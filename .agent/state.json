@@ -1,0 +1,99 @@
+{
+  "updated_at": "2026-10-27T00:58:04.705700+08:00",
+  "timezone": "Asia/Shanghai",
+  "phase": "phase_1_staging",
+  "branch": "codex/initial-mvp-20261027",
+  "repository": "https://github.com/skxndbzu/huoke.git",
+  "deployment": {
+    "host": "117.72.35.216",
+    "user": "admin",
+    "root": "/home/admin/huoke-staging",
+    "release": "20261027-mvp",
+    "status": "healthy_staging",
+    "access": "SSH tunnel to server 127.0.0.1:18080",
+    "real_send_enabled": false,
+    "paused": true,
+    "production_policy": "not_confirmed",
+    "image": "huoke:20261027-mvp",
+    "image_id": "sha256:3a9f0f2233e06545bc99e42b8a93c5372efd0f6526e9387fd10217091bf22ab7",
+    "artifact_sha256": "1e082bb3d4ac4e3427fb70dd0cec03f89a28bbc38417658210e269c8aee3ce5e",
+    "access_note": "Background SSH tunnel startup was rejected by automatic approval; owner can run scripts/open-workbench.ps1 locally."
+  },
+  "automation": {
+    "id": "automation",
+    "status": "ACTIVE",
+    "times": [
+      "09:00",
+      "12:00",
+      "15:00",
+      "18:00",
+      "21:00"
+    ],
+    "kind": "heartbeat",
+    "requires": "Windows computer awake and Codex app running"
+  },
+  "verified": {
+    "local_tests_passed": 31,
+    "postgres_concurrency_test": "passed: 4 workers produced exactly one simulated send",
+    "frontend_build": "passed",
+    "npm_audit_vulnerabilities": 0,
+    "browser": "operator login and real lead evidence viewed",
+    "local_source_sample": {
+      "listed": 26,
+      "filtered": 20,
+      "candidates": 6,
+      "second_run_cache_hits": 26,
+      "second_run_item_requests": 0
+    },
+    "customer_messages_sent": 0,
+    "paid_model_calls": 0,
+    "postgres_tests_passed": 32,
+    "server_health": "passed",
+    "celery_worker": "ping pong",
+    "server_source_sample": {
+      "listed": 26,
+      "filtered": 20,
+      "candidates": 6
+    },
+    "backup_restore": "Passed: restored snapshot to isolated huoke_restore_check_20261027; 6 leads",
+    "deployed_application_manifest": "matched",
+    "server_source_second_run": {
+      "listed": 26,
+      "fetched": 0,
+      "cache_hits": 26,
+      "new_leads": 0
+    }
+  },
+  "costs": {
+    "development_usd": null,
+    "development_note": "No Codex billing data available",
+    "runtime_ai_usd": 0,
+    "budgets_usd": {
+      "single_analysis": 1,
+      "daily": 5,
+      "monthly": 100,
+      "owner_monthly_ceiling": 10000
+    },
+    "conversion_quality": "Unknown: candidates are not qualified opportunities"
+  },
+  "blockers": [
+    "Bluebird sign-in requires accepting terms; explicit confirmation requested and pending. Website strictly read-only.",
+    "SMTP host, port and account not yet retrieved. Supplied SMTP secret stored in user Windows DPAPI store, not Git.",
+    "Model API credential, model and applicable pricing not configured.",
+    "Dedicated HTTPS domain and production release strategy unconfirmed.",
+    "Inbox and conversion events not integrated."
+  ],
+  "next_tasks": [
+    "Read existing SMTP settings after owner confirms login terms; TLS/auth validation only, no customer test messages.",
+    "Configure model endpoint, credential, applicable model/pricing and run bounded evidence extraction pilot.",
+    "Verify a domestic developer source and human-label pilot leads before tuning filters.",
+    "Automate backups and service health notifications; baseline one-off restore already passed.",
+    "Observed UI issue: switching pages retains scroll position; reset scroll on navigation in next UI iteration."
+  ],
+  "constraints": [
+    "Never approve customer messages on behalf of owner",
+    "Never modify bluebirdapi.com",
+    "Preserve existing server services",
+    "No spend increase without confirmation"
+  ]
+}

@@ -1,0 +1,17 @@
+.venv/
+node_modules/
+dist/
+backend/app/static/
+__pycache__/
+.pytest_cache/
+*.pyc
+.env
+.env.*
+!.env.example
+*.db
+*.sqlite*
+.local/
+*.tar.gz
+*.log
+*.pem
+*.key

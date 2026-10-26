@@ -1,0 +1,71 @@
+name: huoke-staging
+x-logging: &logging
+  driver: json-file
+  options: {max-size: 10m, max-file: '3'}
+services:
+  postgres:
+    logging: *logging
+    image: ${POSTGRES_IMAGE:-postgres:17}
+    environment:
+      POSTGRES_DB: huoke
+      POSTGRES_USER: huoke
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?required}
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U huoke -d huoke']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+  redis:
+    logging: *logging
+    image: ${REDIS_IMAGE:-redis:7-alpine}
+    command: [redis-server, --appendonly, 'yes']
+    volumes: [redis_data:/data]
+    restart: unless-stopped
+  init:
+    logging: *logging
+    image: ${HUOKE_IMAGE:-huoke:staging}
+    env_file: .env
+    command: [python, -m, app.db]
+    depends_on:
+      postgres: {condition: service_healthy}
+  web:
+    logging: *logging
+    image: ${HUOKE_IMAGE:-huoke:staging}
+    build:
+      context: .
+      args:
+        NODE_IMAGE: ${NODE_IMAGE:-node:22-bookworm-slim}
+        PYTHON_IMAGE: ${PYTHON_IMAGE:-python:3.12-slim}
+    env_file: .env
+    ports: ['127.0.0.1:18080:8000']
+    depends_on:
+      init: {condition: service_completed_successfully}
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=5)"]
+      interval: 30s
+      timeout: 6s
+      retries: 3
+  worker:
+    logging: *logging
+    image: ${HUOKE_IMAGE:-huoke:staging}
+    env_file: .env
+    command: [celery, -A, app.tasks.celery, worker, --loglevel=warning, --concurrency=1]
+    depends_on:
+      init: {condition: service_completed_successfully}
+      redis: {condition: service_started}
+    restart: unless-stopped
+  beat:
+    logging: *logging
+    image: ${HUOKE_IMAGE:-huoke:staging}
+    env_file: .env
+    command: [celery, -A, app.tasks.celery, beat, --loglevel=warning, --schedule=/tmp/celerybeat-schedule]
+    depends_on:
+      init: {condition: service_completed_successfully}
+      redis: {condition: service_started}
+    restart: unless-stopped
+volumes:
+  postgres_data:
+  redis_data:

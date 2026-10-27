@@ -1042,7 +1042,11 @@ function App() {
                         ? "待配置"
                         : value === "not_connected"
                           ? "未接通"
-                          : "已配置，待实测",
+                          : value === "auth_verified_send_unverified"
+                            ? "TLS/认证已验证，发送未验证"
+                            : value === "auth_check_failed"
+                              ? "认证检查失败"
+                              : "已配置，待实测",
                     )}
                   </div>
                 ))}

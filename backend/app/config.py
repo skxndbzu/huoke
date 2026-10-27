@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     smtp_password: str = ''
     smtp_from: str = ''
     smtp_mode: str = 'ssl'
+    smtp_force_login: bool = False
     llm_base_url: str = ''
     llm_api_key: str = ''
     llm_model: str = ''

@@ -11,6 +11,7 @@ from .db import Session, Control, Lead, Contact, Message, Suppression, Event, Ch
 from .schemas import ContactInput, DraftInput, MessageEdit, Approval, QueueInput, Feedback, Strict
 from .delivery import content_hash, eligibility, TERMINAL
 from .analysis import analyze, configured
+from .smtp_check import smtp_status
 
 
 @asynccontextmanager
@@ -92,7 +93,7 @@ def overview(actor=Depends(role)):
                 'model_calls': len(calls), 'development_cost': '未知：未取得 Codex 计费数据',
                 'daily_budget': settings().ai_daily_budget, 'monthly_budget': settings().ai_monthly_budget},
             'integrations': {'ai': 'configured_unverified' if configured() else 'not_configured',
-                'smtp': 'configured_unverified' if settings().smtp_host else 'not_configured',
+                'smtp': smtp_status(s),
                 'inbox': 'not_connected', 'conversion': 'not_connected'},
         }
 

@@ -1,12 +1,12 @@
 import hashlib
 import json
 import smtplib
-import ssl
 from email.message import EmailMessage
 from datetime import datetime, timezone, timedelta
 from sqlalchemy import select
 from .db import Session, Message, Contact, Lead, Suppression, DeliveryAttempt, locked_control, now, event
 from .config import settings
+from .smtp_connection import authenticated_smtp
 
 BOUND_FIELDS = ('lead_id', 'contact_id', 'recipient', 'channel', 'account', 'subject', 'body', 'attachments', 'version')
 TERMINAL = {'sending', 'submitted', 'sent', 'unknown', 'cancelled', 'simulated', 'failed'}
@@ -55,22 +55,10 @@ def smtp_submit(m):
     # Stable per-content version; SMTP does not guarantee deduplication on Message-ID.
     msg['Message-ID'] = f'<huoke-{m.id}-v{m.version}@{cfg.smtp_from.split("@")[-1]}>'
     msg.set_content(m.body)
-    context = ssl.create_default_context()
-    if cfg.smtp_mode == 'ssl':
-        smtp = smtplib.SMTP_SSL(cfg.smtp_host, cfg.smtp_port, timeout=20, context=context)
-    elif cfg.smtp_mode == 'starttls':
-        smtp = smtplib.SMTP(cfg.smtp_host, cfg.smtp_port, timeout=20)
-        smtp.starttls(context=context)
-    else:
-        raise ValueError('SMTP 必须启用 TLS')
-    try:
-        smtp.login(cfg.smtp_username, cfg.smtp_password)
+    with authenticated_smtp() as smtp:
         refused = smtp.send_message(msg)
         if refused:
             raise smtplib.SMTPRecipientsRefused(refused)
-    finally:
-        # QUIT failure after DATA acceptance must not change the accepted result.
-        smtp.close()
     return msg['Message-ID']
 
 

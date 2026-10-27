@@ -26,6 +26,8 @@ Windows：`py -3.12 -m venv .venv`，`.venv\Scripts\python -m pip install -r bac
 
 真实邮件配置：SMTP_HOST/PORT/USERNAME/PASSWORD/FROM/MODE；用户名和主机必须读取既有配置或由用户提供。先只做 TLS 与认证检查，不发测试邮件给客户。SMTP 真实发送需启用开关、所有者核实商务联系方式、逐条批准内容并恢复队列。
 
+`scripts/configure-smtp.py` 在服务器从 stdin 接收七个 SMTP 字段（含 SMTP_FORCE_LOGIN），原子更新私有 `.env`，不会改写审核令牌或启用发送。当前配置按只读查到的 Bluebird SMTP 设置复制；密钥从 Windows DPAPI 存储经 SSH stdin 传递，不放命令行参数或日志。`python -m app.smtp_check` 仅建立验证证书的 TLS 会话并认证，不发送 MAIL/RCPT/DATA，不需要真实发送开关。认证结果写入 channel_runs，绑定当前配置指纹，24 小时后或配置变化后显示待复核；认证成功不代表邮件提交或送达。不要在无人值守任务里反复认证以免触发邮箱风控，只有配置变化、失败调查或具体需要时运行。
+
 模型配置：LLM_BASE_URL（含 /v1）、LLM_API_KEY、LLM_MODEL、输入/输出每百万 Token 美元单价。没有价格不调用；缺失用量记录为未决。不要将 Bluebird 管理员密码当模型 API 密钥。
 
 ## 恢复及限制

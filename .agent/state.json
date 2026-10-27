@@ -93,10 +93,7 @@
     "Model API credential, model and applicable pricing not configured.",
     "Dedicated HTTPS domain and production release strategy unconfirmed.",
     "Inbox and conversion events not integrated.",
-    "Website protocol says the service is unavailable to Mainland China users; owner chose to retain Mainland China lead target but keep real sending disabled until this policy/target conflict is resolved.",
-    "Model API credential, model and applicable pricing not configured.",
-    "Dedicated HTTPS domain and production release strategy unconfirmed.",
-    "Inbox and conversion events not integrated."
+    "Website protocol says the service is unavailable to Mainland China users; owner chose to retain Mainland China lead target but keep real sending disabled until this policy/target conflict is resolved."
   ],
   "next_tasks": [
     "Keep domestic lead target in research-only mode; do not queue real messages while Bluebird policy conflict remains.",

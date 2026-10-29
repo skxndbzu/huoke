@@ -1,23 +1,23 @@
 {
-  "updated_at": "2026-10-27T08:22:45.338673+08:00",
+  "updated_at": "2026-10-29T20:20:00+08:00",
   "timezone": "Asia/Shanghai",
   "phase": "phase_1_staging",
-  "branch": "codex/smtp-readonly-20261027",
+  "branch": "codex/public-staging-20261029",
   "repository": "https://github.com/skxndbzu/huoke.git",
   "deployment": {
     "host": "117.72.35.216",
     "user": "admin",
     "root": "/home/admin/huoke-staging",
-    "release": "20261027-smtp",
-    "status": "healthy_staging",
-    "access": "SSH tunnel to server 127.0.0.1:18080",
+    "release": "20261029-public",
+    "status": "staging_public_bind_deployed_upstream_blocked",
+    "access": "http://117.72.35.216:18080 (server bind 0.0.0.0; external TCP probe timed out)",
     "real_send_enabled": false,
     "paused": true,
     "production_policy": "not_confirmed",
-    "image": "huoke:20261027-smtp",
-    "image_id": "sha256:eabd0c233713",
-    "artifact_sha256": "f2cbe34fddc05514a1133cc4116d315445280aa7ec971d9519508c73b88ecac1",
-    "access_note": "Background SSH tunnel startup was rejected by automatic approval; owner can run scripts/open-workbench.ps1 locally."
+    "image": "huoke:20261029-public",
+    "image_id": "sha256:61604bb17955717fc5a649455035a822bb18d294f4a86e96107cd86ecaee9ce1",
+    "artifact_sha256": "6ee2bd9f268b83f298b0ac8956441b91dacdf8d1cff79b2eea65700b1b8249c3",
+    "access_note": "Compose supports HUOKE_BIND_ADDRESS; server private .env is set to 0.0.0.0. Local health passes; external probe timed out, likely upstream Jingdong Cloud security group."
   },
   "automation": {
     "id": "automation",
@@ -93,9 +93,11 @@
     "Model API credential, model and applicable pricing not configured.",
     "Dedicated HTTPS domain and production release strategy unconfirmed.",
     "Inbox and conversion events not integrated.",
-    "Website protocol says the service is unavailable to Mainland China users; owner chose to retain Mainland China lead target but keep real sending disabled until this policy/target conflict is resolved."
+    "Website protocol says the service is unavailable to Mainland China users; owner chose to retain Mainland China lead target but keep real sending disabled until this policy/target conflict is resolved.",
+    "Jingdong Cloud upstream security group or provider ACL still blocks inbound TCP 18080; owner must allow the port in the cloud console before public access works."
   ],
   "next_tasks": [
+    "After owner opens inbound TCP 18080 (or provides a domain/TLS plan), verify public health and login; keep real sending disabled.",
     "Keep domestic lead target in research-only mode; do not queue real messages while Bluebird policy conflict remains.",
     "Configure model endpoint, credential, applicable model/pricing and run bounded evidence extraction pilot.",
     "Verify a domestic developer source and human-label pilot leads before tuning filters.",

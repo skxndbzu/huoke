@@ -39,7 +39,9 @@ services:
         NODE_IMAGE: ${NODE_IMAGE:-node:22-bookworm-slim}
         PYTHON_IMAGE: ${PYTHON_IMAGE:-python:3.12-slim}
     env_file: .env
-    ports: ['127.0.0.1:18080:8000']
+    # Keep local development private by default. The staging server can opt in
+    # to a public bind with HUOKE_BIND_ADDRESS=0.0.0.0 in its private .env.
+    ports: ['${HUOKE_BIND_ADDRESS:-127.0.0.1}:18080:8000']
     depends_on:
       init: {condition: service_completed_successfully}
     restart: unless-stopped

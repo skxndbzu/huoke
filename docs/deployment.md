@@ -6,7 +6,7 @@
 
 服务器：117.72.35.216，admin，Ubuntu 22.04，16 GB RAM，检查时系统盘可用 79 GB，Docker 29.1.3。SSH 使用已授权的本机用户密钥，密码不保存在仓库。原有 cpr-postgresql18/cpr-redis8 和其他目录不属于本次获客部署，不修改。新服务使用 huoke-staging Compose 项目、新数据卷、私有网络；数据库和 Redis 不发布宿主端口。
 
-获客根目录 `/home/admin/huoke-staging`，环境文件 `.env` 权限 600，发布源码在 `releases/`。Web 仅绑定服务器 127.0.0.1:18080，通过 SSH 隧道访问；有独立域名及 TLS 配置后才开放正式入口。Bluebird 业务域名不用于未经确认的部署改动。
+获客根目录 `/home/admin/huoke-staging`，环境文件 `.env` 权限 600，发布源码在 `releases/`。Web 默认绑定服务器 127.0.0.1:18080，通过 SSH 隧道访问。若所有者明确要求测试环境公网访问，可在服务器私有 `.env` 设置 `HUOKE_BIND_ADDRESS=0.0.0.0`，入口为 `http://117.72.35.216:18080`；该入口只用于测试，仍须审核令牌登录，正式环境应改用独立域名和 TLS。Bluebird 业务域名不用于未经确认的部署改动。
 
 ## 常规命令
 

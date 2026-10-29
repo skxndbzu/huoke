@@ -27,6 +27,6 @@ npm run build
 
 复制 `.env.example` 为服务器 `.env`，生成不同的运维/人工审核令牌与数据库密码；不提交密钥。首次执行 `python scripts/prepare-staging.py` 可生成隔离配置，随后 `docker compose build web`、`docker compose up -d`。
 
-Web 仅绑定 `127.0.0.1:18080`。Windows 用户运行 `./scripts/open-workbench.ps1 -CopyReviewToken` 打开 SSH 隧道并复制自己的审核登录令牌。开发任务不得借此代用户批准消息。
+Web 默认绑定 `127.0.0.1:18080`。测试服务器可在私有 `.env` 设置 `HUOKE_BIND_ADDRESS=0.0.0.0`，通过 `http://117.72.35.216:18080` 访问；公网入口仍需要审核令牌登录，开发任务不得代用户批准消息。Windows 用户也可运行 `./scripts/open-workbench.ps1 -CopyReviewToken` 使用 SSH 隧道访问。
 
 独立 PostgreSQL 并发集成测试通过 `TEST_DATABASE_URL` 指向专用、可重建的 `huoke_test` 数据库运行。测试不会向真实收件人发送消息。

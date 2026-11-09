@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./style.css";
+import {
+  Today,
+  CustomerWorkspace,
+  Metrics,
+  DiscoverySources,
+} from "./Workspace";
+import { OwnerAccount, ModelSettings } from "./Settings";
 
 type Row = Record<string, any>;
 const names: Row = {
@@ -33,6 +40,10 @@ const link = (url: string, label = "查看原文 ↗") =>
   );
 
 function App() {
+  const [loginMode, setLoginMode] = useState("password");
+  const [username, setUsername] = useState("");
+  const [passwordConfigured, setPasswordConfigured] = useState(false);
+  const [bucket, setBucket] = useState("");
   const [token, setToken] = useState(""),
     [entry, setEntry] = useState(""),
     [page, setPage] = useState("今日工作台");
@@ -63,7 +74,7 @@ function App() {
     const r = await fetch("/api" + path, {
       method: body === undefined ? "GET" : method,
       headers: {
-        Authorization: `Bearer ${authToken}`,
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
         "Content-Type": "application/json",
       },
       body: body === undefined ? undefined : JSON.stringify(body),
@@ -111,12 +122,21 @@ function App() {
     setEdit(null);
   }
   useEffect(() => {
-    if (!token) return;
+    if (!overview) return;
     const interval = setInterval(() => {
       refresh().catch((e) => setError(e.message));
     }, 15000);
     return () => clearInterval(interval);
-  }, [token]);
+  }, [token, !!overview]);
+  useEffect(() => {
+    api("/auth/status")
+      .then((d) => {
+        setPasswordConfigured(d.password_configured);
+        setLoginMode(d.password_configured ? "password" : "token");
+      })
+      .catch(() => {});
+    refresh().catch(() => {});
+  }, []);
   const owner = overview?.role === "reviewer";
   if (!overview)
     return (
@@ -133,24 +153,70 @@ function App() {
           onSubmit={(e) => {
             e.preventDefault();
             setBusy(true);
-            refresh(entry)
+            (async () => {
+              if (loginMode === "password") {
+                await api("/auth/login", { username, password: entry });
+                await refresh("");
+              } else await refresh(entry);
+            })()
               .then(() => {
-                setToken(entry);
+                setToken(loginMode === "token" ? entry : "");
                 setEntry("");
+                setPage("今日工作台");
+                setSelected(null);
+                setError("");
               })
               .catch((e) => setError(e.message))
               .finally(() => setBusy(false));
           }}
         >
+          <div className="actions">
+            <button
+              type="button"
+              className="secondary"
+              onClick={() => setLoginMode("password")}
+            >
+              账号密码
+            </button>
+            <button
+              type="button"
+              className="secondary"
+              onClick={() => setLoginMode("token")}
+            >
+              首次使用 / 令牌登录
+            </button>
+          </div>
+          {loginMode === "password" && (
+            <label>
+              用户名
+              <input
+                autoComplete="username"
+                required
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
+            </label>
+          )}
+          {!passwordConfigured && (
+            <p className="muted">
+              首次使用请用审核令牌登录，再到“成本与配置”设置账号密码。
+            </p>
+          )}
           <label>
-            工作台访问令牌
+            {loginMode === "password" ? "密码" : "工作台访问令牌"}
             <input
               type="password"
-              autoComplete="off"
+              autoComplete={
+                loginMode === "password" ? "current-password" : "off"
+              }
               value={entry}
               onChange={(e) => setEntry(e.target.value)}
               required
-              placeholder="输入运维或人工审核令牌"
+              placeholder={
+                loginMode === "password"
+                  ? "输入你设置的密码"
+                  : "输入运维或人工审核令牌"
+              }
             />
           </label>
           <button disabled={busy}>进入工作台 →</button>
@@ -160,7 +226,7 @@ function App() {
             {error}
           </div>
         )}
-        <small>独立测试环境 · 访问令牌仅保存在本页内存</small>
+        <small>令牌仅保存在页面内存；账号登录使用 12 小时会话</small>
       </main>
     );
   const navigate = (p: string) => {
@@ -168,6 +234,7 @@ function App() {
     setSelected(null);
     setEdit(null);
     setReview(null);
+    window.scrollTo(0, 0);
   };
   return (
     <div className="shell">
@@ -187,7 +254,10 @@ function App() {
               <button
                 key={p}
                 className={page === p ? "active" : ""}
-                onClick={() => navigate(p)}
+                onClick={() => {
+                  setBucket("");
+                  navigate(p);
+                }}
               >
                 <span>{["◈", "◎", "▤", "⇄", "◷"][i]}</span>
                 {p}
@@ -214,8 +284,10 @@ function App() {
           <button
             className="quiet"
             onClick={() => {
-              setToken("");
-              setOverview(null);
+              api("/auth/logout", {}).finally(() => {
+                setToken("");
+                setOverview(null);
+              });
             }}
           >
             退出工作台 ↗
@@ -280,198 +352,21 @@ function App() {
             </div>
           )}
           {page === "今日工作台" && (
-            <>
-              <div className="stats">
-                {[
-                  [
-                    "候选客户",
-                    overview.counts.leads,
-                    "待验证需求，不代表有效商机",
-                  ],
-                  [
-                    "等待审核",
-                    overview.message_statuses.pending_review || 0,
-                    "每条内容都需要你确认",
-                  ],
-                  [
-                    "真实已提交",
-                    overview.message_statuses.submitted || 0,
-                    "不推断送达或已读",
-                  ],
-                  [
-                    "模型分析调用",
-                    overview.cost.model_calls,
-                    "规则初筛不消耗模型 Token",
-                  ],
-                ].map(([label, value, desc]) => (
-                  <section key={label}>
-                    <span>{label}</span>
-                    <strong>{value}</strong>
-                    <small>{desc}</small>
-                  </section>
-                ))}
-              </div>
-              <div className="columns">
-                <section className="panel">
-                  <div className="section-title">
-                    <h2>待办与接入</h2>
-                    {badge("逐步验证")}
-                  </div>
-                  {[
-                    [
-                      "01",
-                      "核实真实需求",
-                      "打开候选客户原文，判断是否需要模型 API。",
-                    ],
-                    [
-                      "02",
-                      "补全商务联系证据",
-                      "仅添加公开商务渠道，地址需人工核实。",
-                    ],
-                    [
-                      "03",
-                      "连接模型分析",
-                      "待模型名称、密钥、单价配置及小样本验证。",
-                    ],
-                    [
-                      "04",
-                      "开启真实发送",
-                      "先完成账号验证与发布审核，再逐条批准消息。",
-                    ],
-                  ].map(([n, t, d]) => (
-                    <div className="todo" key={n}>
-                      <span>{n}</span>
-                      <div>
-                        <h3>{t}</h3>
-                        <p>{d}</p>
-                      </div>
-                    </div>
-                  ))}
-                </section>
-                <section className="panel">
-                  <div className="section-title">
-                    <h2>最近采集</h2>
-                    <button className="text" onClick={() => navigate("客户池")}>
-                      客户池 ↗
-                    </button>
-                  </div>
-                  {leads.slice(0, 4).map((l) => (
-                    <button
-                      className="lead-mini"
-                      key={l.id}
-                      onClick={() => {
-                        navigate("客户池");
-                        act(() => openLead(l.id), "");
-                      }}
-                    >
-                      <small>{l.source}</small>
-                      <h3>{l.title}</h3>
-                      <span>{date(l.published_at)}</span>
-                    </button>
-                  ))}
-                  {leads.length === 0 && (
-                    <Empty
-                      title="等待第一批真实线索"
-                      text="在渠道与任务中运行一次小规模采集；没有匹配内容时不会生成虚假线索。"
-                    />
-                  )}
-                </section>
-              </div>
-              <div className="columns">
-                <section className="panel">
-                  <h2>统一收件箱</h2>
-                  <Empty
-                    title="收件同步尚未接通"
-                    text="待确认邮箱及同步权限。当前没有回复统计，不以模拟内容填充。"
-                  />
-                </section>
-                <section className="panel">
-                  <h2>转化进展</h2>
-                  <div className="funnel">
-                    线索 → 沟通 → 注册 → 调用 → 付费 → 留存
-                  </div>
-                  <p className="muted">
-                    业务平台事件未接入，暂不计算转化率或客户毛利。
-                  </p>
-                </section>
-              </div>
-            </>
+            <Today
+              api={api}
+              openQueue={(b) => {
+                setBucket(b);
+                navigate("客户池");
+              }}
+            />
           )}
           {page === "客户池" && !selected && (
-            <section className="panel">
-              <div className="section-title">
-                <h2>
-                  需求候选 <small>{leads.length} 条</small>
-                </h2>
-                <input
-                  className="search"
-                  placeholder="搜索标题或需求"
-                  aria-label="搜索客户"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-              </div>
-              <div className="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>客户 / 需求证据</th>
-                      <th>判断方式</th>
-                      <th>来源时间</th>
-                      <th>状态</th>
-                      <th />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {leads
-                      .filter((l) =>
-                        (l.title + l.text)
-                          .toLowerCase()
-                          .includes(search.toLowerCase()),
-                      )
-                      .map((l) => (
-                        <tr key={l.id}>
-                          <td>
-                            <strong>{l.title}</strong>
-                            <small>
-                              {l.author} · {l.source}
-                            </small>
-                          </td>
-                          <td>
-                            {badge(
-                              l.analysis.method === "ai"
-                                ? "AI 已分析"
-                                : "规则初筛",
-                            )}
-                            <small>
-                              采购阶段：
-                              {l.analysis.purchase_stage === "unknown"
-                                ? "未知"
-                                : l.analysis.purchase_stage}
-                            </small>
-                          </td>
-                          <td>{date(l.published_at)}</td>
-                          <td>{l.status}</td>
-                          <td>
-                            <button
-                              className="text"
-                              onClick={() => act(() => openLead(l.id), "")}
-                            >
-                              查看 →
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
-              </div>
-              {!leads.length && (
-                <Empty
-                  title="还没有匹配的候选客户"
-                  text="采集结果会在这里出现。"
-                />
-              )}
-            </section>
+            <CustomerWorkspace
+              api={api}
+              owner={owner}
+              bucket={bucket}
+              onEmail={(id) => act(() => openLead(id), "")}
+            />
           )}
           {page === "客户池" && selected && (
             <>
@@ -902,6 +797,7 @@ function App() {
           )}
           {page === "渠道与任务" && (
             <>
+              <DiscoverySources api={api} />
               <section className="panel">
                 <div className="section-title">
                   <div>
@@ -987,6 +883,22 @@ function App() {
                   </div>
                 ))}
               </section>
+            </>
+          )}
+          {page === "成本与配置" && (
+            <>
+              <ModelSettings api={api} owner={owner} />
+              <OwnerAccount
+                api={api}
+                owner={owner}
+                onLogout={() => {
+                  setToken("");
+                  setOverview(null);
+                  setLoginMode("password");
+                  setPasswordConfigured(true);
+                }}
+              />
+              <Metrics api={api} />
             </>
           )}
           {page === "成本与配置" && (

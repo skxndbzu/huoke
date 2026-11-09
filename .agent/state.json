@@ -1,23 +1,23 @@
 {
-  "updated_at": "2026-11-10T00:00:44.3180923+08:00",
+  "updated_at": "2026-11-10T00:54:28.572423+08:00",
   "timezone": "Asia/Shanghai",
-  "phase": "phase_1_staging",
-  "branch": "codex/powershell-login-fix-20261109",
+  "phase": "phase_1_assisted_workflow_live",
+  "branch": "codex/acquisition-workflow-20261110",
   "repository": "https://github.com/skxndbzu/huoke.git",
   "deployment": {
     "host": "117.72.35.216",
     "user": "admin",
     "root": "/home/admin/huoke-staging",
-    "release": "20261029-public",
+    "release": "20261110-workflow-r2",
     "status": "healthy_staging_public_access_verified",
     "access": "http://117.72.35.216:18080",
     "real_send_enabled": false,
     "paused": true,
     "production_policy": "not_confirmed",
-    "image": "huoke:20261029-public",
-    "image_id": "sha256:61604bb17955717fc5a649455035a822bb18d294f4a86e96107cd86ecaee9ce1",
-    "artifact_sha256": "6ee2bd9f268b83f298b0ac8956441b91dacdf8d1cff79b2eea65700b1b8249c3",
-    "access_note": "2026-11-09: automatically recovered after host boot; public homepage HTTP 200, unauthenticated API HTTP 401, worker pong, Docker enabled at boot. Real sending disabled and database paused=true."
+    "image": "huoke:20261110-workflow-r2",
+    "image_id": "sha256:f813e07af3290abb1958d6289aef899e7ec1aefecfd5a8cafae70a6ca7396e86",
+    "artifact_sha256": "27cbc067198f2aa47e9f2cc0737ddd17476a63abb8e9b67b38bb778c46fe15ab",
+    "access_note": "Owner chose IP HTTP access for now. Homepage/assets 200; unauthenticated API 401. Owner must bootstrap password using existing token."
   },
   "automation": {
     "id": "automation",
@@ -33,11 +33,11 @@
     "requires": "Windows computer awake and Codex app running"
   },
   "verified": {
-    "local_tests_passed": 37,
+    "local_tests_passed": 54,
     "postgres_concurrency_test": "passed: 4 workers produced exactly one simulated send",
     "frontend_build": "passed",
     "npm_audit_vulnerabilities": 0,
-    "browser": "operator login and real lead evidence viewed",
+    "browser": "Isolated Playwright flow passed: customer work, followup, password setup/login/session reload, 390px mobile; no page errors.",
     "local_source_sample": {
       "listed": 26,
       "filtered": 20,
@@ -46,9 +46,9 @@
       "second_run_item_requests": 0
     },
     "customer_messages_sent": 0,
-    "paid_model_calls": 0,
-    "postgres_tests_passed": 32,
-    "server_health": "passed",
+    "paid_model_calls": 2,
+    "postgres_tests_passed": 55,
+    "server_health": "healthy",
     "celery_worker": "ping pong",
     "server_source_sample": {
       "listed": 26,
@@ -56,14 +56,14 @@
       "candidates": 6
     },
     "backup_restore": "Passed: restored snapshot to isolated huoke_restore_check_20261027; 6 leads",
-    "deployed_application_manifest": "matched",
+    "deployed_application_manifest": "29 application/test/frontend files matched",
     "server_source_second_run": {
       "listed": 26,
       "fetched": 0,
       "cache_hits": 26,
       "new_leads": 0
     },
-    "server_tests_passed": 38,
+    "server_tests_passed": 55,
     "smtp_auth_probe": {
       "status": "success",
       "host": "smtp.qq.com",
@@ -76,32 +76,48 @@
       "stored_messages_after_probe": 0
     },
     "real_send_enabled": false,
-    "windows_powershell_login_helper": "Native Windows PowerShell parser and mocked token-copy/browser flow passed after ASCII encoding fix; no real reviewer token accessed."
+    "windows_powershell_login_helper": "Native Windows PowerShell parser and mocked token-copy/browser flow passed after ASCII encoding fix; no real reviewer token accessed.",
+    "local_tests_skipped": 1,
+    "successful_model_calls": 1,
+    "github_sample": {
+      "listed": 26,
+      "filtered": 9,
+      "new_leads": 17,
+      "repeat": "cooldown"
+    },
+    "v2ex_sample": {
+      "server": "ConnectError; domain resolves to unreachable addresses",
+      "local": "official python/programmer feeds HTTP 200"
+    },
+    "model": "gpt-6.1-sol models verified and one evidence-checked inference succeeded"
   },
   "costs": {
     "development_usd": null,
     "development_note": "No Codex billing data available",
-    "runtime_ai_usd": 0,
+    "runtime_ai_usd": null,
     "budgets_usd": {
       "single_analysis": 1,
       "daily": 5,
       "monthly": 100,
       "owner_monthly_ceiling": 10000
     },
-    "conversion_quality": "Unknown: candidates are not qualified opportunities"
+    "conversion_quality": "No owner labels or conversion data. Candidates do not imply qualified opportunities.",
+    "runtime_ai_estimated_usd": 0.015732,
+    "runtime_ai_note": "Input=3171, output=939 tokens from two responses. Official Standard estimate, actual third-party billing unverified. One invalid output retained and not retried."
   },
   "blockers": [
-    "Model API credential, model and applicable pricing not configured.",
-    "Dedicated HTTPS domain and production release strategy unconfirmed.",
-    "Inbox and conversion events not integrated.",
-    "Website protocol says the service is unavailable to Mainland China users; owner chose to retain Mainland China lead target but keep real sending disabled until this policy/target conflict is resolved."
+    "V2EX server collection failed: DNS/network unreachable; local official feeds readable.",
+    "Inbox and billing conversion events not connected; manual records available.",
+    "Owner password account awaits one-time setup using existing reviewer login; maintenance must not retrieve token.",
+    "Website policy excludes Mainland China while target remains domestic; keep real sending disabled.",
+    "Production policy unconfirmed; HTTPS deferred by owner, IP HTTP staging retained."
   ],
   "next_tasks": [
-    "Keep domestic lead target in research-only mode; do not queue real messages while Bluebird policy conflict remains.",
-    "Configure model endpoint, credential, applicable model/pricing and run bounded evidence extraction pilot.",
-    "Verify a domestic developer source and human-label pilot leads before tuning filters.",
-    "Automate backups and service health notifications; baseline one-off restore already passed.",
-    "Fix scroll position reset on navigation in the next UI iteration."
+    "Investigate domestic source reachability or implement isolated local acquisition executor.",
+    "Collect owner labels and evaluate GitHub technical-issue noise before tuning filters or increasing volume.",
+    "Add scheduled backups and actionable health monitoring.",
+    "Handle missing model secret files gracefully and define evidence-update reanalysis without blind paid retries.",
+    "Integrate inbox and billing events with actual authorized account configuration."
   ],
   "constraints": [
     "Never approve customer messages on behalf of owner",

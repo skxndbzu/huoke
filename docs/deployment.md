@@ -22,6 +22,14 @@ Windows：`py -3.12 -m venv .venv`，`.venv\Scripts\python -m pip install -r bac
 
 ## 所有者访问
 
+2026-11-10：所有者明确要求本轮功能部署并继续使用 IP，无需等待域名。新增账号登录与模型配置页属于已授权范围；不启用真实发送。首次使用审核令牌登录，在“成本与配置 / 账号与密码”设置用户名密码；服务不预设公共密码。会话 12 小时，HttpOnly/SameSite=strict；cookie 写操作核对 Origin。HTTP IP 入口尚无 TLS，SSH 隧道仍可使用。
+
+本轮数据库仅新增表，由 init 的 create_all 创建：lead_workspaces、touchpoints、contact_points、source_policies、owner_logins、login_sessions、login_throttles、model_providers。无旧列修改或删除；发布前备份。回滚使用上一镜像并保留新增表和数据，不删除数据库。
+
+模型密钥：服务器私有目录 `/home/admin/huoke-staging/secrets`，属主容器 UID 10001、目录 700、文件 600；通过 `HUOKE_SECRETS_DIR` 挂载到 web/worker 的 `/app/secrets`。Web 必须可写以支持所有者在页面替换密钥；部署不将密钥打入镜像。备份时需一并备份私有目录，不能只备份数据库。CLI `python -m app.configure_provider` 从 stdin 接受 JSON，输出配置 ID 与验证状态，不输出输入或密钥；不得将密钥作为命令行参数。模型列表验证不消耗推理 Token，推理验证另记实际用量。配置的价格仅用于估算服务费用。
+
+服务器 Celery beat 每小时执行 GitHub 与 V2EX 采集、每小时最多 2 条新候选分析。所有公开采集通过数据库冷却时间限制重复执行；HTTP 失败不会立即重试。无需本地电脑常开。模型缺失时返回 not_configured，未知费用保留预占；既有失败分析不自动重试。
+
 运行 `scripts/open-workbench.ps1` 建立 SSH 隧道。脚本由用户主动运行时可复制审核令牌到剪贴板用于登录；开发维护任务不得用它代替所有者批准。
 
 真实邮件配置：SMTP_HOST/PORT/USERNAME/PASSWORD/FROM/MODE；用户名和主机必须读取既有配置或由用户提供。先只做 TLS 与认证检查，不发测试邮件给客户。SMTP 真实发送需启用开关、所有者核实商务联系方式、逐条批准内容并恢复队列。

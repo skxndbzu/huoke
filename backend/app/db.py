@@ -133,6 +133,93 @@ class AnalysisCall(Base):
     created_at: Mapped[str] = mapped_column(default=now)
 
 
+class LeadWorkspace(Base):
+    __tablename__ = 'lead_workspaces'
+    lead_id: Mapped[int] = mapped_column(primary_key=True)
+    version: Mapped[int] = mapped_column(default=1)
+    qualification: Mapped[str] = mapped_column(default='pending')
+    reason: Mapped[str] = mapped_column(Text, default='')
+    stage: Mapped[str] = mapped_column(default='new')
+    next_followup: Mapped[str] = mapped_column(default='', index=True)
+    unread_reply: Mapped[bool] = mapped_column(default=False)
+    review_seconds: Mapped[int] = mapped_column(default=0)
+    updated_at: Mapped[str] = mapped_column(default=now)
+
+
+class Touchpoint(Base):
+    __tablename__ = 'touchpoints'
+    id: Mapped[int] = mapped_column(primary_key=True)
+    lead_id: Mapped[int] = mapped_column(index=True)
+    request_id: Mapped[str] = mapped_column(String(64), unique=True)
+    kind: Mapped[str]
+    channel: Mapped[str]
+    body: Mapped[str] = mapped_column(Text)
+    occurred_at: Mapped[str]
+    created_at: Mapped[str] = mapped_column(default=now)
+    provenance: Mapped[str] = mapped_column(default='manual')
+
+
+class ContactPoint(Base):
+    __tablename__ = 'contact_points'
+    id: Mapped[int] = mapped_column(primary_key=True)
+    lead_id: Mapped[int] = mapped_column(index=True)
+    kind: Mapped[str]
+    value: Mapped[str] = mapped_column(String(500))
+    source_url: Mapped[str] = mapped_column(Text)
+    evidence: Mapped[str] = mapped_column(Text)
+    verified: Mapped[bool] = mapped_column(default=False)
+    origin: Mapped[str] = mapped_column(default='manual')
+    collected_at: Mapped[str] = mapped_column(default=now)
+
+
+class SourcePolicy(Base):
+    __tablename__ = 'source_policies'
+    channel: Mapped[str] = mapped_column(primary_key=True)
+    enabled: Mapped[bool] = mapped_column(default=True)
+    options: Mapped[dict] = mapped_column(JSON, default=dict)
+    next_allowed_at: Mapped[str] = mapped_column(default='')
+    version: Mapped[int] = mapped_column(default=1)
+
+
+class OwnerLogin(Base):
+    __tablename__ = 'owner_logins'
+    id: Mapped[int] = mapped_column(primary_key=True, default=1)
+    username: Mapped[str]
+    password_hash: Mapped[str]
+
+
+class ModelProvider(Base):
+    __tablename__ = 'model_providers'
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str]
+    base_url: Mapped[str]
+    model: Mapped[str]
+    secret_ref: Mapped[str]
+    input_price: Mapped[float]
+    output_price: Mapped[float]
+    cached_price: Mapped[float]
+    price_source: Mapped[str]
+    allow_http: Mapped[bool] = mapped_column(default=False)
+    active: Mapped[bool] = mapped_column(default=False)
+    version: Mapped[int] = mapped_column(default=1)
+    probe_status: Mapped[str] = mapped_column(default='unverified')
+    probed_at: Mapped[str] = mapped_column(default='')
+    analysis_verified: Mapped[bool] = mapped_column(default=False)
+
+
+class LoginSession(Base):
+    __tablename__ = 'login_sessions'
+    digest: Mapped[str] = mapped_column(primary_key=True)
+    expires_at: Mapped[str]
+
+
+class LoginThrottle(Base):
+    __tablename__ = 'login_throttles'
+    key: Mapped[str] = mapped_column(primary_key=True)
+    count: Mapped[int] = mapped_column(default=0)
+    until: Mapped[str]
+
+
 engine = create_engine(settings().database_url, **({'connect_args': {'check_same_thread': False}} if settings().database_url.startswith('sqlite') else {'pool_pre_ping': True}))
 Session = sessionmaker(engine, expire_on_commit=False)
 

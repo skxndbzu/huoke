@@ -5,6 +5,8 @@ from sqlalchemy import select
 from app.analysis import analyze
 from app.config import settings
 import pytest
+import json
+from app.db import Event
 
 
 def test_source_filters_and_second_run_reuses_cache(monkeypatch):
@@ -49,3 +51,38 @@ def test_unknown_usage_keeps_reservation_and_prevents_recall(monkeypatch):
     assert len(calls)==1
     with Session() as s:
         call=s.scalar(select(AnalysisCall));assert call.estimated_usd is None and call.reserved_usd>0
+
+
+@pytest.mark.parametrize('invalid', [False, True])
+def test_structured_analysis_usage_cache_and_validation_diagnostics(monkeypatch, invalid):
+    model_config(monkeypatch)
+    calls = []
+    result = {'summary': 'Explicit API search', 'fit': 'high', 'priority': 'high',
+              'purchase_stage': 'explicit_need', 'recency': 'unknown',
+              'evidence': ['Looking for an LLM API provider'], 'unknowns': ['budget'],
+              'next_action': 'Review source'}
+    if invalid:
+        result['recency'] = {'unexpected': 'do-not-log-source-content'}
+    def respond(*args, **kwargs):
+        calls.append(kwargs['json'])
+        return httpx.Response(200, request=httpx.Request('POST', 'https://example.test/v1/chat/completions'),
+            json={'choices': [{'finish_reason': 'stop', 'message': {'content': json.dumps(result)}}],
+                  'usage': {'prompt_tokens': 100, 'completion_tokens': 50}})
+    monkeypatch.setattr('app.analysis.httpx.post', respond)
+    if invalid:
+        with pytest.raises(ValueError):
+            analyze(1)
+        with pytest.raises(ValueError):
+            analyze(1)
+        with Session() as s:
+            detail = s.scalar(select(Event).where(Event.kind == 'ai_failure')).detail
+            assert detail['validation'] == [{'field': 'recency', 'type': 'string_type'}]
+            assert 'do-not-log-source-content' not in str(detail)
+    else:
+        assert analyze(1)['analysis']['contact_permission'] == 'unknown'
+        assert analyze(1)['cached'] is True
+    assert len(calls) == 1
+    with Session() as s:
+        call = s.scalar(select(AnalysisCall))
+        assert call.input_tokens == 100 and call.output_tokens == 50
+        assert call.estimated_usd == pytest.approx(.0002)

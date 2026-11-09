@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     llm_model: str = ''
     llm_input_per_million: float = Field(default=0, ge=0)
     llm_output_per_million: float = Field(default=0, ge=0)
+    secret_store_path: str = '.secrets'
     ai_round_budget: float = Field(default=1, gt=0, le=100)
     ai_daily_budget: float = Field(default=5, gt=0, le=1000)
     ai_monthly_budget: float = Field(default=100, gt=0, le=10000)

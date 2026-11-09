@@ -2,9 +2,11 @@ import secrets
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.staticfiles import StaticFiles
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from sqlalchemy import select, func, text
 from .config import settings
 from .db import Session, Control, Lead, Contact, Message, Suppression, Event, ChannelRun, AnalysisCall, init_db, locked_control, event, now
@@ -26,13 +28,25 @@ app = FastAPI(title='青鸟获客 · 试运行', lifespan=lifespan, docs_url=Non
 auth = HTTPBearer(auto_error=False)
 
 
-def role(credentials: HTTPAuthorizationCredentials | None = Depends(auth)):
+@app.exception_handler(RequestValidationError)
+async def validation_error(request, exc):
+    # Never echo submitted API keys/passwords back in validation diagnostics.
+    return JSONResponse(status_code=422, content={'detail': [
+        {'loc': list(e['loc']), 'msg': e['msg'], 'type': e['type']} for e in exc.errors()]})
+
+
+def role(request: Request, credentials: HTTPAuthorizationCredentials | None = Depends(auth)):
     token = credentials.credentials if credentials else ''
     cfg = settings()
     if token and cfg.reviewer_token and secrets.compare_digest(token, cfg.reviewer_token):
         return 'reviewer'
     if token and cfg.operator_token and secrets.compare_digest(token, cfg.operator_token):
         return 'operator'
+    if not token:
+        from .login import session_role
+        actor = session_role(request)
+        if actor:
+            return actor
     raise HTTPException(401, '需要登录')
 
 
@@ -312,6 +326,15 @@ def activity(actor=Depends(role)):
         return {'events': [obj(e) for e in s.scalars(select(Event).order_by(Event.id.desc()).limit(60))],
             'runs': [obj(r) for r in s.scalars(select(ChannelRun).order_by(ChannelRun.id.desc()).limit(20))]}
 
+
+from .workspace import register_workspace
+from .login import register_login
+from .sources import register_sources
+from .providers import register_providers
+register_workspace(app, role, reviewer)
+register_login(app, reviewer)
+register_sources(app, role)
+register_providers(app, role, reviewer)
 
 static = Path(__file__).parent / 'static'
 if static.exists():

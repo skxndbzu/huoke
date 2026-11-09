@@ -1,8 +1,8 @@
 {
-  "updated_at": "2026-11-10T00:54:28.572423+08:00",
+  "updated_at": "2026-11-10T01:08:24.885317+08:00",
   "timezone": "Asia/Shanghai",
   "phase": "phase_1_assisted_workflow_live",
-  "branch": "codex/acquisition-workflow-20261110",
+  "branch": "codex/owner-login-20261110",
   "repository": "https://github.com/skxndbzu/huoke.git",
   "deployment": {
     "host": "117.72.35.216",
@@ -17,7 +17,7 @@
     "image": "huoke:20261110-workflow-r2",
     "image_id": "sha256:f813e07af3290abb1958d6289aef899e7ec1aefecfd5a8cafae70a6ca7396e86",
     "artifact_sha256": "27cbc067198f2aa47e9f2cc0737ddd17476a63abb8e9b67b38bb778c46fe15ab",
-    "access_note": "Owner chose IP HTTP access for now. Homepage/assets 200; unauthenticated API 401. Owner must bootstrap password using existing token."
+    "access_note": "IP HTTP access retained by owner choice. Password account configured at explicit owner request; login verified. Public homepage/assets 200 and unauthenticated API 401 previously verified."
   },
   "automation": {
     "id": "automation",
@@ -89,7 +89,8 @@
       "server": "ConnectError; domain resolves to unreachable addresses",
       "local": "official python/programmer feeds HTTP 200"
     },
-    "model": "gpt-6.1-sol models verified and one evidence-checked inference succeeded"
+    "model": "gpt-6.1-sol models verified and one evidence-checked inference succeeded",
+    "owner_password_login": "Initial account provisioned at explicit owner request; actual login and logout verified. No reviewer token accessed, no message approval. Credentials not stored in repository."
   },
   "costs": {
     "development_usd": null,
@@ -108,7 +109,6 @@
   "blockers": [
     "V2EX server collection failed: DNS/network unreachable; local official feeds readable.",
     "Inbox and billing conversion events not connected; manual records available.",
-    "Owner password account awaits one-time setup using existing reviewer login; maintenance must not retrieve token.",
     "Website policy excludes Mainland China while target remains domestic; keep real sending disabled.",
     "Production policy unconfirmed; HTTPS deferred by owner, IP HTTP staging retained."
   ],

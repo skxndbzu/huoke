@@ -35,3 +35,11 @@ Bluebird 只读浏览公开首页和价格页，45 个模型及分组动态价�
 从外部 Windows 网络访问 117.72.35.216:18080 的 TCP 探测超时；服务器 Docker 已显示 0.0.0.0:18080->8000，本机和容器健康检查通过，UFW 为 inactive。推断仍有京东云安全组/上游 ACL 未放行 18080，需要所有者在云控制台允许入站 TCP 18080 后再复测。数据库备份保存为 /home/admin/huoke-staging/backups/20261029-before-public.sql.gz。
 
 本轮没有客户消息、模型调用或新增费用。公网入口是临时 HTTP 测试入口，正式使用需域名与 TLS。
+
+## 2026-11-09 关机后恢复核验
+
+用户报告服务器意外关机。SSH 实测主机已重新开机约一分钟，获客 web、worker、beat、PostgreSQL、Redis 均自动启动；无需重复重启正常服务。Web 与数据库 healthy，健康接口正常，Celery worker 返回 pong，Docker 开机启动 enabled。
+
+本地外网实测 http://117.72.35.216:18080/ 返回 HTTP 200，未认证 /api/overview 返回 HTTP 401。此前公网不可达阻塞已解除。数据库 paused=true，真实发送开关 false。沿用 20261029-public 镜像，无代码或部署配置变更，不向客户测试发送。
+
+本轮仅运维核验并更新状态；无模型调用，开发费用未知。下一步仍为 HTTPS、自动备份和监控，获客来源与模型配置待继续完善。

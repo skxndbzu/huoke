@@ -69,6 +69,9 @@ select {
   border: 1px solid #d9e1e4;
   padding: 22px;
 }
+.stats.actionable {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+}
 .actionable strong {
   display: block;
   font-size: 32px;

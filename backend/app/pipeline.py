@@ -6,6 +6,8 @@ import httpx
 from sqlalchemy import select
 from .db import Session, Lead, SourceItem, ChannelRun, locked_control, event, now
 from .config import settings
+from .market import refresh_market
+from .contact_discovery import extract_contacts
 
 HN = 'https://hacker-news.firebaseio.com/v0'
 RULE_VERSION = 'intent-v1'
@@ -81,12 +83,16 @@ def sync_hn():
                     elif s.scalar(select(Lead.id).where(Lead.fingerprint == digest)):
                         stats['duplicates'] += 1
                     else:
-                        s.add(Lead(source='Hacker News / Ask', source_key=key,
+                        lead = Lead(source='Hacker News / Ask', source_key=key,
                             url=f'https://news.ycombinator.com/item?id={int(item_id)}',
                             author=item.get('by', '未知'), title=clean(item.get('title')),
                             text=text, fingerprint=digest,
                             published_at=datetime.fromtimestamp(item.get('time', 0), timezone.utc).isoformat(),
-                            analysis=classify(text)))
+                            analysis=classify(text))
+                        s.add(lead)
+                        s.flush()
+                        refresh_market(s, lead)
+                        extract_contacts(s, lead)
                         stats['new_leads'] += 1
         with Session.begin() as s:
             run = s.get(ChannelRun, run_id)

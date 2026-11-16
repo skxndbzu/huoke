@@ -7,16 +7,19 @@ from xml.etree import ElementTree as ET
 import httpx
 from fastapi import Depends, HTTPException
 from pydantic import Field
-from sqlalchemy import select
-from .db import (Session, SourcePolicy, ChannelRun, SourceItem, Lead, LeadWorkspace,
+from sqlalchemy import select, case
+from .db import (Session, SourcePolicy, ChannelRun, SourceItem, Lead, LeadWorkspace, LeadMarket,
                  ContactPoint, AnalysisCall, locked_control, event, now)
 from .pipeline import TECH, NEED, clean, fingerprint, classify
 from .schemas import Strict
 from .config import settings
+from .market import refresh_market, VERSION as MARKET_VERSION
+from .contact_discovery import extract_contacts
 
-VERSION = 'discovery-v1'
+VERSION = 'discovery-v2-cn'
+OLD_GITHUB_QUERIES = ['"API" "供应商"', '"模型" "接口"', '"LLM" "provider"']
 SOURCES = {
-    'github': {'name': 'GitHub Issues', 'queries': ['"API" "供应商"', '"模型" "接口"', '"LLM" "provider"'],
+    'github': {'name': 'GitHub Issues', 'queries': ['"API" "供应商"', '"模型" "接口"', '"API" "中国"'],
                'docs': 'https://docs.github.com/en/rest/search/search#search-issues-and-pull-requests',
                'scope': '公开 Issue 搜索，每小时最多 3 次搜索、每次 10 条；排除 PR 和机器人，不读取私人资料。'},
     'v2ex': {'name': 'V2EX', 'queries': ['python', 'programmer'],
@@ -35,6 +38,10 @@ def policy(s, channel):
         p = SourcePolicy(channel=channel, options={'queries': SOURCES[channel]['queries'], 'exclude': []})
         s.add(p)
         s.flush()
+    elif channel == 'github' and p.options.get('queries') == OLD_GITHUB_QUERIES:
+        p.options = {**p.options, 'queries': SOURCES[channel]['queries']}
+        p.version += 1
+        event(s, 'domestic_default_queries', channel, version=p.version)
     return p
 
 
@@ -91,17 +98,6 @@ def candidates(client, channel, options):
     return items, incomplete
 
 
-def extract_contacts(s, lead):
-    for m in EMAIL.finditer(lead.text):
-        snippet = lead.text[max(0, m.start()-80):m.end()+80]
-        address = m.group(0).lower()
-        if not BUSINESS.search(snippet) or address.endswith(('.test', '@example.com')) or 'noreply' in address:
-            continue
-        if not s.scalar(select(ContactPoint.id).where(ContactPoint.lead_id == lead.id, ContactPoint.value == address)):
-            s.add(ContactPoint(lead_id=lead.id, kind='email', value=address, source_url=lead.url,
-                               evidence=snippet, origin='public_source', verified=False))
-
-
 def sync_public(channel):
     if channel not in SOURCES:
         raise ValueError('unknown_source')
@@ -120,7 +116,8 @@ def sync_public(channel):
         s.add(run)
         s.flush()
         run_id = run.id
-    stats = {'listed': 0, 'filtered': 0, 'cache_hits': 0, 'duplicates': 0, 'new_leads': 0, 'updated': 0, 'model_calls': 0, 'rule_version': VERSION}
+    stats = {'listed': 0, 'filtered': 0, 'cache_hits': 0, 'duplicates': 0, 'new_leads': 0, 'updated': 0, 'model_calls': 0, 'rule_version': VERSION,
+             'domestic_candidates': 0, 'market_pending': 0}
     try:
         with httpx.Client(timeout=15, follow_redirects=False, headers={'User-Agent': 'HuokePilot/0.2 public-demand-reader', 'Accept': 'application/vnd.github+json' if channel == 'github' else 'application/atom+xml'}) as client:
             items, incomplete = candidates(client, channel, options)
@@ -161,6 +158,8 @@ def sync_public(channel):
                     s.flush()
                     stats['new_leads'] += 1
                 extract_contacts(s, lead)
+                market = refresh_market(s, lead)
+                stats['market_pending'] += 1
         status, error = 'success', ''
     except Exception as exc:
         status, error = 'failed', type(exc).__name__
@@ -179,13 +178,16 @@ def analyze_pending():
         return {'status': 'not_configured', 'analyzed': 0}
     with Session() as s:
         # Failed/unknown calls are not retried automatically; their cost needs review.
-        ids = list(s.scalars(select(Lead.id).outerjoin(LeadWorkspace, LeadWorkspace.lead_id == Lead.id)
-            .where(~Lead.id.in_(select(AnalysisCall.lead_id)), func_coalesce_qualification() != 'invalid')
-            .order_by(Lead.id.desc()).limit(2)))
+        ids = list(s.scalars(select(Lead.id).join(LeadMarket, LeadMarket.lead_id == Lead.id)
+            .outerjoin(LeadWorkspace, LeadWorkspace.lead_id == Lead.id)
+            .where(~Lead.id.in_(select(AnalysisCall.lead_id).where(AnalysisCall.status != 'success')),
+                   func_coalesce_qualification() != 'invalid', LeadMarket.manual.is_(False),
+                   LeadMarket.assessment_version != MARKET_VERSION)
+            .order_by(case((LeadMarket.status == 'likely_cn', 0), else_=1), Lead.id.desc()).limit(2)))
     count = 0
     for lead_id in ids:
         try:
-            analyze(lead_id)
+            analyze(lead_id, automatic=True)
             count += 1
         except ValueError:
             break
@@ -217,7 +219,7 @@ def register_sources(app, role):
                 output.append({'channel': channel, **spec, 'enabled': p.enabled, 'queries': p.options['queries'], 'exclude': p.options.get('exclude', []),
                     'version': p.version, 'next_allowed_at': p.next_allowed_at, 'status': latest.status if latest else 'unverified',
                     'last_success': success.finished_at if success else '', 'error': latest.error if latest else '', 'stats': latest.stats if latest else {},
-                    'can_send': False, 'can_receive': False, 'can_read_profiles': False})
+                    'can_send': False, 'can_receive': False, 'can_read_profiles': channel == 'github'})
             return output
 
     @app.put('/api/discovery/sources/{channel}')

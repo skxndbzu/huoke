@@ -1,23 +1,24 @@
 {
-  "updated_at": "2026-11-10T01:08:24.885317+08:00",
+  "updated_at": "2026-11-17T00:28:27.874783+08:00",
   "timezone": "Asia/Shanghai",
   "phase": "phase_1_assisted_workflow_live",
-  "branch": "codex/owner-login-20261110",
+  "branch": "codex/domestic-market-20261116",
   "repository": "https://github.com/skxndbzu/huoke.git",
   "deployment": {
     "host": "117.72.35.216",
     "user": "admin",
     "root": "/home/admin/huoke-staging",
-    "release": "20261110-workflow-r2",
+    "release": "20261117-market-ai",
     "status": "healthy_staging_public_access_verified",
     "access": "http://117.72.35.216:18080",
     "real_send_enabled": false,
     "paused": true,
     "production_policy": "not_confirmed",
-    "image": "huoke:20261110-workflow-r2",
-    "image_id": "sha256:f813e07af3290abb1958d6289aef899e7ec1aefecfd5a8cafae70a6ca7396e86",
-    "artifact_sha256": "27cbc067198f2aa47e9f2cc0737ddd17476a63abb8e9b67b38bb778c46fe15ab",
-    "access_note": "IP HTTP access retained by owner choice. Password account configured at explicit owner request; login verified. Public homepage/assets 200 and unauthenticated API 401 previously verified."
+    "image": "huoke:20261117-market-ai",
+    "image_id": "sha256:47e960f85b21d3494dd87dd48096e86e87c701510ae751a3c697bcf24120ae9f",
+    "artifact_sha256": "9a36733a6b6a87297337b5f46f2c1939efd98e3d6e1c3d19f9395ed2a3625b88",
+    "access_note": "IP HTTP access retained by owner choice. Password account configured at explicit owner request; login verified. Public homepage/assets 200 and unauthenticated API 401 previously verified.",
+    "rollback_image": "huoke:20261116-contact-r1"
   },
   "automation": {
     "id": "automation",
@@ -33,11 +34,11 @@
     "requires": "Windows computer awake and Codex app running"
   },
   "verified": {
-    "local_tests_passed": 54,
+    "local_tests_passed": 80,
     "postgres_concurrency_test": "passed: 4 workers produced exactly one simulated send",
     "frontend_build": "passed",
     "npm_audit_vulnerabilities": 0,
-    "browser": "Isolated Playwright flow passed: customer work, followup, password setup/login/session reload, 390px mobile; no page errors.",
+    "browser": "TEST ONLY Playwright threshold/contact priority/high-value queue/manual correction; desktop and 390px; no page errors",
     "local_source_sample": {
       "listed": 26,
       "filtered": 20,
@@ -46,8 +47,8 @@
       "second_run_item_requests": 0
     },
     "customer_messages_sent": 0,
-    "paid_model_calls": 2,
-    "postgres_tests_passed": 55,
+    "paid_model_calls": 336,
+    "postgres_tests_passed": 83,
     "server_health": "healthy",
     "celery_worker": "ping pong",
     "server_source_sample": {
@@ -56,14 +57,14 @@
       "candidates": 6
     },
     "backup_restore": "Passed: restored snapshot to isolated huoke_restore_check_20261027; 6 leads",
-    "deployed_application_manifest": "29 application/test/frontend files matched",
+    "deployed_application_manifest": "32 application/test/frontend files matched",
     "server_source_second_run": {
       "listed": 26,
       "fetched": 0,
       "cache_hits": 26,
       "new_leads": 0
     },
-    "server_tests_passed": 55,
+    "server_tests_passed": 83,
     "smtp_auth_probe": {
       "status": "success",
       "host": "smtp.qq.com",
@@ -78,7 +79,6 @@
     "real_send_enabled": false,
     "windows_powershell_login_helper": "Native Windows PowerShell parser and mocked token-copy/browser flow passed after ASCII encoding fix; no real reviewer token accessed.",
     "local_tests_skipped": 1,
-    "successful_model_calls": 1,
     "github_sample": {
       "listed": 26,
       "filtered": 9,
@@ -90,7 +90,18 @@
       "local": "official python/programmer feeds HTTP 200"
     },
     "model": "gpt-6.1-sol models verified and one evidence-checked inference succeeded",
-    "owner_password_login": "Initial account provisioned at explicit owner request; actual login and logout verified. No reviewer token accessed, no message approval. Credentials not stored in repository."
+    "owner_password_login": "Initial account provisioned at explicit owner request; actual login and logout verified. No reviewer token accessed, no message approval. Credentials not stored in repository.",
+    "local_validation": "Full suite 80 passed / 1 skipped before final contact enrichment; final targeted suite 38 passed. Final image PostgreSQL full suite 83 passed.",
+    "market_filter": {
+      "threshold": 70,
+      "total_leads": 1206,
+      "eligible": 1,
+      "pending_or_unknown": 1205,
+      "dmpanch": "unknown, not eligible",
+      "domestic_sample_score": 98,
+      "contact_candidates": 0,
+      "public_profiles_verified_this_run": 7
+    }
   },
   "costs": {
     "development_usd": null,
@@ -102,9 +113,10 @@
       "monthly": 100,
       "owner_monthly_ceiling": 10000
     },
-    "conversion_quality": "No owner labels or conversion data. Candidates do not imply qualified opportunities.",
-    "runtime_ai_estimated_usd": 0.015732,
-    "runtime_ai_note": "Input=3171, output=939 tokens from two responses. Official Standard estimate, actual third-party billing unverified. One invalid output retained and not retried."
+    "conversion_quality": "Two market assessments verified workflow only; no measured conversion or precision uplift.",
+    "runtime_ai_estimated_usd": 2.230646,
+    "runtime_ai_note": "336 cumulative calls at verification; actual supplier billing unknown. This iteration two successful calls 335/336: input 5273, output 799, estimate 0.018536 USD; repeated analysis cached.",
+    "iteration_model_estimated_usd": 0.018536
   },
   "blockers": [
     "V2EX server collection failed: DNS/network unreachable; local official feeds readable.",
@@ -113,11 +125,11 @@
     "Production policy unconfirmed; HTTPS deferred by owner, IP HTTP staging retained."
   ],
   "next_tasks": [
-    "Investigate domestic source reachability or implement isolated local acquisition executor.",
-    "Collect owner labels and evaluate GitHub technical-issue noise before tuning filters or increasing volume.",
-    "Add scheduled backups and actionable health monitoring.",
-    "Handle missing model secret files gracefully and define evidence-update reanalysis without blind paid retries.",
-    "Integrate inbox and billing events with actual authorized account configuration."
+    "Improve genuine business contact coverage using disclosed business sources; current eligible samples have no public email/social account.",
+    "Collect owner labels to calibrate market confidence threshold; do not claim nationality probabilities.",
+    "Observe bounded historical market reanalysis and prioritization without increasing budgets.",
+    "Investigate domestic source reachability/local executor; retain no-send policy.",
+    "Add scheduled backups, health monitoring and actual inbox/billing integrations."
   ],
   "constraints": [
     "Never approve customer messages on behalf of owner",

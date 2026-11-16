@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 type R = Record<string, any>;
 type API = (path: string, body?: unknown, method?: string) => Promise<any>;
 const stages: R = {
-  new: "待联系",
+  new: "未联系",
   contacted: "已联系",
   conversation: "沟通中",
   trial: "试用中",
@@ -12,6 +12,25 @@ const stages: R = {
   closed: "已结束",
 };
 const quals: R = { pending: "待核实", valid: "有效需求", invalid: "不匹配" };
+const contactLabels: R = {
+  verified_contact: "已核实可联系",
+  unverified_candidate: "有待核实联系方式",
+  public_discussion: "仅有公开讨论入口",
+  no_path: "暂无联系路径",
+};
+const marketScopes: R = {
+  domestic: "国内目标（达到阈值）",
+  unknown: "待 AI / 市场未知",
+  below_threshold: "AI 低于阈值",
+  outside_target: "人工排除市场",
+  all: "全部市场（含历史）",
+};
+const defaultMarket = (bucket: string) =>
+  bucket === "market"
+    ? "unknown"
+    : ["reply", "followup"].includes(bucket)
+      ? "all"
+      : "domestic";
 const kinds: R = {
   note: "备注",
   outbound: "手动联系",
@@ -63,6 +82,178 @@ const requestId = () =>
     b.toString(16).padStart(2, "0"),
   ).join("");
 
+function MarketPanel({
+  lead,
+  owner,
+  busy,
+  onSave,
+}: {
+  lead: R;
+  owner: boolean;
+  busy: boolean;
+  onSave: (data: R) => Promise<void>;
+}) {
+  const m = lead.market;
+  const [status, setStatus] = useState("unknown");
+  const [reason, setReason] = useState("");
+  const [sourceUrl, setSourceUrl] = useState(lead.url);
+  useEffect(() => {
+    setStatus(m?.manual ? m.status : "unknown");
+    setReason(m?.manual ? m.reason : "");
+    setSourceUrl(m?.manual ? m.evidence?.[0]?.url || lead.url : lead.url);
+  }, [lead.id, m?.version]);
+  return (
+    <section className="market-evidence">
+      <h3>目标市场：{m?.label || "市场待核实"}</h3>
+      <p>
+        <strong>
+          国内目标置信分数：
+          {m?.score == null ? "未知 / 尚未评估" : `${m.score} / 100`}
+        </strong>{" "}
+        · 纳入阈值 {m?.threshold ?? 70} 分
+      </p>
+      <p>{m?.reason}</p>
+      {(m?.evidence || []).map((e: R, i: number) => (
+        <blockquote key={i}>
+          {e.quote} {urlLink(e.url, "证据来源 ↗")}
+        </blockquote>
+      ))}
+      <p className="muted">
+        判断服务对象是否为国内用户、企业或团队，不推断国籍。中文交流只是初步线索；英语帖子也可能来自国内团队。需求价值和是否允许联系另行核实。
+      </p>
+      {owner && (
+        <details>
+          <summary>核实或纠正目标市场</summary>
+          <label>
+            市场判断
+            <select
+              aria-label="市场判断"
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+            >
+              {options({
+                unknown: "证据不足，待核实",
+                confirmed_cn: "有证据确认国内服务对象",
+                outside_target: "有证据确认非目标市场",
+                auto: "恢复自动 AI 判断",
+              })}
+            </select>
+          </label>
+          <label>
+            业务地区依据
+            <textarea
+              aria-label="业务地区依据"
+              placeholder="例如团队官网注明服务中国企业。不要仅凭昵称或头像判断。"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+            />
+          </label>
+          <label>
+            依据链接
+            <input
+              aria-label="市场依据链接"
+              value={sourceUrl}
+              onChange={(e) => setSourceUrl(e.target.value)}
+            />
+          </label>
+          <button
+            disabled={busy || reason.trim().length < 5}
+            onClick={() =>
+              onSave({
+                version: m?.version || 0,
+                status,
+                reason,
+                source_url: sourceUrl,
+              })
+            }
+          >
+            保存市场判断
+          </button>
+        </details>
+      )}
+    </section>
+  );
+}
+
+function MarketThreshold({
+  api,
+  owner,
+  onSaved,
+}: {
+  api: API;
+  owner: boolean;
+  onSaved: () => Promise<void>;
+}) {
+  const [policy, setPolicy] = useState<R | null>(null),
+    [value, setValue] = useState(70),
+    [message, setMessage] = useState(""),
+    [saving, setSaving] = useState(false);
+  useEffect(() => {
+    api("/workspace/market-policy")
+      .then((p) => {
+        setPolicy(p);
+        setValue(p.threshold);
+      })
+      .catch((e) => setMessage(e.message));
+  }, []);
+  return (
+    <section className="market-policy">
+      <label>
+        国内目标纳入阈值（0–100 分）
+        <input
+          aria-label="国内目标纳入阈值"
+          type="number"
+          min="0"
+          max="100"
+          value={value}
+          disabled={!owner || saving}
+          onChange={(e) => setValue(Number(e.target.value))}
+        />
+      </label>
+      {owner && (
+        <button
+          className="secondary"
+          disabled={
+            !policy ||
+            saving ||
+            !Number.isInteger(value) ||
+            value < 0 ||
+            value > 100
+          }
+          onClick={async () => {
+            setSaving(true);
+            setMessage("");
+            try {
+              const p = await api(
+                "/workspace/market-policy",
+                { version: policy!.version, threshold: value },
+                "PUT",
+              );
+              setPolicy(p);
+              await onSaved();
+              setMessage("阈值已生效，复用已有分数，不重复消耗模型 Token");
+            } catch (e) {
+              setMessage((e as Error).message);
+              const p = await api("/workspace/market-policy");
+              setPolicy(p);
+            } finally {
+              setSaving(false);
+            }
+          }}
+        >
+          保存筛选阈值
+        </button>
+      )}
+      <p className="muted">
+        AI
+        分数达到阈值才自动纳入国内目标；没有分数的记录不会因降低阈值而入选。分数不是校准概率，人工确认可覆盖
+        AI 判断。
+      </p>
+      {message && <p role="status">{message}</p>}
+    </section>
+  );
+}
+
 export function Today({
   api,
   openQueue,
@@ -86,7 +277,13 @@ export function Today({
       <div className="stats actionable">
         {[
           ["review", "值得看看", "核实原文，标记有效需求"],
-          ["contact", "待你联系", "你认可、尚未联系的客户"],
+          ["research", "待补联系方式", "需求有效，但还没有核实的联系路径"],
+          [
+            "high_value",
+            "高价值待补联系方式",
+            "AI 高匹配、高优先级，缺少邮箱或社交账号",
+          ],
+          ["contact", "待你联系", "需求有效、联系路径已核实"],
           ["reply", "待你回复", "手工录入的未处理回复"],
           ["followup", "到期跟进", "按你设置的时间提醒"],
         ].map(([key, title, desc]) => (
@@ -97,6 +294,16 @@ export function Today({
           </button>
         ))}
       </div>
+      <section className="panel">
+        <h2>国内市场优先</h2>
+        <p>
+          AI
+          根据需求原文和可用公开资料评估国内目标置信分数，达到你设置的阈值后才进入默认客户池；可在客户池调整阈值。证据不足保留未知，不猜测国籍。历史记录每小时最多补充评估两条，与新线索共用原有预算。
+        </p>
+        <button className="secondary" onClick={() => openQueue("market")}>
+          核实目标市场（{data?.counts.market ?? "—"}）
+        </button>
+      </section>
       <section className="panel">
         <h2>你的日常获客流程</h2>
         <p>
@@ -135,10 +342,13 @@ export function CustomerWorkspace({
     [source, setSource] = useState(""),
     [qual, setQual] = useState(""),
     [stage, setStage] = useState(""),
+    [contactFilter, setContactFilter] = useState(""),
     [queue, setQueue] = useState(bucket);
+  const [market, setMarket] = useState(defaultMarket(bucket));
   const [selected, setSelected] = useState<R | null>(null),
     [work, setWork] = useState<R>({}),
     [started, setStarted] = useState(Date.now());
+  const [research, setResearch] = useState<R | null>(null);
   const [body, setBody] = useState(""),
     [note, setNote] = useState(""),
     [error, setError] = useState(""),
@@ -164,7 +374,9 @@ export function CustomerWorkspace({
           source,
           qualification: qual,
           stage,
+          contact: contactFilter,
           bucket: queue,
+          market,
           offset: String(offset),
         }),
     );
@@ -174,16 +386,19 @@ export function CustomerWorkspace({
   }
   useEffect(() => {
     load().catch((e) => setError(e.message));
-  }, [q, source, qual, stage, queue, offset]);
+  }, [q, source, qual, stage, contactFilter, queue, market, offset]);
   useEffect(() => {
     setQueue(bucket);
+    setMarket(defaultMarket(bucket));
     setSelected(null);
+    setResearch(null);
     setOffset(0);
   }, [bucket]);
   async function open(id: number) {
     const d = await api("/workspace/leads/" + id);
     setSelected(d);
     setWork(d.work);
+    setResearch(null);
     setStarted(Date.now());
     setBody("");
     setNote("");
@@ -275,7 +490,22 @@ export function CustomerWorkspace({
               刷新列表
             </button>
           </div>
+          <MarketThreshold api={api} owner={owner} onSaved={load} />
+          <p className="muted">
+            列表优先展示已核实的邮箱/社交账号，其次为公开待核实联系方式，再展示高价值待补联系方式。低分和待评估记录仍保留，市场匹配与采购意愿分别核实。
+          </p>
           <div className="filters">
+            <select
+              aria-label="目标市场"
+              value={market}
+              onChange={(e) => {
+                setMarket(e.target.value);
+                setQueue("");
+                setOffset(0);
+              }}
+            >
+              {options(marketScopes)}
+            </select>
             <input
               aria-label="搜索需求"
               placeholder="搜索需求、项目或作者"
@@ -290,15 +520,19 @@ export function CustomerWorkspace({
               value={queue}
               onChange={(e) => {
                 setQueue(e.target.value);
+                setMarket(defaultMarket(e.target.value));
                 setOffset(0);
               }}
             >
               {options({
-                "": "全部客户",
+                "": "不限待办",
                 review: "待核实",
-                contact: "待联系",
+                research: "待补联系方式",
+                high_value: "高价值待补联系方式",
+                contact: "可联系",
                 reply: "待回复",
                 followup: "到期跟进",
+                market: "核实目标市场",
               })}
             </select>
             <select
@@ -326,6 +560,17 @@ export function CustomerWorkspace({
               {options(quals)}
             </select>
             <select
+              aria-label="联系路径筛选"
+              value={contactFilter}
+              onChange={(e) => {
+                setContactFilter(e.target.value);
+                setOffset(0);
+              }}
+            >
+              <option value="">全部联系状态</option>
+              {options(contactLabels)}
+            </select>
+            <select
               aria-label="阶段筛选"
               value={stage}
               onChange={(e) => {
@@ -350,8 +595,18 @@ export function CustomerWorkspace({
                 <h3>{l.title}</h3>
                 <p>{l.analysis.summary?.slice(0, 200)}</p>
                 <div className="tag-row">
+                  {l.high_value_no_contact && (
+                    <span className="badge">高价值 · 待补联系方式</span>
+                  )}
+                  <span className="badge">
+                    {l.market?.label || "市场待核实"}
+                    {l.market?.score != null ? ` · ${l.market.score} 分` : ""}
+                  </span>
                   <span className="badge">{quals[l.work.qualification]}</span>
                   <span className="badge">{stages[l.work.stage]}</span>
+                  <span className="badge">
+                    {contactLabels[l.contact_status]}
+                  </span>
                   <span>
                     {l.analysis.method === "ai" ? "AI 已分析" : "规则初筛"}
                   </span>
@@ -394,6 +649,7 @@ export function CustomerWorkspace({
             className="text"
             onClick={() => {
               setSelected(null);
+              setResearch(null);
               setError("");
               setNote("");
             }}
@@ -409,6 +665,21 @@ export function CustomerWorkspace({
               <p>
                 {urlLink(selected.url)} · 发布时间 {fmt(selected.published_at)}
               </p>
+              <MarketPanel
+                lead={selected}
+                owner={owner}
+                busy={busy}
+                onSave={(data) =>
+                  action(async () => {
+                    await api(
+                      "/workspace/leads/" + selected.id + "/market",
+                      data,
+                      "PUT",
+                    );
+                    await reload();
+                  }, "目标市场判断已更新")
+                }
+              />
               <p className="muted">
                 {selected.analysis.method === "ai"
                   ? "AI 需求分析"
@@ -445,6 +716,11 @@ export function CustomerWorkspace({
               >
                 分析这条需求
               </button>
+              {!selected.market?.eligible && (
+                <p className="muted">
+                  尚未达到目标市场纳入条件；可以补充公开证据或手动分析。已分析记录优先复用结果，异常调用不盲目重试。
+                </p>
+              )}
               <hr />
               <h3>判断与跟进</h3>
               <label>
@@ -519,8 +795,47 @@ export function CustomerWorkspace({
             <section className="panel">
               <h2>联系客户</h2>
               <p className="muted">
-                联系方式与客户价值分别核实。复制话术不代表已发送，系统发送仍须逐条审核。
+                {contactLabels[selected.contact_status]}
+                。联系方式与客户价值分别核实。复制话术不代表已发送，系统发送仍须逐条审核。
               </p>
+              {selected.source_key?.startsWith("github:") && (
+                <div className="contact-evidence">
+                  <button
+                    className="secondary"
+                    disabled={busy}
+                    onClick={() =>
+                      action(async () => {
+                        const d = await api(
+                          "/workspace/leads/" +
+                            selected.id +
+                            "/contact-research",
+                        );
+                        setResearch(d);
+                      }, "公开资料已加载；请人工核实后再录入")
+                    }
+                  >
+                    查 GitHub 作者公开资料
+                  </button>
+                  {research && (
+                    <div>
+                      <p>{urlLink(research.profile_url, "作者公开资料 ↗")}</p>
+                      <p>
+                        公开邮箱候选：{research.public_email || "接口未返回"}
+                      </p>
+                      <p>
+                        资料所填网站：
+                        {research.website_url
+                          ? urlLink(research.website_url, "查看网站 ↗")
+                          : "未填写"}
+                      </p>
+                      <p>资料所填单位：{research.company || "未填写"}</p>
+                      <small>
+                        以上不证明作者代表公司或同意商务联系。请查官网联系页及身份关联证据，再手工录入；不会自动添加邮箱或发送消息。
+                      </small>
+                    </div>
+                  )}
+                </div>
+              )}
               {selected.points.map((p: R) => (
                 <div className="contact-evidence" key={p.id}>
                   <strong>
@@ -579,7 +894,7 @@ export function CustomerWorkspace({
               ))}
               {!selected.points.length && !selected.email_contacts.length && (
                 <p className="muted">
-                  未找到明确的公开商务联系方式。可先查看原帖或项目；不猜测邮箱，不按昵称合并身份。
+                  未找到明确的公开商务联系方式。可先查看原帖、作者资料或官网联系页；公开讨论入口不等于允许营销，不猜测邮箱，不按昵称合并身份。
                 </p>
               )}
               <details>
@@ -829,7 +1144,8 @@ export function Metrics({ api }: { api: API }) {
                 "候选",
                 "已核实 / 有效",
                 "有效占比",
-                "有联系方式",
+                "已核实可联系",
+                "手工回复 / 联系",
                 "有效沟通",
                 "注册",
                 "首次调用",
@@ -854,7 +1170,18 @@ export function Metrics({ api }: { api: API }) {
                     ? "待标注"
                     : (c.valid_rate * 100).toFixed(0) + "%"}
                 </td>
-                <td>{c.with_contact}</td>
+                <td>
+                  {c.with_contact}{" "}
+                  <small>／候选 {c.with_candidate_contact}</small>
+                </td>
+                <td>
+                  {c.manual_replied} / {c.manual_contacted}{" "}
+                  <small>
+                    {c.manual_reply_rate === null
+                      ? "尚无联系记录"
+                      : (c.manual_reply_rate * 100).toFixed(0) + "%"}
+                  </small>
+                </td>
                 <td>{c.conversation}</td>
                 <td>{c.registered}</td>
                 <td>{c.first_call}</td>

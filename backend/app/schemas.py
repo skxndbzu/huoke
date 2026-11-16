@@ -65,6 +65,13 @@ class Feedback(Strict):
     status: str = Field(default='待核实', max_length=40)
 
 
+class MarketAssessment(Strict):
+    status: Literal['assessed', 'unknown']
+    score: int | None = Field(default=None, ge=0, le=100)
+    reason: str = Field(max_length=400)
+    evidence: list[str] = Field(max_length=3)
+
+
 class Analysis(Strict):
     summary: str = Field(max_length=1000)
     fit: Literal['high', 'medium', 'low', 'unknown']
@@ -74,3 +81,4 @@ class Analysis(Strict):
     evidence: list[str] = Field(max_length=5)
     unknowns: list[str] = Field(max_length=12)
     next_action: str = Field(max_length=400)
+    market: MarketAssessment | None = None

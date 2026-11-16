@@ -40,6 +40,10 @@ Windows：`py -3.12 -m venv .venv`，`.venv\Scripts\python -m pip install -r bac
 
 ## 恢复及限制
 
+2026-11-17 国内市场筛选发布仅新增 `lead_markets` 和 `market_policy` 表，不删除旧客户。init 创建表后，在新镜像执行 `python -m app.market`，按每批 200 条初始化历史市场待评估状态并提取原文公开联系方式；该步骤不调用模型、保留原 AI 结果和人工业务状态。已有 AI 成功分析但缺少新市场字段的记录，允许按原预算补充一次新版本分析；异常/结果未知调用不自动重试。每小时仍最多 2 条，优先有国内业务线索的记录。GitHub 原封不动的旧默认搜索词替换为国内需求关键词，用户自定义词保留。
+
+发布前核实实际容器镜像及 release，不能仅信本地 state。此次发现线上 `20261116-contact-r1` 的联系路径筛选、公开资料查看和指标代码未进入本地 Git，已从该 release 的公开源码三方合并并保留；回滚基准应为此版本而非旧 state 的 `20261110-workflow-r2`。
+
 - 容器 restart=unless-stopped，Celery worker 单进程起步，beat 单实例。
 - 发送中超过五分钟的条目进入 unknown；不自动重发。
 - 抓取运行租约 15 分钟，过期记中断，下次可恢复；已经成功处理的来源 ID 保留。

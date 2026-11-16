@@ -44,6 +44,30 @@ class Lead(Base):
     feedback: Mapped[str] = mapped_column(Text, default='')
 
 
+class LeadMarket(Base):
+    __tablename__ = 'lead_markets'
+    lead_id: Mapped[int] = mapped_column(primary_key=True)
+    status: Mapped[str] = mapped_column(default='unknown', index=True)
+    reason: Mapped[str] = mapped_column(Text, default='')
+    evidence: Mapped[list] = mapped_column(JSON, default=list)
+    manual: Mapped[bool] = mapped_column(default=False)
+    version: Mapped[int] = mapped_column(default=1)
+    rule_version: Mapped[str] = mapped_column(default='')
+    fingerprint: Mapped[str] = mapped_column(default='')
+    score: Mapped[int | None] = mapped_column(nullable=True)
+    assessment_version: Mapped[str] = mapped_column(default='')
+    ai_result: Mapped[dict] = mapped_column(JSON, default=dict)
+    profile: Mapped[dict] = mapped_column(JSON, default=dict)
+    updated_at: Mapped[str] = mapped_column(default=now)
+
+
+class MarketPolicy(Base):
+    __tablename__ = 'market_policy'
+    id: Mapped[int] = mapped_column(primary_key=True, default=1)
+    threshold: Mapped[int] = mapped_column(default=70)
+    version: Mapped[int] = mapped_column(default=1)
+
+
 class Contact(Base):
     __tablename__ = 'contacts'
     id: Mapped[int] = mapped_column(primary_key=True)

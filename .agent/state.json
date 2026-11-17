@@ -1,18 +1,18 @@
 {
-  "updated_at": "2026-11-17T00:28:27.874783+08:00",
+  "updated_at": "2026-11-17T23:49:26.469262+08:00",
   "timezone": "Asia/Shanghai",
   "phase": "phase_1_assisted_workflow_live",
-  "branch": "codex/domestic-market-20261116",
+  "branch": "codex/health-check-20261117",
   "repository": "https://github.com/skxndbzu/huoke.git",
   "deployment": {
     "host": "117.72.35.216",
     "user": "admin",
     "root": "/home/admin/huoke-staging",
     "release": "20261117-market-ai",
-    "status": "healthy_staging_public_access_verified",
+    "status": "core_healthy_v2ex_network_blocked",
     "access": "http://117.72.35.216:18080",
     "real_send_enabled": false,
-    "paused": true,
+    "paused": false,
     "production_policy": "not_confirmed",
     "image": "huoke:20261117-market-ai",
     "image_id": "sha256:47e960f85b21d3494dd87dd48096e86e87c701510ae751a3c697bcf24120ae9f",
@@ -47,9 +47,9 @@
       "second_run_item_requests": 0
     },
     "customer_messages_sent": 0,
-    "paid_model_calls": 336,
+    "paid_model_calls": 381,
     "postgres_tests_passed": 83,
-    "server_health": "healthy",
+    "server_health": "2026-11-17: public homepage/health 200; unauthenticated overview 401; operator overview/sources/leads 200; web/postgres healthy; worker pong; queue 0",
     "celery_worker": "ping pong",
     "server_source_sample": {
       "listed": 26,
@@ -86,7 +86,7 @@
       "repeat": "cooldown"
     },
     "v2ex_sample": {
-      "server": "ConnectError; domain resolves to unreachable addresses",
+      "server": "2026-11-17: ConnectError persists. System DNS returned 128.242.240.117 and timed out; both locally corroborated public DNS addresses also reset TLS from server. DNS-only repair insufficient; no TLS weakening or global network changes.",
       "local": "official python/programmer feeds HTTP 200"
     },
     "model": "gpt-6.1-sol models verified and one evidence-checked inference succeeded",
@@ -101,6 +101,26 @@
       "domestic_sample_score": 98,
       "contact_candidates": 0,
       "public_profiles_verified_this_run": 7
+    },
+    "health_check": {
+      "checked_at": "2026-11-17T23:49:26.469262+08:00",
+      "github_last_success": "2026-11-17T22:23:22+08:00",
+      "github_new_leads": 7,
+      "ai_last_success": "2026-11-17T23:22:59+08:00",
+      "ai_success_count": 377,
+      "ai_unknown_or_invalid_count": 4,
+      "lead_count": 1263,
+      "market_counts": {
+        "pending_ai": 1218,
+        "unknown": 37,
+        "below_threshold": 7,
+        "likely_cn": 1
+      },
+      "contacts": 0,
+      "messages": 0,
+      "real_send_enabled": false,
+      "paused": false,
+      "note": "Paused differs from previous snapshot; observed only, not changed by maintenance. Real-send environment switch remains disabled."
     }
   },
   "costs": {
@@ -114,9 +134,9 @@
       "owner_monthly_ceiling": 10000
     },
     "conversion_quality": "Two market assessments verified workflow only; no measured conversion or precision uplift.",
-    "runtime_ai_estimated_usd": 2.230646,
-    "runtime_ai_note": "336 cumulative calls at verification; actual supplier billing unknown. This iteration two successful calls 335/336: input 5273, output 799, estimate 0.018536 USD; repeated analysis cached.",
-    "iteration_model_estimated_usd": 0.018536
+    "runtime_ai_estimated_usd": 2.765938,
+    "runtime_ai_note": "381 cumulative calls; 377 success and 4 unknown_or_invalid. Estimated recorded usage total $2.765938; actual provider bill unknown. This health check issued no model inference.",
+    "iteration_model_estimated_usd": 0
   },
   "blockers": [
     "V2EX server collection failed: DNS/network unreachable; local official feeds readable.",

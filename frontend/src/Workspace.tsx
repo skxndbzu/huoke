@@ -672,6 +672,13 @@ export function CustomerWorkspace({
                 {selected.source} · {selected.author}
               </small>
               <h2>{selected.title}</h2>
+              {selected.capture && <div className="provider">
+                <h3>采集证据</h3>
+                <p>方式：{selected.capture.provenance === 'manual' ? '授权原文导入' : selected.capture.provenance === 'server_feed' ? '公开订阅' : '本地执行器'} · 采集时间 {fmt(selected.capture.captured_at)}</p>
+                {selected.capture.conversation && <p>采集账号：{selected.capture.account}<br/>来源会话：{selected.capture.conversation}<br/>发言者：{selected.capture.sender_label} {selected.capture.sender_id && '（平台 ID '+selected.capture.sender_id+'）'}</p>}
+                {selected.capture.platform === 'wechat' && <p>OCR 仅识别可见窗口，发布时间及发言者身份待核实，不能仅凭昵称联系或合并客户。</p>}
+                {selected.capture.platform === 'qq' && <p>平台发送者 ID 不代表已允许联系，也不保证可以私聊。请先核实原会话及联系意愿。</p>}
+              </div>}
               <p>
                 {urlLink(selected.url)} · 发布时间 {fmt(selected.published_at)}
               </p>
@@ -859,7 +866,7 @@ export function CustomerWorkspace({
                   <p>{p.evidence}</p>
                   <small>
                     {p.verified ? "所有者已核实" : "尚未核实"} ·{" "}
-                    {p.origin === "public_source" ? "公开原文提取" : "手工添加"}{" "}
+                    {p.origin === "public_source" ? "公开原文提取" : p.origin === "authorized_chat" ? "授权会话来源（联系许可未核实）" : "手工添加"}{" "}
                     · {fmt(p.collected_at)}
                   </small>
                   <p>{urlLink(p.source_url, "联系方式出处 ↗")}</p>

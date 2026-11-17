@@ -1,24 +1,25 @@
 {
-  "updated_at": "2026-11-18T01:20:20.502862+08:00",
+  "updated_at": "2026-11-18T02:10:56.242728+08:00",
   "timezone": "Asia/Shanghai",
   "phase": "phase_1_assisted_workflow_live",
-  "branch": "codex/social-channel-research-20261118",
+  "branch": "codex/social-connectors-20261118",
   "repository": "https://github.com/skxndbzu/huoke.git",
   "deployment": {
     "host": "117.72.35.216",
     "user": "admin",
     "root": "/home/admin/huoke-staging",
-    "release": "20261118-rate100",
-    "status": "healthy_staging_rate100_live_v2ex_blocked",
+    "release": "20261118-social-r2",
+    "status": "healthy_staging_social_partial",
     "access": "http://117.72.35.216:18080",
     "real_send_enabled": false,
     "paused": false,
     "production_policy": "not_confirmed",
-    "image": "huoke:20261118-rate100",
-    "image_id": "sha256:a6d4196b9fe8ec4169556e51579b4887bdfc401e84d7ce546f319891d0bf58bb",
-    "artifact_sha256": "6846cffc352eb2aa7002599b632b8f8e1df5261d04981fd30b3de75c89c7f601",
+    "image": "huoke:20261118-social-r2",
+    "image_id": "sha256:7dfd0dd823b0dc328317406b66db83fa9d170ecfa75d5df9d3368fd717ce4f71",
+    "artifact_sha256": "c3c6af7e6a9700b17a26eed216c6fe8557a7c265765d3daec23d1d2b8f6cf0ba",
     "access_note": "IP HTTP access retained by owner choice. Password account configured at explicit owner request; login verified. Public homepage/assets 200 and unauthenticated API 401 previously verified.",
-    "rollback_image": "huoke:20261118-intent-r2"
+    "rollback_image": "huoke:20261118-rate100",
+    "backup": "/home/admin/huoke-staging/backups/20261118-before-social.dump"
   },
   "automation": {
     "id": "automation",
@@ -34,11 +35,11 @@
     "requires": "Windows computer awake and Codex app running"
   },
   "verified": {
-    "local_tests_passed": 80,
+    "local_tests_passed": 54,
     "postgres_concurrency_test": "passed: 4 workers produced exactly one simulated send",
     "frontend_build": "passed",
     "npm_audit_vulnerabilities": 0,
-    "browser": "Isolated TEST ONLY: funnel, pending vs assessed, priority queue navigation/detail, 390px no overflow, no JS errors",
+    "browser": "Isolated TEST ONLY social channels: eight cards, settings save, authorized import, imported status, 390px no overflow/no JS errors",
     "local_source_sample": {
       "listed": 26,
       "filtered": 20,
@@ -48,8 +49,8 @@
     },
     "customer_messages_sent": 0,
     "paid_model_calls": 385,
-    "postgres_tests_passed": 105,
-    "server_health": "Rate100 release: web/Postgres healthy, worker pong, public health 200; automatic Celery runs observed",
+    "postgres_tests_passed": 122,
+    "server_health": "Public health 200; web/Postgres healthy, worker pong; unauthenticated social API 401; messages=0; real_send_enabled=false",
     "celery_worker": "ping pong",
     "server_source_sample": {
       "listed": 26,
@@ -57,14 +58,14 @@
       "candidates": 6
     },
     "backup_restore": "Passed: restored snapshot to isolated huoke_restore_check_20261027; 6 leads",
-    "deployed_application_manifest": "36 application/test/static files matched",
+    "deployed_application_manifest": "39 backend/test/static files matched social-r2 container",
     "server_source_second_run": {
       "listed": 26,
       "fetched": 0,
       "cache_hits": 26,
       "new_leads": 0
     },
-    "server_tests_passed": 105,
+    "server_tests_passed": 122,
     "smtp_auth_probe": {
       "status": "success",
       "host": "smtp.qq.com",
@@ -91,7 +92,7 @@
     },
     "model": "gpt-6.1-sol models verified and one evidence-checked inference succeeded",
     "owner_password_login": "Initial account provisioned at explicit owner request; actual login and logout verified. No reviewer token accessed, no message approval. Credentials not stored in repository.",
-    "local_validation": "Full suite 80 passed / 1 skipped before final contact enrichment; final targeted suite 38 passed. Final image PostgreSQL full suite 83 passed.",
+    "local_validation": "Social/discovery/rate/safety targeted: 54 passed, 1 skipped. Final backend sources match 122-pass PostgreSQL image.",
     "market_filter": {
       "threshold": 70,
       "total_leads": 1265,
@@ -197,23 +198,24 @@
       "monthly": 100,
       "owner_monthly_ceiling": 10000
     },
-    "conversion_quality": "This iteration changes throughput only. Two natural automatic calls succeeded; no demonstrated conversion or contact-coverage uplift.",
+    "conversion_quality": "80 real feed entries read, zero new candidates. No measured customer quality/contact/conversion uplift.",
     "runtime_ai_estimated_usd": 2.805264,
-    "runtime_ai_note": "Verification snapshot: 385 cumulative calls. First two natural scheduled calls after rate100 deployment (384/385) succeeded: input 5927, output 884, estimate $0.020694. Actual supplier bill and Codex development fees unknown. No extra manual paid test batch; service continues running.",
-    "iteration_model_estimated_usd": 0.020694
+    "runtime_ai_note": "This social integration triggered no model calls. Existing background analysis remains active; current supplier bill and development fees unknown. Prior cumulative estimates are historical, not this run.",
+    "iteration_model_estimated_usd": null
   },
   "blockers": [
-    "V2EX server collection failed: DNS/network unreachable; local official feeds readable.",
-    "Inbox and billing conversion events not connected; manual records available.",
-    "Website policy excludes Mainland China while target remains domestic; keep real sending disabled.",
-    "Production policy unconfirmed; HTTPS deferred by owner, IP HTTP staging retained."
+    "QQ upstream Auth Token absent; owner deferred; no purchase or bypass.",
+    "Xiaohongshu Windows helper blocked by security software; engineering compatibility work needed before login.",
+    "Linux.do 403 locally; server public-source network errors. NodeSeek/V2EX use Windows fallback while awake.",
+    "WeChat account unavailable; disabled. Douyin/Kuaishou automatic acquisition and messaging not connected.",
+    "Inbox and billing events not connected. Real sends disabled; production policy unconfirmed; IP HTTP retained per owner."
   ],
   "next_tasks": [
-    "Implement the shared local executor and QQ LLBot adapter against simulated input/output first; validate own logged-in account on selected conversations before claiming connection. Preserve explicit per-message owner approval.",
-    "Validate WeChat 4.x OCR read-only capture and stable conversation/sender identity; never run upstream auto-reply logic. Consult docs/social-channel-research-20261118.md for license/version limits.",
-    "Pilot Xiaohongshu search/read and permitted Linux.do/NodeSeek feeds; reuse existing V2EX parser via a local executor while server network is blocked.",
-    "Observe the 100/rolling-hour analysis ceiling and unchanged $5/day/$100/month budgets; public contact research remains 5/hour. Prioritize actual demand/contact quality and owner labels.",
-    "Add scheduled backups/health alerts and actual inbox/billing integrations."
+    "Improve real domestic demand coverage with filtered-sample review; measure false negatives before widening collection.",
+    "Resolve Xiaohongshu runtime compatibility without disabling security; then request normal owner login.",
+    "QQ only after owner obtains upstream authorization; validate selected group read-only and improve history recovery.",
+    "Improve local collector restart/recovery and source health visibility; preserve no-send boundary.",
+    "Integrate actual inbox/conversion events when configuration is available."
   ],
   "constraints": [
     "Never approve customer messages on behalf of owner",
@@ -249,5 +251,32 @@
     "customer_messages_sent": 0,
     "development_cost_usd": null,
     "efficiency_change": "No measured lead/contact/conversion uplift; research only"
+  },
+  "social_integration": {
+    "checked_at": "2026-11-18T02:10:56.242728+08:00",
+    "report": "docs/social-connectors.md",
+    "release": "20261118-social-r2",
+    "status": "partial_read_only",
+    "nodeseek": {
+      "listed": 20,
+      "filtered": 20,
+      "new_leads": 0,
+      "runtime": "Windows hourly loop; computer must remain awake"
+    },
+    "v2ex": {
+      "listed": 60,
+      "filtered": 60,
+      "new_leads": 0,
+      "runtime": "Windows hourly loop; server remains network-blocked"
+    },
+    "linuxdo": "Local feed 403; server ConnectError; not connected",
+    "qq": "LLBot 8.3.2 launch blocked by missing upstream Auth Token; owner has none and deferred. Account 2635184799/group 677821621 only; no login/capture.",
+    "wechat": "Disabled per owner; adapter tested with simulated backend only",
+    "xiaohongshu": "Official 2.7.4 health succeeded; login/status 500 due to Windows blocking leakless.exe; stopped, no login or AV modification",
+    "douyin_kuaishou": "Authorized manual import only; automatic collection and private messaging not connected",
+    "model_calls_triggered": 0,
+    "customer_messages_sent": 0,
+    "local_executor_startup": "Manual helper, no Windows startup task created",
+    "user_checklist": "docs/social-connectors.md"
   }
 }

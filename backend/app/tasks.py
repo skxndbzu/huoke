@@ -10,6 +10,8 @@ celery.conf.update(timezone='Asia/Shanghai', task_ignore_result=True,
     beat_schedule={'bounded-source-sync': {'task': 'source.sync', 'schedule': 3600},
                    'github-discovery': {'task': 'source.public', 'schedule': 3600, 'args': ['github']},
                    'v2ex-discovery': {'task': 'source.public', 'schedule': 3600, 'args': ['v2ex']},
+                   'nodeseek-discovery': {'task': 'source.social', 'schedule': 3600, 'args': ['nodeseek']},
+                   'linuxdo-discovery': {'task': 'source.social', 'schedule': 3600, 'args': ['linuxdo']},
                    'bounded-ai-analysis': {'task': 'source.analyze_pending', 'schedule': AUTO_ANALYSIS_INTERVAL_SECONDS,
                                           'options': {'expires': AUTO_ANALYSIS_INTERVAL_SECONDS}},
                    'public-contact-research': {'task': 'source.research_pending', 'schedule': 3600},
@@ -20,6 +22,12 @@ celery.conf.update(timezone='Asia/Shanghai', task_ignore_result=True,
 @celery.task(name='source.sync')
 def sync_source():
     return sync_hn()
+
+
+@celery.task(name='source.social')
+def sync_social_source(platform):
+    from .social import sync_social
+    return sync_social(platform)
 
 
 @celery.task(name='outbox.tick')

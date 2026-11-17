@@ -205,6 +205,19 @@ class SourcePolicy(Base):
     version: Mapped[int] = mapped_column(default=1)
 
 
+class CaptureEvidence(Base):
+    __tablename__ = 'capture_evidence'
+    lead_id: Mapped[int] = mapped_column(primary_key=True)
+    platform: Mapped[str]
+    provenance: Mapped[str]
+    account: Mapped[str] = mapped_column(default='')
+    conversation: Mapped[str] = mapped_column(default='')
+    sender_id: Mapped[str] = mapped_column(default='')
+    sender_label: Mapped[str] = mapped_column(default='')
+    identity_verified: Mapped[bool] = mapped_column(default=False)
+    captured_at: Mapped[str] = mapped_column(default=now)
+
+
 class OwnerLogin(Base):
     __tablename__ = 'owner_logins'
     id: Mapped[int] = mapped_column(primary_key=True, default=1)

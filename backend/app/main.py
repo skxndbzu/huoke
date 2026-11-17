@@ -331,10 +331,12 @@ from .workspace import register_workspace
 from .login import register_login
 from .sources import register_sources
 from .providers import register_providers
+from .social import register_social
 register_workspace(app, role, reviewer)
 register_login(app, reviewer)
 register_sources(app, role)
 register_providers(app, role, reviewer)
+register_social(app, role)
 
 static = Path(__file__).parent / 'static'
 if static.exists():

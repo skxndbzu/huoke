@@ -7,7 +7,7 @@ from fastapi import Depends, HTTPException
 from pydantic import Field, field_validator
 from sqlalchemy import select, func, exists, or_, and_, case
 from .db import (Session, Lead, LeadWorkspace, Touchpoint, ContactPoint, Contact,
-                 Control, AnalysisCall, LeadMarket, MarketPolicy, locked_control, event, now)
+                 Control, AnalysisCall, LeadMarket, MarketPolicy, CaptureEvidence, locked_control, event, now)
 from .schemas import Strict, safe_url, ContactInput
 from .market import market_view, refresh_market, market_predicate, market_state, threshold, ELIGIBLE, LABELS
 
@@ -46,7 +46,7 @@ def contact_status(s, lead):
     if s.scalar(select(ContactPoint.id).where(ContactPoint.lead_id == lead.id).limit(1)) or s.scalar(
             select(Contact.id).where(Contact.lead_id == lead.id).limit(1)):
         return 'unverified_candidate'
-    if lead.source_key.startswith(('github:', 'v2ex:', 'hn:')):
+    if lead.source_key.startswith(('github:', 'v2ex:', 'hn:', 'linuxdo:', 'nodeseek:', 'xiaohongshu:', 'douyin:', 'kuaishou:')):
         return 'public_discussion'
     return 'no_path'
 
@@ -81,7 +81,8 @@ def workspace(s, lead_id):
 def view(s, lead):
     from .prospecting import intent
     w = s.get(LeadWorkspace, lead.id)
-    return {**row(lead), 'triage': intent(lead.title, lead.text), 'market': market_view(s, lead), 'contact_status': contact_status(s, lead),
+    evidence = s.get(CaptureEvidence, lead.id)
+    return {**row(lead), 'capture': row(evidence) if evidence else None, 'triage': intent(lead.title, lead.text), 'market': market_view(s, lead), 'contact_status': contact_status(s, lead),
         'high_value_no_contact': bool(lead.analysis.get('method') == 'ai' and lead.analysis.get('fit') == 'high'
             and lead.analysis.get('priority') == 'high' and not s.scalar(select(direct_contact(lead.id)))),
         'work': row(w) if w else {

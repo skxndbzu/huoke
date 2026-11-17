@@ -1,5 +1,13 @@
 # 部署与发布
 
+## 当前发布：20261118-social-r2
+
+2026-11-18 社交只读采集版已发布到现有 staging，仍使用 `http://117.72.35.216:18080`。镜像 `huoke:20261118-social-r2`，SHA256 `7dfd0dd823b0dc328317406b66db83fa9d170ecfa75d5df9d3368fd717ce4f71`。仅新增 `capture_evidence` 表，init create_all 创建，无删除或旧列变更。发布前备份 `backups/20261118-before-social.dump`，r2 前另备份 `backups/20261118-before-social-r2.dump`，权限 600。
+
+最终后端与 122 项 PostgreSQL 测试通过的镜像源文件相同；前端构建/隔离浏览器测试通过。上线后 39 个后端/测试/静态文件 SHA256 匹配；Web/PostgreSQL 健康、worker pong、公网健康 200、未登录 API 401，消息数 0，REAL_SEND_ENABLED=false。回滚将私有环境 HUOKE_IMAGE 恢复 `huoke:20261118-rate100`，使用对应 release 的 Compose 启动并复查健康，保留新增表与数据。没有执行回滚测试。
+
+本地 NodeSeek/V2EX 补采由 `scripts/start-public-executors.ps1` 建立专用 18081 SSH 隧道并启动隐藏进程，每小时一次，需要 Windows 在线；未新增开机任务。读取失败保留状态，上传成功才推进游标；同平台 OS 锁避免重叠。辅助脚本仅读取 OPERATOR_TOKEN，不操作审核令牌。QQ 服务缺上游授权未运行，微信停用，小红书因 Windows 兼容问题停止。更多限制和恢复命令见 [social-connectors.md](social-connectors.md)。
+
 ## 已确认边界
 
 用户授权服务器使用、日常开发测试和推送 GitHub。尚未确认生产发布策略，首次只部署独立 staging。真实发送 REAL_SEND_ENABLED=false，数据库默认全局 paused=true。任何涉及权限、审核边界、计费或数据删除的生产改动需要单独确认。不得修改 bluebirdapi.com。

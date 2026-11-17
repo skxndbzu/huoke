@@ -8,6 +8,7 @@ import {
   DiscoverySources,
 } from "./Workspace";
 import { OwnerAccount, ModelSettings } from "./Settings";
+import { SocialChannels } from "./SocialChannels";
 
 type Row = Record<string, any>;
 const names: Row = {
@@ -797,6 +798,7 @@ function App() {
           )}
           {page === "渠道与任务" && (
             <>
+              <SocialChannels api={api} />
               <DiscoverySources api={api} />
               <section className="panel">
                 <div className="section-title">

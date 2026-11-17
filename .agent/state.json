@@ -1,8 +1,8 @@
 {
-  "updated_at": "2026-11-18T00:51:03.714455+08:00",
+  "updated_at": "2026-11-18T01:20:20.502862+08:00",
   "timezone": "Asia/Shanghai",
   "phase": "phase_1_assisted_workflow_live",
-  "branch": "codex/analysis-rate-100-20261118",
+  "branch": "codex/social-channel-research-20261118",
   "repository": "https://github.com/skxndbzu/huoke.git",
   "deployment": {
     "host": "117.72.35.216",
@@ -209,10 +209,10 @@
     "Production policy unconfirmed; HTTPS deferred by owner, IP HTTP staging retained."
   ],
   "next_tasks": [
-    "Observe the owner-requested 100/hour analysis ceiling, actual throughput and unchanged $5/day/$100/month spend limits; do not auto-increase budgets. The old 2/hour values in previous iteration snapshots are historical.",
-    "Prioritize a genuinely usable domestic source: a local V2EX public-feed executor is a possible fallback while server network remains blocked; it is not yet implemented.",
-    "Improve contact coverage via explicitly linked public business/contact pages with safe fetch controls; do not guess emails or scrape commit addresses.",
-    "Observe source quality and the new 5/hour public research plus 2/hour analysis; collect owner labels before expanding spend or changing thresholds.",
+    "Implement the shared local executor and QQ LLBot adapter against simulated input/output first; validate own logged-in account on selected conversations before claiming connection. Preserve explicit per-message owner approval.",
+    "Validate WeChat 4.x OCR read-only capture and stable conversation/sender identity; never run upstream auto-reply logic. Consult docs/social-channel-research-20261118.md for license/version limits.",
+    "Pilot Xiaohongshu search/read and permitted Linux.do/NodeSeek feeds; reuse existing V2EX parser via a local executor while server network is blocked.",
+    "Observe the 100/rolling-hour analysis ceiling and unchanged $5/day/$100/month budgets; public contact research remains 5/hour. Prioritize actual demand/contact quality and owner labels.",
     "Add scheduled backups/health alerts and actual inbox/billing integrations."
   ],
   "constraints": [
@@ -226,5 +226,28 @@
     "analysis_tick_seconds": 36,
     "public_research_per_hour": 5,
     "budget_change": false
+  },
+  "social_channel_research": {
+    "checked_at": "2026-11-18T01:20:20.502862+08:00",
+    "report": "docs/social-channel-research-20261118.md",
+    "evidence": "docs/channel-research-evidence-20261118.json",
+    "repos_checked": 20,
+    "status": "research_only_no_new_channels_connected",
+    "candidate_order": [
+      "QQ LLBot protocol adapter with simulated I/O and local executor",
+      "WeChat OCR read-only pilot with selected conversations; no stock auto-reply bot",
+      "Xiaohongshu read-only adapter and permitted domestic forum feeds"
+    ],
+    "unresolved": [
+      "Actual account/client compatibility, reliable sender/conversation IDs and recipient reachability untested",
+      "Lagrange current license unresolved; several other repositories restrict commercial use",
+      "Douyin/Kuaishou complete maintained acquisition/private-chat support not established"
+    ],
+    "server_health": "public health 200; web and PostgreSQL healthy; worker/beat/Redis running; image huoke:20261118-rate100; real_send_enabled=false",
+    "deployment_changed": false,
+    "model_calls_triggered": 0,
+    "customer_messages_sent": 0,
+    "development_cost_usd": null,
+    "efficiency_change": "No measured lead/contact/conversion uplift; research only"
   }
 }

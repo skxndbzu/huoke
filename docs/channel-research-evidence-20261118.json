@@ -1,0 +1,765 @@
+{
+  "checked_at": "2026-11-18T01:20:20.502862+08:00",
+  "timezone": "Asia/Shanghai",
+  "method": "GitHub REST metadata, default-branch commits, raw README and selected source/license; no third-party code executed",
+  "repository_count": 20,
+  "repositories": [
+    {
+      "repository": "NapNeko/NapCatQQ",
+      "url": "https://github.com/NapNeko/NapCatQQ",
+      "metadata_http_status": 200,
+      "archived": false,
+      "default_branch": "main",
+      "pushed_at": "2026-11-12T03:26:19Z",
+      "github_detected_license": null,
+      "recent_default_branch_commits": [
+        {
+          "sha": "105f38e3ecb1428c147e0f9165f65f854233d988",
+          "url": "https://github.com/NapNeko/NapCatQQ/commit/105f38e3ecb1428c147e0f9165f65f854233d988",
+          "committed_at": "2026-11-12T03:26:19Z",
+          "subject": "docs: ending"
+        },
+        {
+          "sha": "363a59563d713064853542053d21c7936a38dadd",
+          "url": "https://github.com/NapNeko/NapCatQQ/commit/363a59563d713064853542053d21c7936a38dadd",
+          "committed_at": "2026-11-12T02:58:53Z",
+          "subject": "Keep README only"
+        }
+      ],
+      "validation": "public_metadata_docs_and_selected_source_only; no_login_no_runtime_test"
+    },
+    {
+      "repository": "LuckyLilliaDev/LuckyLilliaBot",
+      "url": "https://github.com/LuckyLilliaDev/LuckyLilliaBot",
+      "metadata_http_status": 200,
+      "archived": false,
+      "default_branch": "main",
+      "pushed_at": "2026-11-17T14:02:01Z",
+      "github_detected_license": {
+        "key": "gpl-2.0",
+        "name": "GNU General Public License v2.0",
+        "spdx_id": "GPL-2.0",
+        "url": "https://api.github.com/licenses/gpl-2.0",
+        "node_id": "MDc6TGljZW5zZTg="
+      },
+      "recent_default_branch_commits": [
+        {
+          "sha": "de602971f850c3965a9b348e7d1f3e723eb1eba7",
+          "url": "https://github.com/LuckyLilliaDev/LuckyLilliaBot/commit/de602971f850c3965a9b348e7d1f3e723eb1eba7",
+          "committed_at": "2026-11-11T01:27:08Z",
+          "subject": "Merge pull request #883 from lihaiyang616/fix/pmhq-recv-length-header"
+        },
+        {
+          "sha": "4fa6472bb8301ab559958893098b4731cd1d5a87",
+          "url": "https://github.com/LuckyLilliaDev/LuckyLilliaBot/commit/4fa6472bb8301ab559958893098b4731cd1d5a87",
+          "committed_at": "2026-11-10T08:38:19Z",
+          "subject": "Remove server references from README"
+        },
+        {
+          "sha": "8e3848f213f8600f3f7a1ae1ef48712c57c07e8e",
+          "url": "https://github.com/LuckyLilliaDev/LuckyLilliaBot/commit/8e3848f213f8600f3f7a1ae1ef48712c57c07e8e",
+          "committed_at": "2026-11-10T08:38:00Z",
+          "subject": "Remove document link from README"
+        }
+      ],
+      "validation": "public_metadata_docs_and_selected_source_only; no_login_no_runtime_test"
+    },
+    {
+      "repository": "LagrangeDev/Lagrange.Core",
+      "url": "https://github.com/LagrangeDev/Lagrange.Core",
+      "metadata_http_status": 200,
+      "archived": false,
+      "default_branch": "master",
+      "pushed_at": "2026-11-17T03:17:46Z",
+      "github_detected_license": null,
+      "recent_default_branch_commits": [
+        {
+          "sha": "e1bd4baa16fa86ef000154e3eecb7816a29b63a7",
+          "url": "https://github.com/LagrangeDev/Lagrange.Core/commit/e1bd4baa16fa86ef000154e3eecb7816a29b63a7",
+          "committed_at": "2026-11-17T03:17:45Z",
+          "subject": "[Core] Fix a bug in the LightAppEntity Build function to support sending LightApp (#909)"
+        },
+        {
+          "sha": "aa3dfefe9c37de07fa868a152c4a9cc7d9316e0a",
+          "url": "https://github.com/LagrangeDev/Lagrange.Core/commit/aa3dfefe9c37de07fa868a152c4a9cc7d9316e0a",
+          "committed_at": "2026-11-17T03:16:29Z",
+          "subject": "[Core] Fix the issue where BinaryPacket.GrowSize enters an infinite loop and fails to return the shared buffer. (#910)"
+        },
+        {
+          "sha": "fe789c4a23796fbc82fa09e70a9c44c8a5cf2948",
+          "url": "https://github.com/LagrangeDev/Lagrange.Core/commit/fe789c4a23796fbc82fa09e70a9c44c8a5cf2948",
+          "committed_at": "2026-11-07T06:01:40Z",
+          "subject": "[Core] Fix the issue where .NET 8 does not support ToHexStringLower"
+        }
+      ],
+      "validation": "public_metadata_docs_and_selected_source_only; no_login_no_runtime_test"
+    },
+    {
+      "repository": "cluic/wxauto",
+      "url": "https://github.com/cluic/wxauto",
+      "metadata_http_status": 200,
+      "archived": false,
+      "default_branch": "main",
+      "pushed_at": "2026-04-13T00:38:09Z",
+      "github_detected_license": {
+        "key": "apache-2.0",
+        "name": "Apache License 2.0",
+        "spdx_id": "Apache-2.0",
+        "url": "https://api.github.com/licenses/apache-2.0",
+        "node_id": "MDc6TGljZW5zZTI="
+      },
+      "recent_default_branch_commits": [
+        {
+          "sha": "05e5a52379c99f401dc512acfdd811b3d701da8b",
+          "url": "https://github.com/cluic/wxauto/commit/05e5a52379c99f401dc512acfdd811b3d701da8b",
+          "committed_at": "2026-04-13T00:38:09Z",
+          "subject": "Revise README with new links and contact info"
+        },
+        {
+          "sha": "b3c763761fa0ca4f030a7b7234b89c179d51bec0",
+          "url": "https://github.com/cluic/wxauto/commit/b3c763761fa0ca4f030a7b7234b89c179d51bec0",
+          "committed_at": "2026-03-12T12:33:07Z",
+          "subject": "update"
+        },
+        {
+          "sha": "2e614b9ac395ef22429405e8e2ed44886d7cc7bd",
+          "url": "https://github.com/cluic/wxauto/commit/2e614b9ac395ef22429405e8e2ed44886d7cc7bd",
+          "committed_at": "2026-03-12T12:16:30Z",
+          "subject": "update"
+        }
+      ],
+      "validation": "public_metadata_docs_and_selected_source_only; no_login_no_runtime_test"
+    },
+    {
+      "repository": "wechatferry/wechatferry",
+      "url": "https://github.com/wechatferry/wechatferry",
+      "metadata_http_status": 200,
+      "archived": false,
+      "default_branch": "main",
+      "pushed_at": "2025-07-18T00:58:59Z",
+      "github_detected_license": {
+        "key": "mit",
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "url": "https://api.github.com/licenses/mit",
+        "node_id": "MDc6TGljZW5zZTEz"
+      },
+      "recent_default_branch_commits": [
+        {
+          "sha": "11a907ce934f798f75eb66063dc08ea299a170a0",
+          "url": "https://github.com/wechatferry/wechatferry/commit/11a907ce934f798f75eb66063dc08ea299a170a0",
+          "committed_at": "2025-07-18T00:58:58Z",
+          "subject": "Update README.md"
+        },
+        {
+          "sha": "557abd3424c6babf294613eeaf7004177f07ad4c",
+          "url": "https://github.com/wechatferry/wechatferry/commit/557abd3424c6babf294613eeaf7004177f07ad4c",
+          "committed_at": "2025-06-08T14:08:05Z",
+          "subject": "chore: add readme"
+        },
+        {
+          "sha": "d3f3ec1b786fb5894f70bfff0377cef30e4a2da8",
+          "url": "https://github.com/wechatferry/wechatferry/commit/d3f3ec1b786fb5894f70bfff0377cef30e4a2da8",
+          "committed_at": "2025-04-18T00:42:30Z",
+          "subject": "fix: selfId() is deprecated, use `currentUserId` instead (#51)"
+        }
+      ],
+      "validation": "public_metadata_docs_and_selected_source_only; no_login_no_runtime_test"
+    },
+    {
+      "repository": "wens6515/weixin-wechat-wxauto-ocr-xiaoli",
+      "url": "https://github.com/wens6515/weixin-wechat-wxauto-ocr-xiaoli",
+      "metadata_http_status": 200,
+      "archived": false,
+      "default_branch": "main",
+      "pushed_at": "2026-11-08T03:53:46Z",
+      "github_detected_license": {
+        "key": "mit",
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "url": "https://api.github.com/licenses/mit",
+        "node_id": "MDc6TGljZW5zZTEz"
+      },
+      "recent_default_branch_commits": [
+        {
+          "sha": "b30c5d29302d5db8d8efdaf27a771b6c4ad1f08c",
+          "url": "https://github.com/wens6515/weixin-wechat-wxauto-ocr-xiaoli/commit/b30c5d29302d5db8d8efdaf27a771b6c4ad1f08c",
+          "committed_at": "2026-11-08T03:47:27Z",
+          "subject": "release: v3.5.2「首启引导 · 使用文档 · 安全与日志修复」"
+        },
+        {
+          "sha": "1e57e0a3ba8906ec3aec0cde49b2b63a41f7f76e",
+          "url": "https://github.com/wens6515/weixin-wechat-wxauto-ocr-xiaoli/commit/1e57e0a3ba8906ec3aec0cde49b2b63a41f7f76e",
+          "committed_at": "2026-11-02T04:17:23Z",
+          "subject": "release: v3.5.1「主动发起修复 · 用量口径修正」——主动发起请求改 user 尾巴/发送目标会话校验/群聊标记持久化/全接收失败退避/用量只计成功调用"
+        },
+        {
+          "sha": "bed975ae77800602166e6c71111c7b666a1b49a7",
+          "url": "https://github.com/wens6515/weixin-wechat-wxauto-ocr-xiaoli/commit/bed975ae77800602166e6c71111c7b666a1b49a7",
+          "committed_at": "2026-11-01T04:18:48Z",
+          "subject": "release: v3.5.0「群聊全接收 · 主动发起 · 远程面板」——群聊三模式/主动发起/设置自动保存/图片文件发送/一键更新与诊断导出/原子写/启动优化"
+        }
+      ],
+      "validation": "public_metadata_docs_and_selected_source_only; no_login_no_runtime_test"
+    },
+    {
+      "repository": "vb2250158/RabiRoute",
+      "url": "https://github.com/vb2250158/RabiRoute",
+      "metadata_http_status": 200,
+      "archived": false,
+      "default_branch": "main",
+      "pushed_at": "2026-11-17T16:29:56Z",
+      "github_detected_license": {
+        "key": "mit",
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "url": "https://api.github.com/licenses/mit",
+        "node_id": "MDc6TGljZW5zZTEz"
+      },
+      "recent_default_branch_commits": [
+        {
+          "sha": "b90c25003d51fc642dd1b79c5ca468f4e0886384",
+          "url": "https://github.com/vb2250158/RabiRoute/commit/b90c25003d51fc642dd1b79c5ca468f4e0886384",
+          "committed_at": "2026-11-17T16:29:32Z",
+          "subject": "fix: support isolated voice startup and stable test ports"
+        },
+        {
+          "sha": "8368b11ac28a9c7f7f8397bcf2f4a301099848ea",
+          "url": "https://github.com/vb2250158/RabiRoute/commit/8368b11ac28a9c7f7f8397bcf2f4a301099848ea",
+          "committed_at": "2026-11-17T15:06:02Z",
+          "subject": "Merge origin/main and retire WorkBuddy completion polling settings"
+        },
+        {
+          "sha": "fd5c4b3f169e4e2f6ce00ed57fa7613023b70f2e",
+          "url": "https://github.com/vb2250158/RabiRoute/commit/fd5c4b3f169e4e2f6ce00ed57fa7613023b70f2e",
+          "committed_at": "2026-11-17T15:01:18Z",
+          "subject": "fix(workbuddy): deliver through the exact native session reply"
+        }
+      ],
+      "validation": "public_metadata_docs_and_selected_source_only; no_login_no_runtime_test"
+    },
+    {
+      "repository": "NanmiCoder/MediaCrawler",
+      "url": "https://github.com/NanmiCoder/MediaCrawler",
+      "metadata_http_status": 200,
+      "archived": false,
+      "default_branch": "main",
+      "pushed_at": "2026-11-17T07:19:54Z",
+      "github_detected_license": {
+        "key": "other",
+        "name": "Other",
+        "spdx_id": "NOASSERTION",
+        "url": null,
+        "node_id": "MDc6TGljZW5zZTA="
+      },
+      "recent_default_branch_commits": [
+        {
+          "sha": "09ed1ec62d885dab422a53de999f52ac0bd4966b",
+          "url": "https://github.com/NanmiCoder/MediaCrawler/commit/09ed1ec62d885dab422a53de999f52ac0bd4966b",
+          "committed_at": "2026-11-17T07:19:41Z",
+          "subject": "update README"
+        },
+        {
+          "sha": "d42048ca9e18da4d8aca7423834ac697b1df246d",
+          "url": "https://github.com/NanmiCoder/MediaCrawler/commit/d42048ca9e18da4d8aca7423834ac697b1df246d",
+          "committed_at": "2026-11-17T07:19:21Z",
+          "subject": "Merge pull request #1002 from divya0795/fix/tieba-creator-skip-failed-notes"
+        },
+        {
+          "sha": "4d629b52eddef9c53b5e9a52b76ec4a64383b494",
+          "url": "https://github.com/NanmiCoder/MediaCrawler/commit/4d629b52eddef9c53b5e9a52b76ec4a64383b494",
+          "committed_at": "2026-11-15T06:20:41Z",
+          "subject": "update README.md"
+        }
+      ],
+      "validation": "public_metadata_docs_and_selected_source_only; no_login_no_runtime_test"
+    },
+    {
+      "repository": "xpzouying/xiaohongshu-mcp",
+      "url": "https://github.com/xpzouying/xiaohongshu-mcp",
+      "metadata_http_status": 200,
+      "archived": false,
+      "default_branch": "main",
+      "pushed_at": "2026-11-16T04:43:40Z",
+      "github_detected_license": {
+        "key": "apache-2.0",
+        "name": "Apache License 2.0",
+        "spdx_id": "Apache-2.0",
+        "url": "https://api.github.com/licenses/apache-2.0",
+        "node_id": "MDc6TGljZW5zZTI="
+      },
+      "recent_default_branch_commits": [
+        {
+          "sha": "bb6fa2e208719ee634fec37881be29d3aa4699b3",
+          "url": "https://github.com/xpzouying/xiaohongshu-mcp/commit/bb6fa2e208719ee634fec37881be29d3aa4699b3",
+          "committed_at": "2026-11-10T17:43:13Z",
+          "subject": "Merge pull request #912 from xpzouying/all-contributors/add-kalivid"
+        },
+        {
+          "sha": "6ea38f383b25af0ab18273ab74fedf4ff9b325a8",
+          "url": "https://github.com/xpzouying/xiaohongshu-mcp/commit/6ea38f383b25af0ab18273ab74fedf4ff9b325a8",
+          "committed_at": "2026-11-10T17:41:38Z",
+          "subject": "docs: update .all-contributorsrc [skip ci]"
+        },
+        {
+          "sha": "91e1abef876d93c8b7a015d17a0914babb8ba281",
+          "url": "https://github.com/xpzouying/xiaohongshu-mcp/commit/91e1abef876d93c8b7a015d17a0914babb8ba281",
+          "committed_at": "2026-11-10T17:41:37Z",
+          "subject": "docs: update README_EN.md [skip ci]"
+        }
+      ],
+      "validation": "public_metadata_docs_and_selected_source_only; no_login_no_runtime_test"
+    },
+    {
+      "repository": "Johnserf-Seed/f2",
+      "url": "https://github.com/Johnserf-Seed/f2",
+      "metadata_http_status": 200,
+      "archived": false,
+      "default_branch": "v0.0.1.8-pw3",
+      "pushed_at": "2026-10-19T11:15:45Z",
+      "github_detected_license": {
+        "key": "apache-2.0",
+        "name": "Apache License 2.0",
+        "spdx_id": "Apache-2.0",
+        "url": "https://api.github.com/licenses/apache-2.0",
+        "node_id": "MDc6TGljZW5zZTI="
+      },
+      "recent_default_branch_commits": [
+        {
+          "sha": "f6be8c0ffba9a127075bbeafe4838716650b6325",
+          "url": "https://github.com/Johnserf-Seed/f2/commit/f6be8c0ffba9a127075bbeafe4838716650b6325",
+          "committed_at": "2026-10-06T03:17:35Z",
+          "subject": "chore: 更新 CHANGELOG"
+        },
+        {
+          "sha": "f3c1034f989251b4b23debb16fd50a2ce3b1584c",
+          "url": "https://github.com/Johnserf-Seed/f2/commit/f3c1034f989251b4b23debb16fd50a2ce3b1584c",
+          "committed_at": "2026-10-06T03:17:17Z",
+          "subject": "fix: Bark 通知在下载前就发出、作为库调用时也会推送，改为运行结束时发送一条结果通知"
+        },
+        {
+          "sha": "c74d60b01ef6cc9c4a87087eb400da966320c5a9",
+          "url": "https://github.com/Johnserf-Seed/f2/commit/c74d60b01ef6cc9c4a87087eb400da966320c5a9",
+          "committed_at": "2026-10-06T03:15:02Z",
+          "subject": "fix: Bark 快捷通知改写共享的参数，上一条的参数会带到下一条，并发发送时互相覆盖"
+        }
+      ],
+      "validation": "public_metadata_docs_and_selected_source_only; no_login_no_runtime_test"
+    },
+    {
+      "repository": "JoeanAmier/TikTokDownloader",
+      "url": "https://github.com/JoeanAmier/TikTokDownloader",
+      "metadata_http_status": 200,
+      "archived": false,
+      "default_branch": "master",
+      "pushed_at": "2026-11-04T01:53:34Z",
+      "github_detected_license": {
+        "key": "gpl-3.0",
+        "name": "GNU General Public License v3.0",
+        "spdx_id": "GPL-3.0",
+        "url": "https://api.github.com/licenses/gpl-3.0",
+        "node_id": "MDc6TGljZW5zZTk="
+      },
+      "recent_default_branch_commits": [
+        {
+          "sha": "f766a6eff25b76fe4d737f10c27258e4da65df7d",
+          "url": "https://github.com/JoeanAmier/TikTokDownloader/commit/f766a6eff25b76fe4d737f10c27258e4da65df7d",
+          "committed_at": "2026-11-03T05:53:00Z",
+          "subject": "build(deps): bump certifi"
+        },
+        {
+          "sha": "e327b9549d284a8b1613566f949fe2dbb8a6c2a1",
+          "url": "https://github.com/JoeanAmier/TikTokDownloader/commit/e327b9549d284a8b1613566f949fe2dbb8a6c2a1",
+          "committed_at": "2026-10-29T13:40:11Z",
+          "subject": "docs: Update README.md"
+        },
+        {
+          "sha": "473c90ff70c663cfb69310fff2b8d5192f200661",
+          "url": "https://github.com/JoeanAmier/TikTokDownloader/commit/473c90ff70c663cfb69310fff2b8d5192f200661",
+          "committed_at": "2026-09-16T12:44:45Z",
+          "subject": "docs: Update README.md"
+        }
+      ],
+      "validation": "public_metadata_docs_and_selected_source_only; no_login_no_runtime_test"
+    },
+    {
+      "repository": "DIYgod/RSSHub",
+      "url": "https://github.com/DIYgod/RSSHub",
+      "metadata_http_status": 200,
+      "archived": false,
+      "default_branch": "master",
+      "pushed_at": "2026-11-17T17:08:11Z",
+      "github_detected_license": {
+        "key": "agpl-3.0",
+        "name": "GNU Affero General Public License v3.0",
+        "spdx_id": "AGPL-3.0",
+        "url": "https://api.github.com/licenses/agpl-3.0",
+        "node_id": "MDc6TGljZW5zZTE="
+      },
+      "recent_default_branch_commits": [
+        {
+          "sha": "67eb7bc97b01ecc4478f757608dc8540da411d50",
+          "url": "https://github.com/DIYgod/RSSHub/commit/67eb7bc97b01ecc4478f757608dc8540da411d50",
+          "committed_at": "2026-11-17T17:02:14Z",
+          "subject": "fix(utils/playwright): always close browsers after an upper time limit"
+        },
+        {
+          "sha": "258742634137c2160b0d98090e8fad3cd56c2182",
+          "url": "https://github.com/DIYgod/RSSHub/commit/258742634137c2160b0d98090e8fad3cd56c2182",
+          "committed_at": "2026-11-17T17:01:10Z",
+          "subject": "fix(container): always forward requests to the RSSHub port"
+        },
+        {
+          "sha": "22524af2ab4ae0048f54b4a5603ad58f90a41f55",
+          "url": "https://github.com/DIYgod/RSSHub/commit/22524af2ab4ae0048f54b4a5603ad58f90a41f55",
+          "committed_at": "2026-11-17T17:00:31Z",
+          "subject": "fix(route): compare the whole host parameter with the allow-list"
+        }
+      ],
+      "validation": "public_metadata_docs_and_selected_source_only; no_login_no_runtime_test"
+    },
+    {
+      "repository": "discourse/discourse",
+      "url": "https://github.com/discourse/discourse",
+      "metadata_http_status": 200,
+      "archived": false,
+      "default_branch": "main",
+      "pushed_at": "2026-11-17T17:05:01Z",
+      "github_detected_license": {
+        "key": "gpl-2.0",
+        "name": "GNU General Public License v2.0",
+        "spdx_id": "GPL-2.0",
+        "url": "https://api.github.com/licenses/gpl-2.0",
+        "node_id": "MDc6TGljZW5zZTg="
+      },
+      "recent_default_branch_commits": [
+        {
+          "sha": "14091fb9dbbef9174887e1aae0648dbbbc5a198b",
+          "url": "https://github.com/discourse/discourse/commit/14091fb9dbbef9174887e1aae0648dbbbc5a198b",
+          "committed_at": "2026-11-17T16:50:26Z",
+          "subject": "UX: Tell admins to refresh after the Admin Assistant changes how the site looks (#46343)"
+        },
+        {
+          "sha": "93157cb42a069aca68fe59c9f2ff84646aa74299",
+          "url": "https://github.com/discourse/discourse/commit/93157cb42a069aca68fe59c9f2ff84646aa74299",
+          "committed_at": "2026-11-17T16:04:20Z",
+          "subject": "FIX: Open same-site event URLs in the current tab (#46144)"
+        },
+        {
+          "sha": "452a0dadea56cb3092a2fb25b2db422adf6e45d5",
+          "url": "https://github.com/discourse/discourse/commit/452a0dadea56cb3092a2fb25b2db422adf6e45d5",
+          "committed_at": "2026-11-17T15:41:51Z",
+          "subject": "SECURITY: Hide restricted tags from search (#46364)"
+        }
+      ],
+      "validation": "public_metadata_docs_and_selected_source_only; no_login_no_runtime_test"
+    },
+    {
+      "repository": "czm15053/linuxdo-idea-ui",
+      "url": "https://github.com/czm15053/linuxdo-idea-ui",
+      "metadata_http_status": 200,
+      "archived": false,
+      "default_branch": "main",
+      "pushed_at": "2026-11-17T01:44:17Z",
+      "github_detected_license": {
+        "key": "mit",
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "url": "https://api.github.com/licenses/mit",
+        "node_id": "MDc6TGljZW5zZTEz"
+      },
+      "recent_default_branch_commits": [
+        {
+          "sha": "144e995030bf25edc7fb409883ec6171009746a9",
+          "url": "https://github.com/czm15053/linuxdo-idea-ui/commit/144e995030bf25edc7fb409883ec6171009746a9",
+          "committed_at": "2026-11-17T01:44:13Z",
+          "subject": "feat(im): 聊天图片防剧透，默认模糊点击显示"
+        },
+        {
+          "sha": "494c02df55f97fad8c867cc3d08cc418a4f446c2",
+          "url": "https://github.com/czm15053/linuxdo-idea-ui/commit/494c02df55f97fad8c867cc3d08cc418a4f446c2",
+          "committed_at": "2026-11-13T06:03:56Z",
+          "subject": "refactor: 去掉分类/标签过滤，保留关键词和用户"
+        },
+        {
+          "sha": "ceb243549c2199a71429cccd743c2d4029c6cf03",
+          "url": "https://github.com/czm15053/linuxdo-idea-ui/commit/ceb243549c2199a71429cccd743c2d4029c6cf03",
+          "committed_at": "2026-11-13T05:31:57Z",
+          "subject": "feat: 话题屏蔽脚本，IM 支持分类/标签过滤"
+        }
+      ],
+      "validation": "public_metadata_docs_and_selected_source_only; no_login_no_runtime_test"
+    },
+    {
+      "repository": "tyrad/nodeseek",
+      "url": "https://github.com/tyrad/nodeseek",
+      "metadata_http_status": 200,
+      "archived": false,
+      "default_branch": "main",
+      "pushed_at": "2026-11-17T16:21:08Z",
+      "github_detected_license": {
+        "key": "mit",
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "url": "https://api.github.com/licenses/mit",
+        "node_id": "MDc6TGljZW5zZTEz"
+      },
+      "recent_default_branch_commits": [
+        {
+          "sha": "a1e7b4f97909963dbd9cd2305c18538b65a72952",
+          "url": "https://github.com/tyrad/nodeseek/commit/a1e7b4f97909963dbd9cd2305c18538b65a72952",
+          "committed_at": "2026-11-17T16:21:06Z",
+          "subject": "fix(ci): 延长 Xcode 构建配置读取超时"
+        },
+        {
+          "sha": "8bdf071c66d1dba71aa84306d9fabf4272f41080",
+          "url": "https://github.com/tyrad/nodeseek/commit/8bdf071c66d1dba71aa84306d9fabf4272f41080",
+          "committed_at": "2026-11-17T16:15:18Z",
+          "subject": "fix(ci): 写入工程发布版本并校验上传包版本"
+        },
+        {
+          "sha": "c321a714a3237675a45462d59c8a9fb13a9bc7b4",
+          "url": "https://github.com/tyrad/nodeseek/commit/c321a714a3237675a45462d59c8a9fb13a9bc7b4",
+          "committed_at": "2026-11-17T15:37:05Z",
+          "subject": "ci(release): 支持同一源码分别构建商店和测试版本"
+        }
+      ],
+      "validation": "public_metadata_docs_and_selected_source_only; no_login_no_runtime_test"
+    },
+    {
+      "repository": "coolpace/V2EX_Polish",
+      "url": "https://github.com/coolpace/V2EX_Polish",
+      "metadata_http_status": 200,
+      "archived": false,
+      "default_branch": "main",
+      "pushed_at": "2026-11-17T06:57:32Z",
+      "github_detected_license": {
+        "key": "other",
+        "name": "Other",
+        "spdx_id": "NOASSERTION",
+        "url": null,
+        "node_id": "MDc6TGljZW5zZTA="
+      },
+      "recent_default_branch_commits": [
+        {
+          "sha": "3ac9afb7cfbdefc97e1e4269c9da1a7c32bc197f",
+          "url": "https://github.com/coolpace/V2EX_Polish/commit/3ac9afb7cfbdefc97e1e4269c9da1a7c32bc197f",
+          "committed_at": "2026-11-17T06:57:28Z",
+          "subject": "chore(extension): 更新版本号至 2.5.12"
+        },
+        {
+          "sha": "83b309dd07a99cf4410cea1df943cc467cc1a3a2",
+          "url": "https://github.com/coolpace/V2EX_Polish/commit/83b309dd07a99cf4410cea1df943cc467cc1a3a2",
+          "committed_at": "2026-11-17T06:51:23Z",
+          "subject": "fix(extension): 补齐关闭楼中楼时的站内树形缩进样式隔离"
+        },
+        {
+          "sha": "95098107d4d69752766c13e64a16d5bee197db69",
+          "url": "https://github.com/coolpace/V2EX_Polish/commit/95098107d4d69752766c13e64a16d5bee197db69",
+          "committed_at": "2026-11-17T06:42:21Z",
+          "subject": "Merge pull request #165 from Mittalnew/fix/nested-reply-styles-164"
+        }
+      ],
+      "validation": "public_metadata_docs_and_selected_source_only; no_login_no_runtime_test"
+    },
+    {
+      "repository": "nonebot/nonebot2",
+      "url": "https://github.com/nonebot/nonebot2",
+      "metadata_http_status": 200,
+      "archived": false,
+      "default_branch": "master",
+      "pushed_at": "2026-11-17T11:17:59Z",
+      "github_detected_license": {
+        "key": "mit",
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "url": "https://api.github.com/licenses/mit",
+        "node_id": "MDc6TGljZW5zZTEz"
+      },
+      "recent_default_branch_commits": [
+        {
+          "sha": "a0ce84512ceaf4a45e51bc1119b8340d24506539",
+          "url": "https://github.com/nonebot/nonebot2/commit/a0ce84512ceaf4a45e51bc1119b8340d24506539",
+          "committed_at": "2026-11-17T11:17:58Z",
+          "subject": ":memo: Update changelog"
+        },
+        {
+          "sha": "93556b4ef5a4ff6bc58b8f377e88ed77b1b55c1b",
+          "url": "https://github.com/nonebot/nonebot2/commit/93556b4ef5a4ff6bc58b8f377e88ed77b1b55c1b",
+          "committed_at": "2026-11-17T11:16:51Z",
+          "subject": ":beers: publish plugin 数字论证计算器 (#4238)"
+        },
+        {
+          "sha": "2450b67a115916410d67154a8767b8e4c5aeb62f",
+          "url": "https://github.com/nonebot/nonebot2/commit/2450b67a115916410d67154a8767b8e4c5aeb62f",
+          "committed_at": "2026-11-12T08:31:38Z",
+          "subject": ":memo: Update changelog"
+        }
+      ],
+      "validation": "public_metadata_docs_and_selected_source_only; no_login_no_runtime_test"
+    },
+    {
+      "repository": "lich0821/WeChatFerry",
+      "url": "https://github.com/lich0821/WeChatFerry",
+      "metadata_http_status": 200,
+      "archived": true,
+      "default_branch": "master",
+      "pushed_at": "2026-07-10T15:38:48Z",
+      "github_detected_license": {
+        "key": "mit",
+        "name": "MIT License",
+        "spdx_id": "MIT",
+        "url": "https://api.github.com/licenses/mit",
+        "node_id": "MDc6TGljZW5zZTEz"
+      },
+      "recent_default_branch_commits": [
+        {
+          "sha": "0f5c60a034fcac234cabd000b49c9200defa7f7d",
+          "url": "https://github.com/lich0821/WeChatFerry/commit/0f5c60a034fcac234cabd000b49c9200defa7f7d",
+          "committed_at": "2026-03-21T07:45:27Z",
+          "subject": "chore: update readme"
+        },
+        {
+          "sha": "a4f00f4cb430dbb81b5c2acfb5fc4f00af671d54",
+          "url": "https://github.com/lich0821/WeChatFerry/commit/a4f00f4cb430dbb81b5c2acfb5fc4f00af671d54",
+          "committed_at": "2026-03-21T07:40:19Z",
+          "subject": "Revert \"final commit\""
+        },
+        {
+          "sha": "f0c0ce2170c2e0e9c82e70a3171997388c122b26",
+          "url": "https://github.com/lich0821/WeChatFerry/commit/f0c0ce2170c2e0e9c82e70a3171997388c122b26",
+          "committed_at": "2025-05-25T01:43:41Z",
+          "subject": "final commit"
+        },
+        {
+          "sha": "dbb7afad040e8ccfcd496b8857504e8a9e5dbd98",
+          "url": "https://github.com/lich0821/WeChatFerry/commit/dbb7afad040e8ccfcd496b8857504e8a9e5dbd98",
+          "committed_at": "2025-05-04T13:48:57Z",
+          "subject": "Merge pull request #403 from aaron7524/master"
+        },
+        {
+          "sha": "eac633434ce79c1b10e351ff3998e4f851eac7b4",
+          "url": "https://github.com/lich0821/WeChatFerry/commit/eac633434ce79c1b10e351ff3998e4f851eac7b4",
+          "committed_at": "2025-05-04T12:18:26Z",
+          "subject": "功能实现："
+        }
+      ],
+      "validation": "public_metadata_docs_and_selected_source_only; no_login_no_runtime_test"
+    },
+    {
+      "repository": "JoeanAmier/KS-Downloader",
+      "url": "https://github.com/JoeanAmier/KS-Downloader",
+      "metadata_http_status": 200,
+      "archived": false,
+      "default_branch": "master",
+      "pushed_at": "2026-10-26T04:45:15Z",
+      "github_detected_license": {
+        "key": "gpl-3.0",
+        "name": "GNU General Public License v3.0",
+        "spdx_id": "GPL-3.0",
+        "url": "https://api.github.com/licenses/gpl-3.0",
+        "node_id": "MDc6TGljZW5zZTk="
+      },
+      "recent_default_branch_commits": [
+        {
+          "sha": "b8ecf66d46358c013df1637d46d0194a42d525e3",
+          "url": "https://github.com/JoeanAmier/KS-Downloader/commit/b8ecf66d46358c013df1637d46d0194a42d525e3",
+          "committed_at": "2026-10-26T03:19:53Z",
+          "subject": "build(deps): bump anyio"
+        },
+        {
+          "sha": "7c493d1c9f6aab1ee37885909f0f5450e01f2462",
+          "url": "https://github.com/JoeanAmier/KS-Downloader/commit/7c493d1c9f6aab1ee37885909f0f5450e01f2462",
+          "committed_at": "2026-09-16T13:48:42Z",
+          "subject": "perf: 优化内置延时逻辑"
+        },
+        {
+          "sha": "bc96dd6358d7d53f992ea861ca3215da027d6ba2",
+          "url": "https://github.com/JoeanAmier/KS-Downloader/commit/bc96dd6358d7d53f992ea861ca3215da027d6ba2",
+          "committed_at": "2026-09-16T12:48:55Z",
+          "subject": "docs: Update README.md"
+        },
+        {
+          "sha": "5f35762c3e87f72e68270e1ff30c1dffccf366b6",
+          "url": "https://github.com/JoeanAmier/KS-Downloader/commit/5f35762c3e87f72e68270e1ff30c1dffccf366b6",
+          "committed_at": "2026-09-16T12:22:03Z",
+          "subject": "docs: Update Star History URL"
+        },
+        {
+          "sha": "ec0504d39945272649618070feceb8d031ddab66",
+          "url": "https://github.com/JoeanAmier/KS-Downloader/commit/ec0504d39945272649618070feceb8d031ddab66",
+          "committed_at": "2026-09-07T11:55:14Z",
+          "subject": "docs: migrate issue templates to issue forms"
+        }
+      ],
+      "validation": "public_metadata_docs_and_selected_source_only; no_login_no_runtime_test"
+    },
+    {
+      "repository": "fanyuantaier/wechatauto-replica",
+      "url": "https://github.com/fanyuantaier/wechatauto-replica",
+      "metadata_http_status": 200,
+      "archived": false,
+      "default_branch": "main",
+      "pushed_at": "2026-11-15T14:51:44Z",
+      "github_detected_license": {
+        "key": "apache-2.0",
+        "name": "Apache License 2.0",
+        "spdx_id": "Apache-2.0",
+        "url": "https://api.github.com/licenses/apache-2.0",
+        "node_id": "MDc6TGljZW5zZTI="
+      },
+      "recent_default_branch_commits": [
+        {
+          "sha": "1de41d482712dee7381fbe0f90599a226937e24d",
+          "url": "https://github.com/fanyuantaier/wechatauto-replica/commit/1de41d482712dee7381fbe0f90599a226937e24d",
+          "committed_at": "2026-11-15T14:51:44Z",
+          "subject": "Merge PR #60: 新增可配置群聊机器人示例与教程"
+        },
+        {
+          "sha": "36be5c5013fb015f315c09e20da3c2ad89416667",
+          "url": "https://github.com/fanyuantaier/wechatauto-replica/commit/36be5c5013fb015f315c09e20da3c2ad89416667",
+          "committed_at": "2026-11-15T14:46:37Z",
+          "subject": "Merge PR #59: 图片导出密钥扫描超时 + 微信预览保存（修复图片导出卡死）"
+        },
+        {
+          "sha": "03e65545ae556cd92781d3c6121fb710989c201b",
+          "url": "https://github.com/fanyuantaier/wechatauto-replica/commit/03e65545ae556cd92781d3c6121fb710989c201b",
+          "committed_at": "2026-11-15T14:46:03Z",
+          "subject": "Sync: merge PR #58 into local main"
+        },
+        {
+          "sha": "0284417166eec0943cccebd18ad7949314306abe",
+          "url": "https://github.com/fanyuantaier/wechatauto-replica/commit/0284417166eec0943cccebd18ad7949314306abe",
+          "committed_at": "2026-11-15T14:44:36Z",
+          "subject": "Merge PR #58: Windows 文档重定向后的数据库自动探测"
+        },
+        {
+          "sha": "b0de11ca04385afb9f4442914d123366a9c87f5a",
+          "url": "https://github.com/fanyuantaier/wechatauto-replica/commit/b0de11ca04385afb9f4442914d123366a9c87f5a",
+          "committed_at": "2026-11-15T14:44:00Z",
+          "subject": "test: 补 PR #59 的 FakeMD 参数与断言"
+        }
+      ],
+      "validation": "public_metadata_docs_and_selected_source_only; no_login_no_runtime_test"
+    }
+  ],
+  "extra_code_commit_evidence": {
+    "xiaohongshu-mcp": [
+      "https://github.com/xpzouying/xiaohongshu-mcp/commit/3517d63afe7ed0299559a8007060d57b1a20ae6b",
+      "https://github.com/xpzouying/xiaohongshu-mcp/commit/375f1e317540ca4b3cdbf1205ae47578049e92ee"
+    ]
+  },
+  "source_tree_observations": {
+    "Lagrange.Core": "Recursive master tree contained no LICENSE/LICENCE/COPYING path; license unresolved",
+    "RSSHub": "Recursive master tree contained discourse and v2ex routes; no nodeseek route found",
+    "LuckyLilliaBot": "Current Milky send_private_message/send_group_message handlers and private/group message_receive transformations read"
+  },
+  "license_content_overrides": {
+    "coolpace/V2EX_Polish": "LICENSE text is MIT despite API Other/NOASSERTION"
+  },
+  "deployment_changed": false,
+  "customer_messages_sent_by_this_task": 0,
+  "acquisition_model_calls_triggered_by_this_task": 0,
+  "development_cost_usd": null,
+  "actual_runtime_bill_usd": null
+}

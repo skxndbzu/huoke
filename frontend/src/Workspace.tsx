@@ -28,7 +28,7 @@ const marketScopes: R = {
 const defaultMarket = (bucket: string) =>
   bucket === "market"
     ? "unknown"
-    : ["reply", "followup"].includes(bucket)
+    : ["reply", "followup", "opportunity"].includes(bucket)
       ? "all"
       : "domestic";
 const kinds: R = {
@@ -295,11 +295,19 @@ export function Today({
         ))}
       </div>
       <section className="panel">
-        <h2>国内市场优先</h2>
+        <h2>获客进展：先看有效需求</h2>
+        <div className="stats">
+          {[["total", "收集的候选"], ["pending", "待市场分析"], ["ai_assessed", "已做市场分析"],
+            ["domestic", "达到国内阈值的需求"], ["domestic_accounts", "对应独立平台账号"], ["domestic_with_contact", "国内需求有联系方式"]].map(([key, label]) => (
+            <div key={key}><span>{label}</span><strong>{data?.acquisition?.[key] ?? "—"}</strong></div>
+          ))}
+        </div>
         <p>
-          AI
-          根据需求原文和可用公开资料评估国内目标置信分数，达到你设置的阈值后才进入默认客户池；可在客户池调整阈值。证据不足保留未知，不猜测国籍。历史记录每小时最多补充评估两条，与新线索共用原有预算。
+          待分析不是筛选失败。同一平台账号的多条需求不算多个客户。系统优先处理接口选型、服务问题和应用开发需求，每小时最多分析两条；另每小时最多补查五位作者的公开资料和个人 README，不消耗模型 Token。公开联系方式仍需你核实，普通技术任务留待人工查看。
         </p>
+        <button onClick={() => openQueue("opportunity")}>
+          查看优先调查需求（{data?.acquisition?.priority_pending ?? "—"}）
+        </button>{" "}
         <button className="secondary" onClick={() => openQueue("market")}>
           核实目标市场（{data?.counts.market ?? "—"}）
         </button>
@@ -526,6 +534,7 @@ export function CustomerWorkspace({
             >
               {options({
                 "": "不限待办",
+                opportunity: "优先调查需求",
                 review: "待核实",
                 research: "待补联系方式",
                 high_value: "高价值待补联系方式",
@@ -612,6 +621,7 @@ export function CustomerWorkspace({
                   </span>
                 </div>
                 <small>
+                  {queue === "opportunity" && `${l.triage?.reason || "待核实需求"} · `}
                   原文发布：{fmt(l.published_at)} · 跟进：
                   {fmt(l.work.next_followup)}
                 </small>
@@ -800,6 +810,11 @@ export function CustomerWorkspace({
               </p>
               {selected.source_key?.startsWith("github:") && (
                 <div className="contact-evidence">
+                  <button disabled={busy} onClick={() => action(async () => {
+                    const result = await api(`/workspace/leads/${selected.id}/public-evidence`, {}, "POST");
+                    await reload();
+                    setResearch({ notice: result.notice, profile_url: `https://github.com/${selected.author}` });
+                  }, "公开资料已检查，找到的联系方式已整理在下方；未找到时不会猜测账号")}>整理公开联系方式</button>{" "}
                   <button
                     className="secondary"
                     disabled={busy}

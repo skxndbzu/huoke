@@ -1,24 +1,24 @@
 {
-  "updated_at": "2026-11-17T23:49:26.469262+08:00",
+  "updated_at": "2026-11-18T00:24:49.324241+08:00",
   "timezone": "Asia/Shanghai",
   "phase": "phase_1_assisted_workflow_live",
-  "branch": "codex/health-check-20261117",
+  "branch": "codex/acquisition-intent-20261117",
   "repository": "https://github.com/skxndbzu/huoke.git",
   "deployment": {
     "host": "117.72.35.216",
     "user": "admin",
     "root": "/home/admin/huoke-staging",
-    "release": "20261117-market-ai",
-    "status": "core_healthy_v2ex_network_blocked",
+    "release": "20261118-intent-r2",
+    "status": "healthy_staging_intent_priority_live_v2ex_blocked",
     "access": "http://117.72.35.216:18080",
     "real_send_enabled": false,
     "paused": false,
     "production_policy": "not_confirmed",
-    "image": "huoke:20261117-market-ai",
-    "image_id": "sha256:47e960f85b21d3494dd87dd48096e86e87c701510ae751a3c697bcf24120ae9f",
-    "artifact_sha256": "9a36733a6b6a87297337b5f46f2c1939efd98e3d6e1c3d19f9395ed2a3625b88",
+    "image": "huoke:20261118-intent-r2",
+    "image_id": "sha256:87fd7a27b76ccd763665edbc7844678dad229a0c01de6f118fd1a5a3976f567b",
+    "artifact_sha256": "e10f10593e89b3a97e696d9cd593a3cef7bbbcedecc5db6c396eaf61229a8b39",
     "access_note": "IP HTTP access retained by owner choice. Password account configured at explicit owner request; login verified. Public homepage/assets 200 and unauthenticated API 401 previously verified.",
-    "rollback_image": "huoke:20261116-contact-r1"
+    "rollback_image": "huoke:20261117-market-ai"
   },
   "automation": {
     "id": "automation",
@@ -38,7 +38,7 @@
     "postgres_concurrency_test": "passed: 4 workers produced exactly one simulated send",
     "frontend_build": "passed",
     "npm_audit_vulnerabilities": 0,
-    "browser": "TEST ONLY Playwright threshold/contact priority/high-value queue/manual correction; desktop and 390px; no page errors",
+    "browser": "Isolated TEST ONLY: funnel, pending vs assessed, priority queue navigation/detail, 390px no overflow, no JS errors",
     "local_source_sample": {
       "listed": 26,
       "filtered": 20,
@@ -47,9 +47,9 @@
       "second_run_item_requests": 0
     },
     "customer_messages_sent": 0,
-    "paid_model_calls": 381,
-    "postgres_tests_passed": 83,
-    "server_health": "2026-11-17: public homepage/health 200; unauthenticated overview 401; operator overview/sources/leads 200; web/postgres healthy; worker pong; queue 0",
+    "paid_model_calls": 383,
+    "postgres_tests_passed": 100,
+    "server_health": "Final release web/Postgres healthy, worker pong, public health 200, authenticated acquisition APIs 200",
     "celery_worker": "ping pong",
     "server_source_sample": {
       "listed": 26,
@@ -57,14 +57,14 @@
       "candidates": 6
     },
     "backup_restore": "Passed: restored snapshot to isolated huoke_restore_check_20261027; 6 leads",
-    "deployed_application_manifest": "32 application/test/frontend files matched",
+    "deployed_application_manifest": "35 application/test/static files matched",
     "server_source_second_run": {
       "listed": 26,
       "fetched": 0,
       "cache_hits": 26,
       "new_leads": 0
     },
-    "server_tests_passed": 83,
+    "server_tests_passed": 100,
     "smtp_auth_probe": {
       "status": "success",
       "host": "smtp.qq.com",
@@ -94,8 +94,8 @@
     "local_validation": "Full suite 80 passed / 1 skipped before final contact enrichment; final targeted suite 38 passed. Final image PostgreSQL full suite 83 passed.",
     "market_filter": {
       "threshold": 70,
-      "total_leads": 1206,
-      "eligible": 1,
+      "total_leads": 1265,
+      "eligible": 2,
       "pending_or_unknown": 1205,
       "dmpanch": "unknown, not eligible",
       "domestic_sample_score": 98,
@@ -121,6 +121,47 @@
       "real_send_enabled": false,
       "paused": false,
       "note": "Paused differs from previous snapshot; observed only, not changed by maintenance. Real-send environment switch remains disabled."
+    },
+    "acquisition_iteration": {
+      "baseline": {
+        "total": 1263,
+        "ai_assessed": 45,
+        "domestic": 1,
+        "contact_candidates": 0
+      },
+      "after": {
+        "total": 1265,
+        "pending": 1218,
+        "ai_assessed": 47,
+        "domestic": 2,
+        "domestic_accounts": 2,
+        "contact_candidates": 0,
+        "priority_pending": 84
+      },
+      "source_sample": {
+        "listed": 14,
+        "filtered": 12,
+        "new_leads": 2,
+        "model_calls": 0,
+        "note": "One new row was a seller promotion; final rule excludes it from priority, preserves historical row."
+      },
+      "ai_pilot_ids": [
+        382,
+        383
+      ],
+      "new_target_lead": 1171,
+      "existing_target_lead": 1197,
+      "public_research": {
+        "researched": 5,
+        "public_profiles": 4,
+        "public_readmes": 0,
+        "contacts_added": 0,
+        "model_calls": 0,
+        "repeat": "cooldown"
+      },
+      "inference_limit_per_hour": 2,
+      "public_research_limit_per_hour": 5,
+      "no_real_messages": true
     }
   },
   "costs": {
@@ -133,10 +174,10 @@
       "monthly": 100,
       "owner_monthly_ceiling": 10000
     },
-    "conversion_quality": "Two market assessments verified workflow only; no measured conversion or precision uplift.",
-    "runtime_ai_estimated_usd": 2.765938,
-    "runtime_ai_note": "381 cumulative calls; 377 success and 4 unknown_or_invalid. Estimated recorded usage total $2.765938; actual provider bill unknown. This health check issued no model inference.",
-    "iteration_model_estimated_usd": 0
+    "conversion_quality": "One additional domestic target account from two pilot analyses; no new contact candidate or conversion, no statistically supported uplift claim.",
+    "runtime_ai_estimated_usd": 2.78457,
+    "runtime_ai_note": "383 cumulative calls. This iteration calls 382/383 succeeded: 5116 input, 840 output tokens, $0.018632 estimated. Actual supplier billing/development fees unknown; public research makes no inference calls.",
+    "iteration_model_estimated_usd": 0.018632
   },
   "blockers": [
     "V2EX server collection failed: DNS/network unreachable; local official feeds readable.",
@@ -145,11 +186,10 @@
     "Production policy unconfirmed; HTTPS deferred by owner, IP HTTP staging retained."
   ],
   "next_tasks": [
-    "Improve genuine business contact coverage using disclosed business sources; current eligible samples have no public email/social account.",
-    "Collect owner labels to calibrate market confidence threshold; do not claim nationality probabilities.",
-    "Observe bounded historical market reanalysis and prioritization without increasing budgets.",
-    "Investigate domestic source reachability/local executor; retain no-send policy.",
-    "Add scheduled backups, health monitoring and actual inbox/billing integrations."
+    "Prioritize a genuinely usable domestic source: a local V2EX public-feed executor is a possible fallback while server network remains blocked; it is not yet implemented.",
+    "Improve contact coverage via explicitly linked public business/contact pages with safe fetch controls; do not guess emails or scrape commit addresses.",
+    "Observe source quality and the new 5/hour public research plus 2/hour analysis; collect owner labels before expanding spend or changing thresholds.",
+    "Add scheduled backups/health alerts and actual inbox/billing integrations."
   ],
   "constraints": [
     "Never approve customer messages on behalf of owner",

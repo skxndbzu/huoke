@@ -51,3 +51,11 @@ Windows：`py -3.12 -m venv .venv`，`.venv\Scripts\python -m pip install -r bac
 - 目前尚需：自动数据库备份、正式 TLS 域名、磁盘/服务/账号告警、生产发布确认；不能宣称达到生产可靠性。
 
 2026-10-27 实测：镜像 huoke:20261027-mvp 启动并通过健康检查；Celery 可响应，真实来源任务成功。单次备份已恢复到独立 huoke_restore_check_20261027，核对 6 条客户。发布文件摘要见 .agent/state.json。后台 SSH 隧道启动曾被自动审批拦截，所有者可手动运行访问脚本。
+
+## 2026-11-18 发布补充
+
+需求优先与公开联系方式补查版本不改数据库结构、不删除历史线索、不改权限或审核规则。新增每小时 source.research_pending 任务，最多 5 个公开账号，独立于每小时最多 2 条 AI 分析；公开补查不调用模型。github_profiles 任务有数据库冷却/运行结果，README 成功和失败均缓存一天。
+
+解压离线包时注意：数据库备份使用 umask 077；源码目录和静态文件需要容器 UID 10001 可读。只将 release 内 backend/web/wheels 的目录设置 755、普通文件设置 644，不修改私有 .env、secrets 或数据库备份。发布前必须以最终非 root 镜像运行独立 huoke_test 检查，避免将仅 root 可读的代码目录上线。
+
+本轮最终发布 20261118-intent-r2，回滚基准为本轮前的 huoke:20261117-market-ai。数据库备份 /home/admin/huoke-staging/backups/20261118-before-intent.dump；无需回滚数据库。前端构建及隔离浏览器检查通过，最终镜像在独立 PostgreSQL huoke_test 中 100 项测试通过。实际发布、来源结果、费用和限制见状态摘要。

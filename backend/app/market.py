@@ -164,7 +164,10 @@ def apply_ai_market(s, lead, assessment, profile):
     record.status = 'ai_assessed'
     record.reason = assessment['reason']
     record.evidence = [{'kind':'ai_market_evidence','quote':quote,
-                        'url':lead.url if quote in lead.text else profile.get('url', lead.url)} for quote in assessment['evidence']]
+                        'url':lead.url if quote in lead.text else (
+                            profile.get('readme', {}).get('url', profile.get('url', lead.url))
+                            if quote in profile.get('readme', {}).get('text', '') else profile.get('url', lead.url))}
+                       for quote in assessment['evidence']]
     record.version += 1
     record.updated_at = now()
 

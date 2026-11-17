@@ -28,14 +28,22 @@ def save_candidate(s, lead, kind, value, source_url, evidence, origin):
 
 
 def extract_contacts(s, lead):
+    return extract_contact_text(s, lead, lead.text, lead.url, 'public_source')
+
+
+def extract_contact_text(s, lead, text, source_url, origin, public_profile=False):
     count = 0
-    for m in EMAIL.finditer(lead.text):
-        snippet = lead.text[max(0,m.start()-80):m.end()+80]
-        if BUSINESS.search(snippet):
-            count += save_candidate(s,lead,'email',m.group(0).lower(),lead.url,snippet,'public_source')
+    for m in EMAIL.finditer(text):
+        snippet = text[max(0,m.start()-80):m.end()+80]
+        explicit_profile_contact = public_profile and re.search(r'联系|邮箱|email|e-mail|mailto:|reach me|contact me', snippet, re.I)
+        if BUSINESS.search(snippet) or explicit_profile_contact:
+            count += save_candidate(s,lead,'email',m.group(0).lower(),source_url,snippet,origin)
     for kind, pattern in SOCIAL.items():
-        for m in pattern.finditer(lead.text):
-            snippet = lead.text[max(0,m.start()-60):m.end()+60]
+        for m in pattern.finditer(text):
+            snippet = text[max(0,m.start()-60):m.end()+60]
             # Explicit account labels only; group invitations and guessed identities are not contacts.
-            count += save_candidate(s,lead,kind,m.group(1),lead.url,snippet,'public_source')
+            prefix = text[max(0,m.start()-15):m.start()]
+            if re.search(r'群|group', prefix, re.I):
+                continue
+            count += save_candidate(s,lead,kind,m.group(1),source_url,snippet,origin)
     return count

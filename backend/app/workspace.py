@@ -79,8 +79,9 @@ def workspace(s, lead_id):
 
 
 def view(s, lead):
+    from .prospecting import intent
     w = s.get(LeadWorkspace, lead.id)
-    return {**row(lead), 'market': market_view(s, lead), 'contact_status': contact_status(s, lead),
+    return {**row(lead), 'triage': intent(lead.title, lead.text), 'market': market_view(s, lead), 'contact_status': contact_status(s, lead),
         'high_value_no_contact': bool(lead.analysis.get('method') == 'ai' and lead.analysis.get('fit') == 'high'
             and lead.analysis.get('priority') == 'high' and not s.scalar(select(direct_contact(lead.id)))),
         'work': row(w) if w else {
@@ -140,6 +141,17 @@ class PointInput(Strict):
 
 
 def register_workspace(app, role, reviewer):
+    @app.post('/api/workspace/leads/{lead_id}/public-evidence')
+    def public_evidence(lead_id: int, actor=Depends(role)):
+        with Session() as s:
+            if not s.get(Lead, lead_id):
+                raise HTTPException(404, '客户不存在')
+        from .profile_research import research_profile
+        profile = research_profile(lead_id)
+        return {'status': profile.get('readme', {}).get('status', profile.get('status', 'unsupported')),
+                'source_url': profile.get('readme', {}).get('url', ''), 'verified': False,
+                'notice': '仅整理作者公开披露的候选；身份、商务用途和联系许可仍需核实。'}
+
     @app.get('/api/workspace/market-policy')
     def market_policy(actor=Depends(role)):
         with Session() as s:
@@ -170,6 +182,11 @@ def register_workspace(app, role, reviewer):
             raise HTTPException(422, '联系方式筛选无效')
         with Session() as s:
             stmt = select(Lead).outerjoin(LeadWorkspace, LeadWorkspace.lead_id == Lead.id).outerjoin(LeadMarket, LeadMarket.lead_id == Lead.id)
+            research_ids = []
+            if bucket == 'opportunity':
+                from .prospecting import pending_ranked
+                research_ids = [r['id'] for r in pending_ranked(s)]
+                stmt = stmt.where(Lead.id.in_(research_ids))
             if market != 'all':
                 stmt = stmt.where(market_predicate(market, threshold(s)))
             if q:
@@ -207,7 +224,8 @@ def register_workspace(app, role, reviewer):
                 stmt = stmt.where(~candidate, ~Lead.source_key.like('github:%'), ~Lead.source_key.like('v2ex:%'), ~Lead.source_key.like('hn:%'))
             total = s.scalar(select(func.count()).select_from(stmt.subquery()))
             contact_order = case((direct_contact(Lead.id, True), 0), (direct_contact(Lead.id), 1), (high_value(), 2), else_=3)
-            items = list(s.scalars(stmt.order_by(contact_order, Lead.id.desc()).offset(offset).limit(limit)))
+            ranking = case({lead_id: i for i, lead_id in enumerate(research_ids)}, value=Lead.id, else_=len(research_ids)) if research_ids else contact_order
+            items = list(s.scalars(stmt.order_by(ranking, Lead.id.desc()).offset(offset).limit(limit)))
             return {'total': total, 'items': [view(s, l) for l in items],
                     'sources': list(s.scalars(select(Lead.source).distinct()))}
 
@@ -416,6 +434,8 @@ def register_workspace(app, role, reviewer):
             calls = list(s.scalars(select(AnalysisCall)))
             cutoff = threshold(s)
             markets = {m.lead_id: market_state(m, cutoff) for m in s.scalars(select(LeadMarket))}
+            from .prospecting import pending_ranked
+            opportunities = pending_ranked(s)
             grouped = {}
             for l, w in rows:
                 g = grouped.setdefault(l.source, {'source': l.source, 'candidates': 0, 'reviewed': 0, 'valid': 0, 'invalid': 0,
@@ -451,6 +471,15 @@ def register_workspace(app, role, reviewer):
                 g['valid_rate'] = g['valid'] / g['reviewed'] if g['reviewed'] else None
                 g['ai_cost_per_valid'] = g['estimated_ai_usd'] / g['valid'] if g['valid'] and not g['unresolved_calls'] else None
             return {'channels': list(grouped.values()),
+                'acquisition': {
+                    'total': len(rows),
+                    'pending': sum(1 for l, _ in rows if markets.get(l.id, 'pending_ai') == 'pending_ai'),
+                    'ai_assessed': s.scalar(select(func.count()).select_from(LeadMarket).where(LeadMarket.assessment_version != '')),
+                    'domestic': sum(1 for l, _ in rows if markets.get(l.id) in ELIGIBLE),
+                    'domestic_accounts': len({(l.source, l.author.lower() if l.author and l.author != '未知' else str(l.id)) for l, _ in rows if markets.get(l.id) in ELIGIBLE}),
+                    'domestic_with_contact': sum(1 for l, _ in rows if markets.get(l.id) in ELIGIBLE and l.id in direct_ids),
+                    'with_contact': len(direct_ids), 'priority_pending': len(opportunities),
+                    'note': '待分析不是筛选失败；市场分数不是成交概率，公开联系方式仍需核实。'},
                 'market_counts': {status: sum(1 for l, _ in rows if markets.get(l.id, 'pending_ai') == status) for status in LABELS},
                 'counts': {
                 'review': sum(1 for l, w in rows if markets.get(l.id) in ELIGIBLE and (not w or w.qualification == 'pending')),

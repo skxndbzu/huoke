@@ -11,7 +11,7 @@ from .contact_discovery import extract_contacts
 
 HN = 'https://hacker-news.firebaseio.com/v0'
 RULE_VERSION = 'intent-v1'
-TECH = re.compile(r'\b(llm|openai|gpt|claude|gemini|inference|model api|ai api)\b|模型.{0,4}(接口|API)|大模型', re.I)
+TECH = re.compile(r'\b(llm|openai|gpt|claude|gemini|inference|model api|ai api)\b|模型.{0,4}(接口|API)|大模型|AI\s*(?:答题|应用|客服)', re.I)
 NEED = re.compile(r'\b(need|looking for|recommend|alternative|provider|cost|pricing|integrat|building|develop|rate limit|latency)\w*|寻找|接入|开发|价格|供应商', re.I)
 
 

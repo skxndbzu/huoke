@@ -16,17 +16,18 @@ from .config import settings
 from .market import refresh_market, VERSION as MARKET_VERSION
 from .contact_discovery import extract_contacts
 
-VERSION = 'discovery-v2-cn'
+VERSION = 'discovery-v3-intent'
 OLD_GITHUB_QUERIES = ['"API" "供应商"', '"模型" "接口"', '"LLM" "provider"']
+PREVIOUS_GITHUB_QUERIES = ['"API" "供应商"', '"模型" "接口"', '"API" "中国"']
 SOURCES = {
-    'github': {'name': 'GitHub Issues', 'queries': ['"API" "供应商"', '"模型" "接口"', '"API" "中国"'],
+    'github': {'name': 'GitHub Issues', 'queries': ['"API" "哪家"', '"API" "求助"', '"中转" "API"'],
                'docs': 'https://docs.github.com/en/rest/search/search#search-issues-and-pull-requests',
-               'scope': '公开 Issue 搜索，每小时最多 3 次搜索、每次 10 条；排除 PR 和机器人，不读取私人资料。'},
+               'scope': '默认搜索近 90 天未关闭 Issue 标题中的选型、求助和中转问题；自定义词仍查近 30 天标题/正文。每小时最多 3 次搜索、每次 10 条；需求规则过滤后入库，不读取私人资料。'},
     'v2ex': {'name': 'V2EX', 'queries': ['python', 'programmer'],
              'docs': 'https://www.v2ex.com/feed/programmer.xml',
              'scope': '官方节点订阅源，每小时各读取一次；只覆盖订阅源近期帖子，不是全站搜索。'}
 }
-DEMAND = re.compile(r'供应商|推荐.{0,12}(api|接口)|寻找|接入|收费|计费|稳定|限流|延迟|预算|采购|\b(provider|pricing|cost|rate limit|latency|alternative|integrat\w*|looking for|need)\b', re.I)
+DEMAND = re.compile(r'供应商|推荐.{0,12}(api|接口)|寻找|哪家|求助|接入|收费|计费|稳定|限流|延迟|预算|采购|\b(provider|pricing|cost|rate limit|latency|alternative|integrat\w*|looking for|need)\b', re.I)
 NON_DEMAND = re.compile(r'教程|周报|日报|招聘|求职|\b(tutorial|newsletter|hiring|release notes)\b', re.I)
 BUSINESS = re.compile(r'商务|合作|业务联系|business|partnership|contact me', re.I)
 EMAIL = re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b')
@@ -38,7 +39,7 @@ def policy(s, channel):
         p = SourcePolicy(channel=channel, options={'queries': SOURCES[channel]['queries'], 'exclude': []})
         s.add(p)
         s.flush()
-    elif channel == 'github' and p.options.get('queries') == OLD_GITHUB_QUERIES:
+    elif channel == 'github' and p.options.get('queries') in (OLD_GITHUB_QUERIES, PREVIOUS_GITHUB_QUERIES):
         p.options = {**p.options, 'queries': SOURCES[channel]['queries']}
         p.version += 1
         event(s, 'domestic_default_queries', channel, version=p.version)
@@ -60,10 +61,12 @@ def read_bounded(client, url, params=None):
 def candidates(client, channel, options):
     items, incomplete = [], False
     if channel == 'github':
-        since = (datetime.now(timezone.utc) - timedelta(days=30)).date().isoformat()
+        focused = options['queries'] == SOURCES['github']['queries']
+        since = (datetime.now(timezone.utc) - timedelta(days=90 if focused else 30)).date().isoformat()
+        scope = 'title' if focused else 'title,body'
         for query in options['queries']:
             data = json.loads(read_bounded(client, 'https://api.github.com/search/issues', {
-                'q': f'{query} is:issue is:open created:>={since} in:title,body',
+                'q': f'{query} is:issue is:open created:>={since} in:{scope}',
                 'sort': 'created', 'order': 'desc', 'per_page': 10}))
             incomplete |= bool(data.get('incomplete_results'))
             for item in data.get('items', [])[:10]:
@@ -117,7 +120,7 @@ def sync_public(channel):
         s.flush()
         run_id = run.id
     stats = {'listed': 0, 'filtered': 0, 'cache_hits': 0, 'duplicates': 0, 'new_leads': 0, 'updated': 0, 'model_calls': 0, 'rule_version': VERSION,
-             'domestic_candidates': 0, 'market_pending': 0}
+             'domestic_candidates': 0, 'market_pending': 0, 'intent_filtered': 0}
     try:
         with httpx.Client(timeout=15, follow_redirects=False, headers={'User-Agent': 'HuokePilot/0.2 public-demand-reader', 'Accept': 'application/vnd.github+json' if channel == 'github' else 'application/atom+xml'}) as client:
             items, incomplete = candidates(client, channel, options)
@@ -139,6 +142,11 @@ def sync_public(channel):
                     s.add(SourceItem(key=item['key'], fingerprint=cache_digest))
                 if not TECH.search(text) or not DEMAND.search(text) or NON_DEMAND.search(title) or any(word.lower() in text.lower() for word in options.get('exclude', [])):
                     stats['filtered'] += 1
+                    continue
+                from .prospecting import intent
+                if intent(title, text)['score'] < 35:
+                    stats['filtered'] += 1
+                    stats['intent_filtered'] += 1
                     continue
                 lead = s.scalar(select(Lead).where(Lead.source_key == item['key']))
                 if not lead and s.scalar(select(Lead.id).where((Lead.fingerprint == digest) | (Lead.url == item['url']))):
@@ -174,16 +182,11 @@ def sync_public(channel):
 
 def analyze_pending():
     from .analysis import analyze, configured
+    from .prospecting import analysis_candidates
     if not configured():
         return {'status': 'not_configured', 'analyzed': 0}
     with Session() as s:
-        # Failed/unknown calls are not retried automatically; their cost needs review.
-        ids = list(s.scalars(select(Lead.id).join(LeadMarket, LeadMarket.lead_id == Lead.id)
-            .outerjoin(LeadWorkspace, LeadWorkspace.lead_id == Lead.id)
-            .where(~Lead.id.in_(select(AnalysisCall.lead_id).where(AnalysisCall.status != 'success')),
-                   func_coalesce_qualification() != 'invalid', LeadMarket.manual.is_(False),
-                   LeadMarket.assessment_version != MARKET_VERSION)
-            .order_by(case((LeadMarket.status == 'likely_cn', 0), else_=1), Lead.id.desc()).limit(2)))
+        ids = analysis_candidates(s, limit=2)
     count = 0
     for lead_id in ids:
         try:

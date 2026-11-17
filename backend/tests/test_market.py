@@ -94,7 +94,8 @@ def test_auto_ai_prioritizes_domestic_clues_but_can_assess_unknown_and_preserves
     called = []
     original = analyze
     monkeypatch.setattr('app.analysis.analyze',lambda lead_id, automatic=False: called.append((lead_id,automatic)))
-    assert analyze_pending()['analyzed'] == 2 and called == [(cn_id,True),(1,True)]
+    assert analyze_pending()['analyzed'] == 1 and called == [(cn_id,True)]
+    assert analyze_pending()['analyzed'] == 1 and called == [(cn_id,True),(1,True)]
     monkeypatch.setattr('app.analysis.public_profile',lambda _: {})
     monkeypatch.setattr('app.analysis.httpx.post',lambda *a,**k:pytest.fail('Manual decision must not consume tokens'))
     with Session.begin() as s:

@@ -50,9 +50,9 @@ def pending_ranked(s):
     return sorted(rows, key=lambda r: (r['score'] + 20 * r['domestic_clue'], r['has_contact'], r['id']), reverse=True)
 
 
-def analysis_candidates(s, limit=2):
+def analysis_candidates(s, limit=2, excluded_authors=()):
     # Avoid spending this round on several issues from the same public account.
-    chosen, authors = [], set()
+    chosen, authors = [], set(excluded_authors)
     for item in pending_ranked(s):
         identity = (item['source'], item['author'].lower())
         if identity in authors:

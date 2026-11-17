@@ -2,6 +2,7 @@ from celery import Celery
 from .config import settings
 from .pipeline import sync_hn
 from .delivery import dispatch_one
+from .sources import AUTO_ANALYSIS_INTERVAL_SECONDS
 
 celery = Celery('huoke', broker=settings().redis_url)
 celery.conf.update(timezone='Asia/Shanghai', task_ignore_result=True,
@@ -9,7 +10,8 @@ celery.conf.update(timezone='Asia/Shanghai', task_ignore_result=True,
     beat_schedule={'bounded-source-sync': {'task': 'source.sync', 'schedule': 3600},
                    'github-discovery': {'task': 'source.public', 'schedule': 3600, 'args': ['github']},
                    'v2ex-discovery': {'task': 'source.public', 'schedule': 3600, 'args': ['v2ex']},
-                   'bounded-ai-analysis': {'task': 'source.analyze_pending', 'schedule': 3600},
+                   'bounded-ai-analysis': {'task': 'source.analyze_pending', 'schedule': AUTO_ANALYSIS_INTERVAL_SECONDS,
+                                          'options': {'expires': AUTO_ANALYSIS_INTERVAL_SECONDS}},
                    'public-contact-research': {'task': 'source.research_pending', 'schedule': 3600},
                    'outbox-tick': {'task': 'outbox.tick', 'schedule': 15}},
     task_soft_time_limit=180, task_time_limit=240)

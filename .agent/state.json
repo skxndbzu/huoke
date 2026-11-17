@@ -1,24 +1,24 @@
 {
-  "updated_at": "2026-11-18T00:24:49.324241+08:00",
+  "updated_at": "2026-11-18T00:51:03.714455+08:00",
   "timezone": "Asia/Shanghai",
   "phase": "phase_1_assisted_workflow_live",
-  "branch": "codex/acquisition-intent-20261117",
+  "branch": "codex/analysis-rate-100-20261118",
   "repository": "https://github.com/skxndbzu/huoke.git",
   "deployment": {
     "host": "117.72.35.216",
     "user": "admin",
     "root": "/home/admin/huoke-staging",
-    "release": "20261118-intent-r2",
-    "status": "healthy_staging_intent_priority_live_v2ex_blocked",
+    "release": "20261118-rate100",
+    "status": "healthy_staging_rate100_live_v2ex_blocked",
     "access": "http://117.72.35.216:18080",
     "real_send_enabled": false,
     "paused": false,
     "production_policy": "not_confirmed",
-    "image": "huoke:20261118-intent-r2",
-    "image_id": "sha256:87fd7a27b76ccd763665edbc7844678dad229a0c01de6f118fd1a5a3976f567b",
-    "artifact_sha256": "e10f10593e89b3a97e696d9cd593a3cef7bbbcedecc5db6c396eaf61229a8b39",
+    "image": "huoke:20261118-rate100",
+    "image_id": "sha256:a6d4196b9fe8ec4169556e51579b4887bdfc401e84d7ce546f319891d0bf58bb",
+    "artifact_sha256": "6846cffc352eb2aa7002599b632b8f8e1df5261d04981fd30b3de75c89c7f601",
     "access_note": "IP HTTP access retained by owner choice. Password account configured at explicit owner request; login verified. Public homepage/assets 200 and unauthenticated API 401 previously verified.",
-    "rollback_image": "huoke:20261117-market-ai"
+    "rollback_image": "huoke:20261118-intent-r2"
   },
   "automation": {
     "id": "automation",
@@ -47,9 +47,9 @@
       "second_run_item_requests": 0
     },
     "customer_messages_sent": 0,
-    "paid_model_calls": 383,
-    "postgres_tests_passed": 100,
-    "server_health": "Final release web/Postgres healthy, worker pong, public health 200, authenticated acquisition APIs 200",
+    "paid_model_calls": 385,
+    "postgres_tests_passed": 105,
+    "server_health": "Rate100 release: web/Postgres healthy, worker pong, public health 200; automatic Celery runs observed",
     "celery_worker": "ping pong",
     "server_source_sample": {
       "listed": 26,
@@ -57,14 +57,14 @@
       "candidates": 6
     },
     "backup_restore": "Passed: restored snapshot to isolated huoke_restore_check_20261027; 6 leads",
-    "deployed_application_manifest": "35 application/test/static files matched",
+    "deployed_application_manifest": "36 application/test/static files matched",
     "server_source_second_run": {
       "listed": 26,
       "fetched": 0,
       "cache_hits": 26,
       "new_leads": 0
     },
-    "server_tests_passed": 100,
+    "server_tests_passed": 105,
     "smtp_auth_probe": {
       "status": "success",
       "host": "smtp.qq.com",
@@ -162,6 +162,29 @@
       "inference_limit_per_hour": 2,
       "public_research_limit_per_hour": 5,
       "no_real_messages": true
+    },
+    "rate_change": {
+      "owner_requested": 100,
+      "unit_targeted_passed": 38,
+      "postgres_final_passed": 105,
+      "frontend_build": "passed",
+      "observed_runs": [
+        {
+          "id": 649,
+          "lead_id": 846,
+          "started": "2026-11-18T00:48:55.848270+08:00",
+          "status": "success"
+        },
+        {
+          "id": 650,
+          "lead_id": 370,
+          "started": "2026-11-18T00:49:31.828331+08:00",
+          "status": "success"
+        }
+      ],
+      "observed_interval_seconds": 35.980061,
+      "verification": "Real beat/worker automatic runs, not manual triggering. 100/hour quota tested with simulated model calls, not 100 paid live tests.",
+      "real_send_enabled": false
     }
   },
   "costs": {
@@ -174,10 +197,10 @@
       "monthly": 100,
       "owner_monthly_ceiling": 10000
     },
-    "conversion_quality": "One additional domestic target account from two pilot analyses; no new contact candidate or conversion, no statistically supported uplift claim.",
-    "runtime_ai_estimated_usd": 2.78457,
-    "runtime_ai_note": "383 cumulative calls. This iteration calls 382/383 succeeded: 5116 input, 840 output tokens, $0.018632 estimated. Actual supplier billing/development fees unknown; public research makes no inference calls.",
-    "iteration_model_estimated_usd": 0.018632
+    "conversion_quality": "This iteration changes throughput only. Two natural automatic calls succeeded; no demonstrated conversion or contact-coverage uplift.",
+    "runtime_ai_estimated_usd": 2.805264,
+    "runtime_ai_note": "Verification snapshot: 385 cumulative calls. First two natural scheduled calls after rate100 deployment (384/385) succeeded: input 5927, output 884, estimate $0.020694. Actual supplier bill and Codex development fees unknown. No extra manual paid test batch; service continues running.",
+    "iteration_model_estimated_usd": 0.020694
   },
   "blockers": [
     "V2EX server collection failed: DNS/network unreachable; local official feeds readable.",
@@ -186,6 +209,7 @@
     "Production policy unconfirmed; HTTPS deferred by owner, IP HTTP staging retained."
   ],
   "next_tasks": [
+    "Observe the owner-requested 100/hour analysis ceiling, actual throughput and unchanged $5/day/$100/month spend limits; do not auto-increase budgets. The old 2/hour values in previous iteration snapshots are historical.",
     "Prioritize a genuinely usable domestic source: a local V2EX public-feed executor is a possible fallback while server network remains blocked; it is not yet implemented.",
     "Improve contact coverage via explicitly linked public business/contact pages with safe fetch controls; do not guess emails or scrape commit addresses.",
     "Observe source quality and the new 5/hour public research plus 2/hour analysis; collect owner labels before expanding spend or changing thresholds.",
@@ -196,5 +220,11 @@
     "Never modify bluebirdapi.com",
     "Preserve existing server services",
     "No spend increase without confirmation"
-  ]
+  ],
+  "runtime_limits": {
+    "automatic_analysis_per_rolling_hour": 100,
+    "analysis_tick_seconds": 36,
+    "public_research_per_hour": 5,
+    "budget_change": false
+  }
 }

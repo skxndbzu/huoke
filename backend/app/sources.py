@@ -17,6 +17,8 @@ from .market import refresh_market, VERSION as MARKET_VERSION
 from .contact_discovery import extract_contacts
 
 VERSION = 'discovery-v3-intent'
+AUTO_ANALYSIS_HOURLY_LIMIT = 100
+AUTO_ANALYSIS_INTERVAL_SECONDS = 36
 OLD_GITHUB_QUERIES = ['"API" "供应商"', '"模型" "接口"', '"LLM" "provider"']
 PREVIOUS_GITHUB_QUERIES = ['"API" "供应商"', '"模型" "接口"', '"API" "中国"']
 SOURCES = {
@@ -181,20 +183,48 @@ def sync_public(channel):
 
 
 def analyze_pending():
+    """One short task per tick; a DB lease and rolling-hour quota survive worker restarts."""
     from .analysis import analyze, configured
     from .prospecting import analysis_candidates
     if not configured():
         return {'status': 'not_configured', 'analyzed': 0}
-    with Session() as s:
-        ids = analysis_candidates(s, limit=2)
-    count = 0
-    for lead_id in ids:
-        try:
-            analyze(lead_id, automatic=True)
-            count += 1
-        except ValueError:
-            break
-    return {'analyzed': count}
+    with Session.begin() as s:
+        locked_control(s)
+        stamp = now()
+        current = datetime.fromisoformat(stamp)
+        lease_cutoff = (current - timedelta(minutes=5)).isoformat()
+        active = list(s.scalars(select(ChannelRun).where(ChannelRun.channel == 'ai_auto', ChannelRun.status == 'running')))
+        if any(r.started_at > lease_cutoff for r in active):
+            return {'status': 'already_running', 'analyzed': 0}
+        for r in active:
+            r.status, r.finished_at, r.error = 'interrupted', stamp, 'previous_run_interrupted'
+        recent = list(s.scalars(select(ChannelRun).where(ChannelRun.channel == 'ai_auto',
+                            ChannelRun.started_at > (current - timedelta(hours=1)).isoformat())))
+        if len(recent) >= AUTO_ANALYSIS_HOURLY_LIMIT:
+            return {'status': 'hourly_limit', 'analyzed': 0}
+        authors = {(r.stats.get('source'), r.stats.get('author')) for r in recent if r.stats.get('author')}
+        ids = analysis_candidates(s, limit=1, excluded_authors=authors)
+        if not ids:
+            return {'status': 'no_candidates', 'analyzed': 0}
+        lead = s.get(Lead, ids[0])
+        stats = {'lead_id': lead.id, 'source': lead.source, 'author': lead.author.lower(), 'analyzed': 0,
+                 'hourly_limit': AUTO_ANALYSIS_HOURLY_LIMIT}
+        run = ChannelRun(channel='ai_auto', started_at=stamp, stats=stats)
+        s.add(run);s.flush()
+        run_id, lead_id = run.id, lead.id
+    status, error = 'success', ''
+    try:
+        analyze(lead_id, automatic=True)
+        stats['analyzed'] = 1
+    except ValueError as exc:
+        # Existing analysis code retains failed/unknown calls and budget reservations.
+        status, error = ('budget_blocked', 'budget_limit') if str(exc) == '预算上限阻止调用' else ('failed', 'analysis_guard_or_validation')
+    except Exception as exc:
+        status, error = 'failed', type(exc).__name__
+    with Session.begin() as s:
+        run = s.get(ChannelRun, run_id)
+        run.status, run.finished_at, run.error, run.stats = status, now(), error, stats
+    return {'status': status, 'analyzed': stats['analyzed'], 'lead_id': lead_id}
 
 
 def func_coalesce_qualification():

@@ -28,7 +28,7 @@ Windows：`py -3.12 -m venv .venv`，`.venv\Scripts\python -m pip install -r bac
 
 模型密钥：服务器私有目录 `/home/admin/huoke-staging/secrets`，属主容器 UID 10001、目录 700、文件 600；通过 `HUOKE_SECRETS_DIR` 挂载到 web/worker 的 `/app/secrets`。Web 必须可写以支持所有者在页面替换密钥；部署不将密钥打入镜像。备份时需一并备份私有目录，不能只备份数据库。CLI `python -m app.configure_provider` 从 stdin 接受 JSON，输出配置 ID 与验证状态，不输出输入或密钥；不得将密钥作为命令行参数。模型列表验证不消耗推理 Token，推理验证另记实际用量。配置的价格仅用于估算服务费用。
 
-服务器 Celery beat 每小时执行 GitHub 与 V2EX 采集、每小时最多 2 条新候选分析。所有公开采集通过数据库冷却时间限制重复执行；HTTP 失败不会立即重试。无需本地电脑常开。模型缺失时返回 not_configured，未知费用保留预占；既有失败分析不自动重试。
+服务器 Celery beat 每小时执行 GitHub 与 V2EX 采集；自动分析按所有者 2026-11-18 要求，每 36 秒调度一条、滚动一小时最多 100 条（见文末当前策略）。所有公开采集通过数据库冷却时间限制重复执行；HTTP 失败不会立即重试。无需本地电脑常开。模型缺失时返回 not_configured，未知费用保留预占；既有失败分析不自动重试。
 
 运行 `scripts/open-workbench.ps1` 建立 SSH 隧道。脚本由用户主动运行时可复制审核令牌到剪贴板用于登录；开发维护任务不得用它代替所有者批准。
 
@@ -59,3 +59,11 @@ Windows：`py -3.12 -m venv .venv`，`.venv\Scripts\python -m pip install -r bac
 解压离线包时注意：数据库备份使用 umask 077；源码目录和静态文件需要容器 UID 10001 可读。只将 release 内 backend/web/wheels 的目录设置 755、普通文件设置 644，不修改私有 .env、secrets 或数据库备份。发布前必须以最终非 root 镜像运行独立 huoke_test 检查，避免将仅 root 可读的代码目录上线。
 
 本轮最终发布 20261118-intent-r2，回滚基准为本轮前的 huoke:20261117-market-ai。数据库备份 /home/admin/huoke-staging/backups/20261118-before-intent.dump；无需回滚数据库。前端构建及隔离浏览器检查通过，最终镜像在独立 PostgreSQL huoke_test 中 100 项测试通过。实际发布、来源结果、费用和限制见状态摘要。
+
+## 2026-11-18 当前自动分析速率（所有者明确要求）
+
+自动分析上限从 2 条/小时调整为 **滚动一小时最多 100 条**。Celery beat 每 36 秒投递一个单条分析任务；积压超过 36 秒未开始的调度任务过期，避免恢复后突发堆积。单个任务保留原 180 秒软超时/240 秒硬超时，不使用一次长循环处理 100 条。
+
+数据库 ChannelRun 的 ai_auto 记录负责小时额度和运行租约，跨 worker 重启有效；运行租约 5 分钟，到期标记 interrupted，再按既有 AnalysisCall 状态选择可安全处理的新候选。滚动一小时优先不同作者；失败/结果未知调用仍排除自动重试。预算保护未变：单次 $1、每日 $5、每月 $100。100 是速率上限，不保证候选不足、模型响应慢或预算耗尽时仍达到 100。真实发送保持关闭。
+
+本次发布 20261118-rate100，无数据库结构变更；回滚镜像 huoke:20261118-intent-r2，发布前备份 backups/20261118-before-rate100.dump。最终镜像在独立 PostgreSQL huoke_test 中 105 项测试通过，包括 100 次上限、第 101 次阻止、滚动窗口恢复、重叠任务、过期租约和预算保护。前端已同步显示 100 条/小时及预算约束。

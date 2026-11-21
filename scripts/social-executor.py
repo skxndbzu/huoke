@@ -12,7 +12,7 @@ from urllib.parse import urlparse
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'backend'))
 import httpx
-from app.social_adapters import feed_items, qq_items, xhs_items, wechat_items, AdapterError
+from app.social_adapters import FEEDS, feed_items, qq_items, xhs_items, wechat_items, AdapterError
 
 
 def private_url(value):
@@ -68,7 +68,7 @@ def main():
     bridge_headers = {'Authorization': 'Bearer ' + bridge_token} if bridge_token else {}
     backend = None
     with httpx.Client(base_url=server, headers={'Authorization': 'Bearer ' + token}, timeout=30, follow_redirects=False, trust_env=False) as api, \
-            httpx.Client(timeout=45, headers=bridge_headers, follow_redirects=False, trust_env=False) as reader:
+            httpx.Client(timeout=45, headers=bridge_headers, follow_redirects=False, trust_env=args.platform in FEEDS) as reader:
         while True:
             config = None
             try:

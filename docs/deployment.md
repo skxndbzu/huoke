@@ -1,6 +1,14 @@
 # 部署与发布
 
-## 当前发布：20261118-social-r2
+## 当前发布 `20261121-gitee-r1`
+
+Gitee 公开 Issue 搜索已加入 `huoke-staging` 的现有 Celery beat，每小时最多一轮。线上已通过运维接口启用并由 worker 成功执行。无数据库结构变更。备份为 `/home/admin/huoke-staging/backups/20261121-before-gitee.dump`，回滚镜像 `huoke:20261118-social-r2`。执行回滚后复查健康和真实发送开关，保留新增渠道配置与数据。
+
+123 项隔离 PostgreSQL 测试、前端构建与 390px 浏览器验证通过。线上 39 个应用、测试和静态文件摘要匹配，Web/PostgreSQL 健康，Celery worker 正常响应，未认证接口返回 401，真实发送关闭。
+
+本地 NodeSeek 和 V2EX 进程已用更新的执行器恢复补采。仅公开订阅读取采用 Windows 当前的代理配置。私有桥接接口和工作台 SSH 隧道继续直连。电脑休眠或进程停止后，可使用 `scripts/start-public-executors.ps1` 恢复。
+
+## 上次发布 `20261118-social-r2`
 
 2026-11-18 社交只读采集版已发布到现有 staging，仍使用 `http://117.72.35.216:18080`。镜像 `huoke:20261118-social-r2`，SHA256 `7dfd0dd823b0dc328317406b66db83fa9d170ecfa75d5df9d3368fd717ce4f71`。仅新增 `capture_evidence` 表，init create_all 创建，无删除或旧列变更。发布前备份 `backups/20261118-before-social.dump`，r2 前另备份 `backups/20261118-before-social-r2.dump`，权限 600。
 

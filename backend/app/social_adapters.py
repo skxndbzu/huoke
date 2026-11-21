@@ -1,5 +1,6 @@
 """Read-only transports. No publisher, sender, friend-adding or login bypass methods."""
 import hashlib
+import json
 import re
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
@@ -10,6 +11,9 @@ from pydantic import Field, field_validator
 from .schemas import Strict
 
 CATALOG = {
+    'gitee': {'name': 'Gitee Issues', 'adapter': 'Gitee OpenAPI v5', 'mode': 'search',
+              'repo': 'https://gitee.com/api/v5/swagger',
+              'description': '通过官方接口搜索公开且未关闭的 Issue。每小时最多三组词，每组最多 12 条。'},
     'qq': {'name': 'QQ', 'adapter': 'LLBot / Milky', 'mode': 'executor', 'repo': 'https://github.com/LuckyLilliaDev/LuckyLilliaBot',
            'description': '只读同步指定私聊/群聊的近期文本；需要已登录的 LLBot 和明确的会话 ID。陌生群成员不保证可私聊。'},
     'wechat': {'name': '微信', 'adapter': '小栗 visual backend', 'mode': 'executor', 'repo': 'https://github.com/wens6515/weixin-wechat-wxauto-ocr-xiaoli',
@@ -29,7 +33,7 @@ CATALOG = {
 }
 FEEDS = {'linuxdo': ['https://linux.do/latest.rss'], 'nodeseek': ['https://rss.nodeseek.com/'],
          'v2ex': ['https://www.v2ex.com/feed/python.xml', 'https://www.v2ex.com/feed/programmer.xml']}
-HOSTS = {'linuxdo': {'linux.do'}, 'nodeseek': {'www.nodeseek.com', 'nodeseek.com'},
+HOSTS = {'gitee': {'gitee.com'}, 'linuxdo': {'linux.do'}, 'nodeseek': {'www.nodeseek.com', 'nodeseek.com'},
          'v2ex': {'www.v2ex.com', 'v2ex.com'}, 'xiaohongshu': {'www.xiaohongshu.com', 'xiaohongshu.com'},
          'douyin': {'www.douyin.com', 'douyin.com'}, 'kuaishou': {'www.kuaishou.com', 'kuaishou.com', 'www.kuaishou.cn'}}
 
@@ -73,7 +77,6 @@ def read(client, method, url, **kwargs):
 
 
 def json_read(client, method, url, **kwargs):
-    import json
     data = json.loads(read(client, method, url, **kwargs))
     if not isinstance(data, dict):
         raise AdapterError('invalid_response')
@@ -102,6 +105,43 @@ def validate_url(platform, url):
     if p.query:
         raise ValueError('请移除原文链接中的查询参数，不保存会话或安全令牌')
     return url
+
+
+def gitee_issue_url(url):
+    if not isinstance(url, str):
+        raise ValueError('Gitee 需要公开 Issue 的原文链接')
+    path = urlparse(validate_url('gitee', url)).path.rstrip('/')
+    if not re.fullmatch(r'/[\w.-]+/[\w.-]+/issues/[A-Za-z0-9]+', path):
+        raise ValueError('Gitee 需要公开 Issue 的原文链接')
+    return 'https://gitee.com' + path
+
+
+def gitee_items(client, queries):
+    items = {}
+    for query in queries[:3]:
+        data = json.loads(read(client, 'GET', 'https://gitee.com/api/v5/search/issues',
+                               params={'q': query, 'state': 'open', 'per_page': 12}))
+        if not isinstance(data, list):
+            raise AdapterError('invalid_response')
+        for issue in data[:12]:
+            if not isinstance(issue, dict) or issue.get('state') != 'open':
+                continue
+            try:
+                url = gitee_issue_url(issue.get('html_url') or '')
+            except ValueError:
+                continue
+            title = issue.get('title') or ''
+            body = issue.get('body') or title
+            created_at = issue.get('created_at')
+            stamp = iso(created_at) if isinstance(created_at, str) else ''
+            if not stamp or not isinstance(title, str) or not isinstance(body, str) or not body.strip():
+                continue
+            user = issue.get('user')
+            author = user.get('login') if isinstance(user, dict) else None
+            items[url] = Capture(event_id=hashlib.sha256(url.encode()).hexdigest(), url=url,
+                                 title=title[:500], text=body[:12000], published_at=stamp,
+                                 author=author[:200] if isinstance(author, str) and author else '未知')
+    return list(items.values())
 
 
 def feed_items(platform, client):

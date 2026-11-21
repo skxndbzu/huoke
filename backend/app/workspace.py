@@ -9,6 +9,7 @@ from sqlalchemy import select, func, exists, or_, and_, case
 from .db import (Session, Lead, LeadWorkspace, Touchpoint, ContactPoint, Contact,
                  Control, AnalysisCall, LeadMarket, MarketPolicy, CaptureEvidence, locked_control, event, now)
 from .schemas import Strict, safe_url, ContactInput
+from .social_adapters import HOSTS
 from .market import market_view, refresh_market, market_predicate, market_state, threshold, ELIGIBLE, LABELS
 
 STAGES = {'new': '待联系', 'contacted': '已联系', 'conversation': '沟通中',
@@ -17,6 +18,7 @@ STAGES = {'new': '待联系', 'contacted': '已联系', 'conversation': '沟通�
 QUALIFICATIONS = {'pending': '待核实', 'valid': '有效需求', 'invalid': '不匹配'}
 GITHUB_LOGIN = re.compile(r'[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?\Z')
 CONTACT_KINDS = ('email', 'wechat', 'qq', 'url')
+PUBLIC_DISCUSSION_PREFIXES = ('github:', 'hn:', *(platform + ':' for platform in HOSTS))
 
 
 def direct_contact(lead_id, verified=False):
@@ -46,7 +48,7 @@ def contact_status(s, lead):
     if s.scalar(select(ContactPoint.id).where(ContactPoint.lead_id == lead.id).limit(1)) or s.scalar(
             select(Contact.id).where(Contact.lead_id == lead.id).limit(1)):
         return 'unverified_candidate'
-    if lead.source_key.startswith(('github:', 'v2ex:', 'hn:', 'linuxdo:', 'nodeseek:', 'xiaohongshu:', 'douyin:', 'kuaishou:')):
+    if lead.source_key.startswith(PUBLIC_DISCUSSION_PREFIXES):
         return 'public_discussion'
     return 'no_path'
 
@@ -220,9 +222,9 @@ def register_workspace(app, role, reviewer):
             elif contact == 'unverified_candidate':
                 stmt = stmt.where(~verified_path(Lead.id), candidate)
             elif contact == 'public_discussion':
-                stmt = stmt.where(~candidate, Lead.source_key.like('github:%') | Lead.source_key.like('v2ex:%') | Lead.source_key.like('hn:%'))
+                stmt = stmt.where(~candidate, or_(*(Lead.source_key.startswith(prefix) for prefix in PUBLIC_DISCUSSION_PREFIXES)))
             elif contact == 'no_path':
-                stmt = stmt.where(~candidate, ~Lead.source_key.like('github:%'), ~Lead.source_key.like('v2ex:%'), ~Lead.source_key.like('hn:%'))
+                stmt = stmt.where(~candidate, *(~Lead.source_key.startswith(prefix) for prefix in PUBLIC_DISCUSSION_PREFIXES))
             total = s.scalar(select(func.count()).select_from(stmt.subquery()))
             contact_order = case((direct_contact(Lead.id, True), 0), (direct_contact(Lead.id), 1), (high_value(), 2), else_=3)
             ranking = case({lead_id: i for i, lead_id in enumerate(research_ids)}, value=Lead.id, else_=len(research_ids)) if research_ids else contact_order

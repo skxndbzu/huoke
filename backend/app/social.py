@@ -14,18 +14,21 @@ from .pipeline import clean, classify, fingerprint
 from .prospecting import intent
 from .market import refresh_market
 from .contact_discovery import extract_contacts, save_candidate
-from .social_adapters import CATALOG, Capture, feed_items, validate_url
+from .social_adapters import CATALOG, Capture, feed_items, gitee_items, gitee_issue_url, validate_url
 from .config import settings
 
 VERSION = 'social-capture-v1'
 DEFAULT_QUERIES = ['API', '模型', '中转']
+GITEE_QUERIES = ['大模型 API', '中转站', 'DeepSeek API']
+SERVER_MODES = {'feed', 'search'}
 
 
 def get_policy(s, platform):
     p = s.get(SourcePolicy, 'social:' + platform)
     if not p:
         p = SourcePolicy(channel='social:' + platform, enabled=False, options={
-            'queries': DEFAULT_QUERIES, 'exclude': [], 'account': '', 'conversations': []})
+            'queries': GITEE_QUERIES if platform == 'gitee' else DEFAULT_QUERIES,
+            'exclude': [], 'account': '', 'conversations': []})
         s.add(p)
         s.flush()
     return p
@@ -66,6 +69,8 @@ def validate_capture(platform, item, options):
             raise ValueError('OCR 不提供已核实的平台身份')
     else:
         validate_url(platform, item.url)
+        if platform == 'gitee':
+            gitee_issue_url(item.url)
         if item.account or item.conversation or item.identity_verified:
             raise ValueError('公开内容不能声明登录账号或已核实联系人')
     if item.published_at and datetime.fromisoformat(item.published_at) > datetime.now(timezone.utc) + timedelta(minutes=5):
@@ -76,12 +81,15 @@ def ingest(s, platform, items, options, provenance):
     stats = {'listed': len(items), 'filtered': 0, 'cache_hits': 0, 'new_leads': 0, 'updated': 0,
              'model_calls': 0, 'capture_mode': provenance, 'rule_version': VERSION,
              'filter_reasons': {}, 'filtered_samples': []}
+    queries = [word.casefold().split() if platform == 'gitee' else [word.casefold()] for word in options['queries']]
+    excluded = [word.casefold() for word in options['exclude']]
     for item in items:
         validate_capture(platform, item, options)
     for item in items:
         title = clean(item.title or item.text.split('\n')[0])[:250]
         text = clean(item.text)
-        event_id = fingerprint(item.url) if provenance == 'manual' else item.event_id
+        url = gitee_issue_url(item.url) if platform == 'gitee' else item.url
+        event_id = fingerprint(url) if platform == 'gitee' or provenance == 'manual' else item.event_id
         if platform == 'v2ex':
             match = re.fullmatch(r'https://(?:www\.)?v2ex.com/t/(\d+)(?:#.*)?', item.url)
             if not match:
@@ -100,15 +108,16 @@ def ingest(s, platform, items, options, provenance):
         else:
             s.add(SourceItem(key=key, fingerprint=cached_digest))
         s.flush()  # intra-batch duplicates see the same key, even with disabled autoflush
+        content = (title + '\n' + text).casefold()
         reason = ('older_than_90_days' if item.published_at and datetime.fromisoformat(item.published_at) < datetime.now(timezone.utc) - timedelta(days=90)
-                  else 'excluded_keyword' if any(x.lower() in (title + '\n' + text).lower() for x in options['exclude'])
-                  else 'no_keyword' if not any(x.lower() in (title + '\n' + text).lower() for x in options['queries'])
+                  else 'excluded_keyword' if any(word in content for word in excluded)
+                  else 'no_keyword' if not any(all(word in content for word in query) for query in queries)
                   else 'no_demand_evidence' if intent(title, text)['score'] < 35 else '')
         if reason:
             stats['filtered'] += 1
             stats['filter_reasons'][reason] = stats['filter_reasons'].get(reason, 0) + 1
             if len(stats['filtered_samples']) < 5:
-                stats['filtered_samples'].append({'title': title[:160], 'url': item.url, 'reason': reason})
+                stats['filtered_samples'].append({'title': title[:160], 'url': url, 'reason': reason})
             continue
         lead = s.scalar(select(Lead).where(Lead.source_key == key))
         # Unknown OCR labels never become a cross-conversation identity.
@@ -125,7 +134,7 @@ def ingest(s, platform, items, options, provenance):
             stats['updated'] += 1
         else:
             lead = Lead(source='V2EX' if platform == 'v2ex' else CATALOG[platform]['name'], source_key=key,
-                        url=item.url, author=author[:200], title=title, text=text, fingerprint=digest,
+                        url=url, author=author[:200], title=title, text=text, fingerprint=digest,
                         published_at=item.published_at, analysis=analysis)
             s.add(lead)
             s.flush()
@@ -156,7 +165,7 @@ def status_error(exc):
 
 
 def sync_social(platform):
-    if platform not in CATALOG or CATALOG[platform]['mode'] != 'feed':
+    if platform not in CATALOG or CATALOG[platform]['mode'] not in SERVER_MODES:
         return {'status': 'executor_required'}
     with Session.begin() as s:
         locked_control(s)
@@ -171,17 +180,18 @@ def sync_social(platform):
         run = ChannelRun(channel=p.channel)
         s.add(run)
         s.flush()
-        run_id, version = run.id, p.version
+        run_id, version, queries = run.id, p.version, p.options['queries']
     try:
-        with httpx.Client(timeout=20, follow_redirects=False, headers={'User-Agent': 'HuokePilot/0.3 bounded-public-feed'}) as client:
-            items = feed_items(platform, client)
+        with httpx.Client(timeout=20, follow_redirects=False, headers={'User-Agent': 'HuokePilot/0.3 bounded-public-source'}) as client:
+            items = gitee_items(client, queries) if platform == 'gitee' else feed_items(platform, client)
+        provenance = 'server_search' if platform == 'gitee' else 'server_feed'
         with Session.begin() as s:
             locked_control(s)
             p = get_policy(s, platform)
             if p.version != version or not p.enabled:
                 result = {'status': 'config_changed'}
             else:
-                result = {'status': 'success', **ingest(s, platform, items, p.options, 'server_feed')}
+                result = {'status': 'success', **ingest(s, platform, items, p.options, provenance)}
             r = s.get(ChannelRun, run_id)
             r.status, r.stats, r.finished_at = result['status'], result, now()
         return result
@@ -239,7 +249,7 @@ def register_social(app, role):
     @app.post('/api/social/channels/{platform}/sync')
     def sync(platform: str, actor=Depends(role)):
         platform_exists(platform)
-        if CATALOG[platform]['mode'] != 'feed':
+        if CATALOG[platform]['mode'] not in SERVER_MODES:
             raise HTTPException(409, '此渠道需要本地执行器或授权内容导入')
         with Session.begin() as s:
             p = get_policy(s, platform)
@@ -257,8 +267,8 @@ def register_social(app, role):
     @app.post('/api/social/channels/{platform}/capture')
     def capture(platform: str, data: Batch, actor=Depends(role)):
         platform_exists(platform)
-        if data.mode == 'executor' and CATALOG[platform]['mode'] == 'manual':
-            raise HTTPException(409, '该渠道尚无自动适配器，请使用授权内容导入')
+        if data.mode == 'executor' and CATALOG[platform]['mode'] in {'manual', 'search'}:
+            raise HTTPException(409, '该渠道不接收本地执行器上传，请使用页面提供的采集方式')
         with Session.begin() as s:
             locked_control(s)
             p = get_policy(s, platform)

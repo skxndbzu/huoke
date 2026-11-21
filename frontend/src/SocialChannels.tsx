@@ -24,17 +24,17 @@ export function SocialChannels({api}: {api: API}) {
     <div className="columns">{channels.map(c=><article className="panel" key={c.platform}>
       <div className="section-title"><h3>{c.name}</h3><span className="badge">{labels[c.status] || c.status}</span></div>
       <p>{c.description}</p>
-      <p>采集{c.enabled?'已启用':'已停用'} · {c.stats.capture_mode==='executor'?'本地补采（电脑需在线）':c.mode==='feed'?'服务器每小时读取':c.mode==='executor'?'需要执行器在线':'仅授权内容导入'}</p>
+      <p>采集{c.enabled?'已启用':'已停用'} · {c.stats.capture_mode==='executor'?'本地补采（电脑需在线）':c.mode==='search'?'服务器每小时搜索':c.mode==='feed'?'服务器每小时读取':c.mode==='executor'?'需要执行器在线':'仅授权内容导入'}</p>
       <p>最后自动读取成功：{time(c.last_success)}<br/>最近尝试：{time(c.last_attempt)}</p>
       {c.error && <p className="error">{errors[c.error] || c.error}。{c.status==='verification_required'?'请在平台正常完成验证，系统不会绕过。':c.status==='login_required'?'请在对应执行器上完成账号登录。':errors[c.error]?'':'请检查执行器或网络连接。'}</p>}
       <p>最近一轮：读取 {c.stats.listed ?? 0} · 筛除 {c.stats.filtered ?? 0} · 去重 {c.stats.cache_hits ?? 0} · 新候选 {c.stats.new_leads ?? 0}</p>
       {!!c.stats.filtered_samples?.length && <details><summary>抽查筛除样本（最多 5 条）</summary>{c.stats.filtered_samples.map((x:R,i:number)=><p key={i}>{x.title} · {{older_than_90_days:'超过 90 天',excluded_keyword:'命中排除词',no_keyword:'未命中关键词',no_demand_evidence:'未发现明确需求'}[x.reason as string] || x.reason}{x.url && <> · <a href={x.url} target="_blank" rel="noreferrer">原文 ↗</a></>}</p>)}<p>如发现漏判，可调整关键词或将原文作为反馈保留；筛除不等于确认没有商业价值。</p></details>}
       <div className="actions">
         <button className="secondary" disabled={busy} onClick={()=>{setEdit({...c,queryText:c.queries.join('\n'),excludeText:c.exclude.join('\n'),conversationText:c.conversations.join('\n')});setSelected(null)}}>配置 {c.name}</button>
-        {c.mode==='feed' && <button disabled={busy || !c.enabled || new Date(c.next_allowed_at).getTime()>Date.now()} onClick={()=>act(async()=>{await api('/social/channels/'+c.platform+'/sync',{});return '任务已排队；请查看实际读取结果'})}>立即读取 {c.name}</button>}
+        {['feed','search'].includes(c.mode) && <button disabled={busy || !c.enabled || new Date(c.next_allowed_at).getTime()>Date.now()} onClick={()=>act(async()=>{await api('/social/channels/'+c.platform+'/sync',{});return '任务已排队，请查看实际读取结果'})}>立即读取 {c.name}</button>}
         {!['qq','wechat'].includes(c.platform) && <button className="text" disabled={busy || !c.enabled} onClick={()=>{setSelected(c);setEdit(null);setInput({url:'',author:'',title:'',text:''})}}>导入 {c.name} 原文</button>}
       </div>
-      <details><summary>接入方式与当前限制</summary><p>{c.adapter} · <a href={c.repo} target="_blank" rel="noreferrer">上游项目 ↗</a></p>
+      <details><summary>接入方式与当前限制</summary><p>{c.adapter} · <a href={c.repo} target="_blank" rel="noreferrer">{c.mode==='search'?'官方 API 文档':'上游项目'} ↗</a></p>
         {c.mode==='executor' && <p>执行器需要在已登录的平台机器运行；配置采集范围后启动。微信只读可见消息，QQ 每分钟最多读取每会话最近 30 条，活跃群可能漏读。</p>}
         <p>平台登录、读取成功、发现有效需求是不同状态。导入不代表自动渠道已接通；没有发送/送达验证。</p>
       </details>

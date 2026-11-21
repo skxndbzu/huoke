@@ -1,25 +1,25 @@
 {
-  "updated_at": "2026-11-18T02:10:56.242728+08:00",
+  "updated_at": "2026-11-21T10:45:14.651447+08:00",
   "timezone": "Asia/Shanghai",
   "phase": "phase_1_assisted_workflow_live",
-  "branch": "codex/social-connectors-20261118",
+  "branch": "codex/public-feeds-20261121",
   "repository": "https://github.com/skxndbzu/huoke.git",
   "deployment": {
     "host": "117.72.35.216",
     "user": "admin",
     "root": "/home/admin/huoke-staging",
-    "release": "20261118-social-r2",
-    "status": "healthy_staging_social_partial",
+    "release": "20261121-gitee-r1",
+    "status": "healthy_staging_gitee_pilot",
     "access": "http://117.72.35.216:18080",
     "real_send_enabled": false,
     "paused": false,
     "production_policy": "not_confirmed",
-    "image": "huoke:20261118-social-r2",
-    "image_id": "sha256:7dfd0dd823b0dc328317406b66db83fa9d170ecfa75d5df9d3368fd717ce4f71",
-    "artifact_sha256": "c3c6af7e6a9700b17a26eed216c6fe8557a7c265765d3daec23d1d2b8f6cf0ba",
+    "image": "huoke:20261121-gitee-r1",
+    "image_id": "sha256:d02e0928f81706c73d581de05f71acb5bdccbdce0eb416f1d4f01288ce8d2505",
+    "artifact_sha256": "d4ba2d56ec14bf7b31c3431baa1738885563efb868f248e9c7585b1d67fa88f7",
     "access_note": "IP HTTP access retained by owner choice. Password account configured at explicit owner request; login verified. Public homepage/assets 200 and unauthenticated API 401 previously verified.",
-    "rollback_image": "huoke:20261118-rate100",
-    "backup": "/home/admin/huoke-staging/backups/20261118-before-social.dump"
+    "rollback_image": "huoke:20261118-social-r2",
+    "backup": "/home/admin/huoke-staging/backups/20261121-before-gitee.dump"
   },
   "automation": {
     "id": "automation",
@@ -35,11 +35,11 @@
     "requires": "Windows computer awake and Codex app running"
   },
   "verified": {
-    "local_tests_passed": 54,
+    "local_tests_passed": 29,
     "postgres_concurrency_test": "passed: 4 workers produced exactly one simulated send",
     "frontend_build": "passed",
     "npm_audit_vulnerabilities": 0,
-    "browser": "Isolated TEST ONLY social channels: eight cards, settings save, authorized import, imported status, 390px no overflow/no JS errors",
+    "browser": "Isolated 390px: Gitee card, settings save and sync action available, no overflow or JS error",
     "local_source_sample": {
       "listed": 26,
       "filtered": 20,
@@ -49,7 +49,7 @@
     },
     "customer_messages_sent": 0,
     "paid_model_calls": 385,
-    "postgres_tests_passed": 122,
+    "postgres_tests_passed": 123,
     "server_health": "Public health 200; web/Postgres healthy, worker pong; unauthenticated social API 401; messages=0; real_send_enabled=false",
     "celery_worker": "ping pong",
     "server_source_sample": {
@@ -58,14 +58,14 @@
       "candidates": 6
     },
     "backup_restore": "Passed: restored snapshot to isolated huoke_restore_check_20261027; 6 leads",
-    "deployed_application_manifest": "39 backend/test/static files matched social-r2 container",
+    "deployed_application_manifest": "39 backend/test/static files matched Gitee release running image",
     "server_source_second_run": {
       "listed": 26,
       "fetched": 0,
       "cache_hits": 26,
       "new_leads": 0
     },
-    "server_tests_passed": 122,
+    "server_tests_passed": 123,
     "smtp_auth_probe": {
       "status": "success",
       "host": "smtp.qq.com",
@@ -79,7 +79,7 @@
     },
     "real_send_enabled": false,
     "windows_powershell_login_helper": "Native Windows PowerShell parser and mocked token-copy/browser flow passed after ASCII encoding fix; no real reviewer token accessed.",
-    "local_tests_skipped": 1,
+    "local_tests_skipped": 0,
     "github_sample": {
       "listed": 26,
       "filtered": 9,
@@ -92,7 +92,7 @@
     },
     "model": "gpt-6.1-sol models verified and one evidence-checked inference succeeded",
     "owner_password_login": "Initial account provisioned at explicit owner request; actual login and logout verified. No reviewer token accessed, no message approval. Credentials not stored in repository.",
-    "local_validation": "Social/discovery/rate/safety targeted: 54 passed, 1 skipped. Final backend sources match 122-pass PostgreSQL image.",
+    "local_validation": "29 social/workspace tests passed; 123 tests passed on final isolated PostgreSQL image",
     "market_filter": {
       "threshold": 70,
       "total_leads": 1265,
@@ -198,24 +198,23 @@
       "monthly": 100,
       "owner_monthly_ceiling": 10000
     },
-    "conversion_quality": "80 real feed entries read, zero new candidates. No measured customer quality/contact/conversion uplift.",
-    "runtime_ai_estimated_usd": 2.805264,
-    "runtime_ai_note": "This social integration triggered no model calls. Existing background analysis remains active; current supplier bill and development fees unknown. Prior cumulative estimates are historical, not this run.",
-    "iteration_model_estimated_usd": null
+    "conversion_quality": "Restored real V2EX produced one candidate below domestic threshold; zero new verified leads or contact paths. No measured efficiency or conversion uplift.",
+    "runtime_ai_estimated_usd": 3.736246,
+    "runtime_ai_note": "Capture itself made zero AI calls. Existing background analysis for V2EX row 1270 used 3962 input/519 output tokens, estimated $0.013114. Total workbench estimate $3.736246; billed and development costs unknown.",
+    "iteration_model_estimated_usd": 0.013114
   },
   "blockers": [
     "QQ upstream Auth Token absent; owner deferred; no purchase or bypass.",
     "Xiaohongshu Windows helper blocked by security software; engineering compatibility work needed before login.",
-    "Linux.do 403 locally; server public-source network errors. NodeSeek/V2EX use Windows fallback while awake.",
+    "Linux.do public feed was blocked; server V2EX and NodeSeek still cannot connect. Local polling restored via existing Windows proxy while awake.",
     "WeChat account unavailable; disabled. Douyin/Kuaishou automatic acquisition and messaging not connected.",
     "Inbox and billing events not connected. Real sends disabled; production policy unconfirmed; IP HTTP retained per owner."
   ],
   "next_tasks": [
-    "Improve real domestic demand coverage with filtered-sample review; measure false negatives before widening collection.",
-    "Resolve Xiaohongshu runtime compatibility without disabling security; then request normal owner login.",
-    "QQ only after owner obtains upstream authorization; validate selected group read-only and improve history recovery.",
-    "Improve local collector restart/recovery and source health visibility; preserve no-send boundary.",
-    "Integrate actual inbox/conversion events when configuration is available."
+    "Verify natural hourly Gitee and Windows fallback runs; show independent server/local channel state and stale detection if later failures obscure earlier local success.",
+    "Use filtered samples and user labels to validate actual demand, prior to expanding queries or adding more sources.",
+    "Resolve Xiaohongshu runtime compatibility before normal owner login; QQ separately awaits upstream authority and WeChat is disabled until available.",
+    "Investigate another permitted high-intent Chinese source as evidence warrants; continue public contact discovery and manual workflow improvements."
   ],
   "constraints": [
     "Never approve customer messages on behalf of owner",
@@ -278,5 +277,75 @@
     "customer_messages_sent": 0,
     "local_executor_startup": "Manual helper, no Windows startup task created",
     "user_checklist": "docs/social-connectors.md"
+  },
+  "public_source_goal_iteration": {
+    "baseline": {
+      "github": "hourly success",
+      "nodeseek_v2ex_local": "last success November 18; direct timeout on November 21",
+      "gitee": "not implemented",
+      "leads": 1269
+    },
+    "last_success": {
+      "github": {
+        "at": "2026-11-21T01:09:29.159454+00:00",
+        "listed": 14,
+        "cache_hits": 14,
+        "new_leads": 0
+      },
+      "nodeseek": {
+        "at": "2026-11-21T02:37:48.665946+00:00",
+        "listed": 20,
+        "filtered": 20,
+        "new_leads": 0
+      },
+      "v2ex": {
+        "at": "2026-11-21T02:37:49.311035+00:00",
+        "listed": 60,
+        "filtered": 29,
+        "cache_hits": 30,
+        "new_leads": 1
+      },
+      "gitee": {
+        "at": "2026-11-21T02:42:36.722809+00:00",
+        "listed": 35,
+        "filtered": 35,
+        "new_leads": 0,
+        "filter_reasons": {
+          "older_than_90_days": 26,
+          "no_keyword": 3,
+          "no_demand_evidence": 6
+        }
+      }
+    },
+    "gitee_live_isolated_second_pass": {
+      "listed": 35,
+      "cache_hits": 33,
+      "filtered": 2,
+      "new_leads": 0
+    },
+    "new_v2ex_lead": {
+      "id": 1270,
+      "market": "below_threshold",
+      "qualification": "pending",
+      "contact": "public_discussion",
+      "input_tokens": 3962,
+      "output_tokens": 519,
+      "estimated_usd": 0.013114
+    },
+    "workbench_snapshot": {
+      "total": 1270,
+      "domestic": 4,
+      "valid": 0,
+      "domestic_with_contact": 0,
+      "verified_contact": 0,
+      "domestic_high_value_without_direct_contact": 0
+    },
+    "capture_model_calls": 0,
+    "manual_false_negative_rate": null,
+    "owner_actions": [],
+    "verification_pending": [
+      "Gitee beat automatic run and next Windows polling cycles",
+      "Observed lead quality and reachable authorized business contacts"
+    ]
   }
 }

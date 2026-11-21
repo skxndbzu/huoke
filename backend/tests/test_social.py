@@ -1,11 +1,12 @@
 import json
+from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 import httpx
 import pytest
 from sqlalchemy import select, func
 from app.db import Session, Lead, CaptureEvidence, ContactPoint, Message, AnalysisCall, ChannelRun
 from app.social import get_policy, sync_social
-from app.social_adapters import (feed_items, qq_items, xhs_items, wechat_items, Capture,
+from app.social_adapters import (feed_items, gitee_items, qq_items, xhs_items, wechat_items, Capture,
                                  AdapterError, validate_url, milky)
 
 DEMAND = '我们正在开发 AI 应用，想找稳定的大模型 API 供应商，哪家 API 支持按量计费？'
@@ -27,7 +28,7 @@ def item(**kwargs):
 
 def test_catalog_is_honest_and_auth_required(client):
     rows = client.get('/api/social/channels').json()
-    assert len(rows) == 8
+    assert 'gitee' in {row['platform'] for row in rows}
     assert all(not x['can_send'] and not x['enabled'] and x['status'] == 'not_connected' for x in rows)
     assert client.get('/api/social/channels', headers={'Authorization':'Bearer wrong'}).status_code == 401
     assert client.post('/api/social/channels/douyin/sync', json={}).status_code == 409
@@ -155,3 +156,43 @@ def test_private_same_text_different_people_not_merged(client):
     version=enable(client,'qq',account='12345',conversations=['group:54321'])
     records=[item(event_id=str(i),url='',account='12345',conversation='group:54321',sender_id=str(90000+i),identity_verified=True) for i in [1,2]]
     assert client.post('/api/social/channels/qq/capture',json={'version':version,'mode':'executor','items':records}).json()['new_leads']==2
+
+
+def test_gitee_search_filters_and_deduplicates_in_workspace(client, monkeypatch):
+    version = enable(client, 'gitee')
+    current = datetime.now(timezone.utc)
+    issue_url = 'https://gitee.com/test-team/test-repo/issues/ITEST1'
+    issue = {'html_url': issue_url, 'created_at': current.isoformat(), 'state': 'open',
+             'title': '哪家大模型API稳定？', 'body': DEMAND, 'user': {'login': 'test-author'}}
+    pages = [issue, {**issue, 'state': 'closed'}, {**issue, 'html_url': 'https://example.test/t/1'},
+             {**issue, 'html_url': issue_url[:-1] + '2',
+              'created_at': (current - timedelta(days=91)).isoformat()},
+             {**issue, 'html_url': issue_url[:-1] + '3', 'title': 'OpenAPI 端点', 'body': '文档更新'}]
+    searches = []
+
+    def serve(request):
+        assert request.method == 'GET'
+        assert request.url.host == 'gitee.com' and request.url.path == '/api/v5/search/issues'
+        assert request.url.params['state'] == 'open' and request.url.params['per_page'] == '12'
+        searches.append(request.url.params['q'])
+        return httpx.Response(200, json=pages)
+
+    def search(_, queries):
+        with httpx.Client(transport=httpx.MockTransport(serve)) as source:
+            return gitee_items(source, queries)
+
+    monkeypatch.setattr('app.social.gitee_items', search)
+    result = sync_social('gitee')
+    assert searches == ['大模型 API', '中转站', 'DeepSeek API']
+    assert result['listed'] == 3 and result['new_leads'] == 1
+    assert result['filter_reasons'] == {'older_than_90_days': 1, 'no_keyword': 1}
+    assert result['model_calls'] == 0 and result['capture_mode'] == 'server_search'
+    assert sync_social('gitee') == {'status': 'cooldown'}
+    options = {'source': 'Gitee Issues', 'contact': 'public_discussion'}
+    row = client.get('/api/workspace/leads', params=options).json()['items'][0]
+    assert row['url'] == issue_url and row['capture']['provenance'] == 'server_search'
+    assert row['contact_status'] == 'public_discussion'
+    duplicate = {'url': issue_url + '#comment', 'title': issue['title'], 'text': DEMAND, 'event_id': 'manual'}
+    result = client.post('/api/social/channels/gitee/capture',
+                         json={'version': version, 'mode': 'manual', 'items': [duplicate]}).json()
+    assert result['new_leads'] == 0 and result['cache_hits'] == 1

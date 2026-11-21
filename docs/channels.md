@@ -1,5 +1,15 @@
 # 渠道能力与证据
 
+## 2026-11-21 Gitee Issues 与国内公开来源恢复
+
+Gitee 官方 OpenAPI v5 提供 `GET /api/v5/search/issues`，文档中的 `access_token` 可选。服务器实测匿名访问成功。使用默认相关度排序，按创建时间排序的试读混入了大量近期但无关的 Issue。连接器每小时最多查询三组词，每组最多 12 条，只读取开放 Issue 和原文、作者、发布时间字段，按原文链接去重。工作台“渠道与任务”可查看运行和筛除样本，客户档案显示官方 API 搜索来源。支持授权原文导入，来源可追溯。 [官方文档](https://gitee.com/api/v5/swagger) · [搜索规范](https://gitee.com/api/v5/swagger_doc/search)
+
+2026-11-21 在 GitHub 搜索 Gitee OpenAPI v5 SDK，对照官方规范，核对了 `gitee-php/gitee-sdk`（`9b4ec9b53400`，2024-08-07，MIT）、较新的 `bojackli/gitee-sdk`（`55a64d7ea24c`，2026-05-11，MIT）及 `wuhuizuo/gitee-client-sdk-v5`（`fdec9bb5a8a1`，2024-12-25，MIT）。这些项目是 PHP/其他语言客户端候选，MIT 文本允许商用并要求保留声明；未安装或验证它们的读取能力。现有 Python HTTP 客户端直接调用官方接口即可在服务器运行，无额外账号和依赖。 [PHP SDK](https://github.com/gitee-php/gitee-sdk) · [较近更新的 PHP SDK](https://github.com/bojackli/gitee-sdk) · [v5 客户端](https://github.com/wuhuizuo/gitee-client-sdk-v5)
+
+Gitee 线上读取 35 条，26 条超过 90 天、3 条关键词不符、6 条缺明确需求证据，本批新增 0。隔离环境使用同一真实接口连读两轮，第二轮 35 条中 33 条缓存命中、2 条重新筛除，新增 0。拓展词组的小样本也没有规则达标项。接入已验证，商机质量仍需观测。
+
+Windows 使用当前已有的网络代理恢复 NodeSeek/V2EX 公开订阅访问，直接访问本地工作台隧道和登录桥接接口。NodeSeek 20 条，筛除 20 条。V2EX 60 条，去重 30 条、筛除 29 条、新增 1 条。客户档案 1270 有公开讨论原文，市场分析低于阈值。两个渠道服务器直连仍受阻，当前补采依赖 Windows 在线及现有网络。Linux.do 服务器仍不可达，其余平台接入限制见下文。四个平台均有真实读取记录，Gitee 的自然调度和商机产出继续验证。
+
 ## 2026-11-18 社交渠道实际接入（当前状态）
 
 本节更新下方旧调研状态。已发布 `20261118-social-r2`，完整能力、实测结果和用户待办见 [social-connectors.md](social-connectors.md)。新增八渠道配置、只读适配器、授权导入、来源证据和本地执行器，不新增任何发送方法。

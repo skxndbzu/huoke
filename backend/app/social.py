@@ -104,6 +104,14 @@ def ingest(s, platform, items, options, provenance):
     samples = {reason: [] for reason in FILTER_REVIEW_ORDER}
     for item in items:
         validate_capture(platform, item, options)
+    if platform == 'nodeseek' and provenance in ('executor', 'server_feed'):
+        # Count dated feed entries before filtering and cache lookup.
+        published = [datetime.fromisoformat(item.published_at) for item in items if item.published_at]
+        stats['publication_window'] = {
+            'known': len(published),
+            'earliest_at': min(published).isoformat() if published else None,
+            'latest_at': max(published).isoformat() if published else None,
+        }
     for item in items:
         title = clean(item.title or item.text.split('\n')[0])[:250]
         text = clean(item.text)

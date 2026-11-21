@@ -1,6 +1,10 @@
 # 部署与发布
 
-## 当前发布 `20261121-screening-history-r1`
+## 当前发布 `20261121-nodeseek-window-r1`
+
+NodeSeek 渠道卡显示成功采集批次中已知原帖发布时间的最早值和最晚值。筛除及缓存命中计入批次，有缺失时间时显示可统计条数。数据存在现有运行记录的 JSON 中。24 项定向测试、136 项隔离 PostgreSQL 测试、390px 官方 RSS 回放及 39 个线上文件摘要验证通过。数据库备份为 `backups/20261121-before-nodeseek-window.dump`，私有配置备份为 `backups/20261121-before-nodeseek-window.secrets.tar`，回滚镜像为 `huoke:20261121-screening-history-r1`。
+
+## 上次发布 `20261121-screening-history-r1`
 
 渠道与任务页展示近 30 天样本复核汇总及最近 12 条有判断的记录。修改和撤回即时反映到汇总。沿用现有事件表。隔离 PostgreSQL 135 项测试与手机界面验证通过。回滚镜像 `huoke:20261121-screening-feedback-r1`，备份 `backups/20261121-before-screening-history.dump`。
 

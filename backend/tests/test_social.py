@@ -297,6 +297,32 @@ def test_screening_review_covers_different_reasons_and_survives_cache_only_run(c
     assert local['screening_batch']['reasons'] == first['filter_reasons']
 
 
+def test_nodeseek_reports_publication_window_for_cache_only_batch(client):
+    version = enable(client, 'nodeseek')
+    latest = datetime.now(timezone.utc) - timedelta(minutes=2)
+    earliest = latest - timedelta(minutes=10)
+    route = '/api/social/channels/nodeseek/capture'
+    items = [
+        item(published_at=latest.isoformat()),
+        item(event_id='two', url='https://www.nodeseek.com/post-456-1',
+             title='今日天气', text='晴', published_at=earliest.isoformat()),
+        item(event_id='three', url='https://www.nodeseek.com/post-789-1'),
+    ]
+    payload = {'version': version, 'mode': 'executor', 'items': items}
+    expected = {'known': 2, 'earliest_at': earliest.isoformat(), 'latest_at': latest.isoformat()}
+    first = client.post(route, json=payload)
+    assert first.status_code == 200
+    assert first.json()['publication_window'] == expected
+    replay = client.post(route, json=payload).json()
+    assert replay['cache_hits'] == 3 and replay['publication_window'] == expected
+
+    row = next(r for r in client.get('/api/social/channels').json() if r['platform'] == 'nodeseek')
+    assert row['routes'][1]['stats']['publication_window'] == expected
+    undated = client.post(route, json={**payload, 'items': items[2:]}).json()
+    assert undated['publication_window'] == {'known': 0, 'earliest_at': None, 'latest_at': None}
+    assert 'publication_window' not in client.post(route, json={**payload, 'mode': 'manual'}).json()
+
+
 def test_public_screening_feedback_is_owner_only_and_does_not_change_the_lead_pool(client):
     version = enable(client, 'nodeseek')
     rejected = item(title='独立测试样本', text='没有采集关键词。')

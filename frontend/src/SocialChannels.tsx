@@ -8,6 +8,17 @@ const time = (s: string) => s ? new Date(s).toLocaleString('zh-CN') : '尚无';
 const filterLabels: Record<string, string> = {older_than_90_days:'超过 90 天',excluded_keyword:'命中排除词',no_keyword:'未命中关键词',no_demand_evidence:'未发现明确需求'};
 const modeLabels: Record<string, string> = {manual:'授权导入',executor:'本地补采',server_feed:'服务器订阅',server_search:'服务器搜索'};
 
+function PublicationWindow({window, listed}: {
+  window: {known: number, earliest_at: string | null, latest_at: string | null}, listed: number
+}) {
+  const {known, earliest_at, latest_at} = window;
+  if (!earliest_at || !latest_at) return listed > 0 ? <p>本批原帖发布时间未知</p> : null;
+  return <p>本批原帖发布时间 {time(earliest_at)}
+    {latest_at !== earliest_at && <> 至 {time(latest_at)}</>}
+    {known < listed && <> · {known}/{listed} 条有时间</>}
+  </p>;
+}
+
 function ChannelRun({run, title, onReview, busy}: {run: R, title?: string, onReview?: ReviewSample, busy: boolean}) {
   const stats = run.stats;
   const screening = run.screening_batch;
@@ -16,6 +27,7 @@ function ChannelRun({run, title, onReview, busy}: {run: R, title?: string, onRev
     <p>{run.status !== 'imported' && <>最后读取成功 {time(run.last_success)}<br/></>}最近尝试 {time(run.last_attempt)}</p>
     {run.error && <p className="error">{errors[run.error] || run.error}</p>}
     {stats.listed !== undefined && <p>{run.status === 'imported' ? '导入批次' : '上次成功批次'} · 读取 {stats.listed} · 筛除 {stats.filtered ?? 0} · 去重 {stats.cache_hits ?? 0} · 新候选 {stats.new_leads ?? 0}</p>}
+    {stats.publication_window && <PublicationWindow window={stats.publication_window} listed={stats.listed}/>}
     {screening?.samples.length > 0 && <details>
       <summary>抽查筛除样本</summary>
       <p>{time(screening.finished_at)}{modeLabels[screening.mode] && ` · ${modeLabels[screening.mode]}`}</p>

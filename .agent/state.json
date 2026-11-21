@@ -1,25 +1,26 @@
 {
-  "updated_at": "2026-11-21T15:22:16.789971+08:00",
+  "updated_at": "2026-11-21T15:45:53.775367+08:00",
   "timezone": "Asia/Shanghai",
   "phase": "phase_1_assisted_workflow_live",
-  "branch": "codex/screening-history-20261121",
+  "branch": "codex/nodeseek-publication-window-20261121",
   "repository": "https://github.com/skxndbzu/huoke.git",
   "deployment": {
     "host": "117.72.35.216",
     "user": "admin",
     "root": "/home/admin/huoke-staging",
-    "release": "20261121-screening-history-r1",
-    "status": "healthy_staging_screening_review_history",
+    "release": "20261121-nodeseek-window-r1",
+    "status": "healthy_staging_nodeseek_publication_window",
     "access": "http://117.72.35.216:18080",
     "real_send_enabled": false,
     "paused": false,
     "production_policy": "not_confirmed",
-    "image": "huoke:20261121-screening-history-r1",
-    "image_id": "sha256:f6c10423d498ed861b874d0274580b58dac6690f51490af023493f212bfc3867",
-    "artifact_sha256": "00c920b8a55ea910352a957a77f1745925b8cc0f168a2e7721a70b8faa2fafe3",
+    "image": "huoke:20261121-nodeseek-window-r1",
+    "image_id": "sha256:262d76a5f74c9a12e31d1f43db221695dc89aee8a6e0cc27cd34bfa3aa64c2d7",
+    "artifact_sha256": "c2a122be3b2e51378c54b199ce1214ab5ffbc2c4f0feeff518830074c05d560b",
     "access_note": "IP HTTP access retained by owner choice. Password account configured at explicit owner request; login verified. Public homepage/assets 200 and unauthenticated API 401 previously verified.",
-    "rollback_image": "huoke:20261121-screening-feedback-r1",
-    "backup": "/home/admin/huoke-staging/backups/20261121-before-screening-history.dump"
+    "rollback_image": "huoke:20261121-screening-history-r1",
+    "backup": "/home/admin/huoke-staging/backups/20261121-before-nodeseek-window.dump",
+    "private_backup": "/home/admin/huoke-staging/backups/20261121-before-nodeseek-window.secrets.tar"
   },
   "automation": {
     "id": "automation",
@@ -39,7 +40,7 @@
     "postgres_concurrency_test": "passed: 4 workers produced exactly one simulated send",
     "frontend_build": "passed",
     "npm_audit_vulnerabilities": 0,
-    "browser": "390px: saving and clearing sample decisions changes 30-day screening history",
+    "browser": "390px: official RSS capture and cache-only replay preserve the publication range",
     "local_source_sample": {
       "listed": 26,
       "filtered": 20,
@@ -49,8 +50,8 @@
     },
     "customer_messages_sent": 0,
     "paid_model_calls": 385,
-    "postgres_tests_passed": 135,
-    "server_health": "Public health 200, web and PostgreSQL healthy, worker pong, unauthenticated API 401, messages=0 and real sending disabled",
+    "postgres_tests_passed": 136,
+    "server_health": "Public 200, authenticated routes readable, anonymous API 401, PostgreSQL and web healthy, worker pong, real send disabled, message rows 0",
     "celery_worker": "ping pong",
     "server_source_sample": {
       "listed": 26,
@@ -65,7 +66,7 @@
       "cache_hits": 26,
       "new_leads": 0
     },
-    "server_tests_passed": 135,
+    "server_tests_passed": 136,
     "smtp_auth_probe": {
       "status": "success",
       "host": "smtp.qq.com",
@@ -92,7 +93,7 @@
     },
     "model": "gpt-6.1-sol models verified and one evidence-checked inference succeeded",
     "owner_password_login": "Initial account provisioned at explicit owner request; actual login and logout verified. No reviewer token accessed, no message approval. Credentials not stored in repository.",
-    "local_validation": "23 social tests; final isolated PostgreSQL image 135 passed",
+    "local_validation": "24 social tests; final isolated PostgreSQL image 136 passed",
     "market_filter": {
       "threshold": 70,
       "total_leads": 1265,
@@ -198,10 +199,10 @@
       "monthly": 100,
       "owner_monthly_ceiling": 10000
     },
-    "conversion_quality": "V2EX node pilot found one explicit price-comparison inquiry. It remains below the domestic threshold, with no direct contact; quality lift beyond this sample is unproven.",
-    "runtime_ai_estimated_usd": 3.744794,
-    "runtime_ai_note": "Screening history verification did not use the model. Actual supplier and development costs unknown.",
-    "iteration_model_estimated_usd": null
+    "conversion_quality": "Four domestic matches. No domestic match with a direct contact and no owner-qualified leads; no measured change in conversion efficiency.",
+    "runtime_ai_estimated_usd": 3.75222,
+    "runtime_ai_note": "NodeSeek validation made no model calls. Ordinary background analysis of lead 1272 cost an estimated $0.007426. Actual supplier and development costs unknown.",
+    "iteration_model_estimated_usd": 0.007426
   },
   "blockers": [
     "QQ upstream Auth Token absent; owner deferred; no purchase or bypass.",
@@ -211,7 +212,7 @@
     "Inbox and billing events not connected. Real sends disabled; production policy unconfirmed; IP HTTP retained per owner."
   ],
   "next_tasks": [
-    "Measure upcoming natural runs and saved owner labels. Continue validating public narrow demand sources with contact paths before expanding automated reads.",
+    "Measure successive natural NodeSeek batch windows and check actual demand in intervening public snapshots before adjusting polling. Review owner labels when available.",
     "Use filtered samples and user labels to validate actual demand, prior to expanding queries or adding more sources.",
     "Resolve Xiaohongshu runtime compatibility before normal owner login; QQ separately awaits upstream authority and WeChat is disabled until available.",
     "Investigate another permitted high-intent Chinese source as evidence warrants; continue public contact discovery and manual workflow improvements."
@@ -533,8 +534,8 @@
     "verification_model_calls": 0,
     "owner_actions": [],
     "verified_natural_runs": {
-      "github": 1079,
-      "gitee": 1083
+      "github": 1091,
+      "gitee": 1094
     }
   },
   "collector_wake_iteration": {
@@ -643,5 +644,92 @@
     "owner_actions": [
       "Actual sample judgments are needed to estimate missed demand."
     ]
+  },
+  "nodeseek_window_iteration": {
+    "window_replay": {
+      "earliest_at": "2026-11-21T07:22:30+00:00",
+      "latest_at": "2026-11-21T07:33:55+00:00",
+      "known": 20,
+      "seconds": 685,
+      "cache_hits": 20
+    },
+    "additional_rss_probe": {
+      "earliest_at": "2026-11-21T07:25:46+00:00",
+      "latest_at": "2026-11-21T07:37:18+00:00",
+      "known": 20,
+      "seconds": 692,
+      "filter_passed": 1,
+      "model_calls": 0
+    },
+    "older_rss_archive_span_seconds": 802,
+    "natural_runs_before_release": {
+      "github": {
+        "id": 1091,
+        "listed": 14,
+        "cache_hits": 14,
+        "new_leads": 0
+      },
+      "gitee": {
+        "id": 1094,
+        "listed": 35,
+        "cache_hits": 35,
+        "new_leads": 0
+      },
+      "nodeseek": {
+        "id": 1087,
+        "listed": 20,
+        "filtered": 19,
+        "new_leads": 1
+      },
+      "v2ex": {
+        "id": 1086,
+        "listed": 60,
+        "cache_hits": 59,
+        "filtered": 1,
+        "new_leads": 0
+      },
+      "github_discussions": {
+        "id": 1088,
+        "listed": 50,
+        "cache_hits": 49,
+        "filtered": 1,
+        "new_leads": 0
+      }
+    },
+    "new_candidate": {
+      "id": 1272,
+      "url": "https://www.nodeseek.com/post-1069947-1",
+      "market_score": 50,
+      "market_threshold": 70,
+      "purchase_stage": "explicit_need",
+      "fit": "medium",
+      "contact": "public_discussion",
+      "analysis_call_id": 470,
+      "input_tokens": 2158,
+      "output_tokens": 311,
+      "estimated_usd": 0.007426
+    },
+    "workbench_snapshot": {
+      "total": 1272,
+      "domestic": 4,
+      "domestic_with_contact": 0,
+      "verified_contacts": 0,
+      "valid": 0,
+      "owner_screening_judgments": 0
+    },
+    "validation_model_calls": 0,
+    "live_release_verification": {
+      "id": 1096,
+      "trigger": "one_off_live_rss_read",
+      "listed": 20,
+      "filtered": 20,
+      "new_leads": 0,
+      "known": 20,
+      "earliest_at": "2026-11-21T07:31:54+00:00",
+      "latest_at": "2026-11-21T07:44:45+00:00",
+      "seconds": 771,
+      "model_calls": 0
+    },
+    "scheduled_interval_minutes": 60
   }
 }

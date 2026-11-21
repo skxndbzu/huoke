@@ -1,10 +1,16 @@
 # 部署与发布
 
-## 当前发布 `20261121-beat-state-r1`
+## 当前发布 `20261121-screening-review-r1`
+
+公开来源筛除样本按不同原因抽取，后续空批或全缓存批次保留最近的样本时间与来源。线上已核对四个公开来源真实返回记录。127 项隔离 PostgreSQL 测试和 390px 界面验证通过。回滚镜像 `huoke:20261121-beat-state-r1`，备份 `backups/20261121-before-screening-review.dump`。继续保留 Celery beat 的专用数据卷。
+
+## 上次发布 `20261121-beat-state-r1`
 
 Celery beat 使用命名卷 `huoke-staging_beat_state` 持久保存 `/var/lib/huoke/beat/celerybeat-schedule`。通过 Dockerfile 初始化 UID 10001 可写目录。保留单实例，发布和回滚不清理该卷。首次迁移在正常停止 beat 后复制旧调度文件，并在新卷初始化，避免发布从头计时。
 
 隔离环境两次启动验证同一卷保留计数、最后运行时间与剩余等待时间。线上迁移前后 Gitee/GitHub 的调度时间一致，Web/PostgreSQL 健康，worker 正常响应。后端、测试、网页 39 个摘要与此前通过 126 项测试的版本一致。回滚 `huoke:20261121-discussions-r1`，数据库与调度备份分别为 `backups/20261121-before-beat-state.dump` 和 `backups/20261121-before-beat-state.schedule`。
+
+2026-11-21 12:29 原时间段自然触发 GitHub 和 Gitee，均成功写入运行记录。
 
 ## Windows 公开采集自动重连
 

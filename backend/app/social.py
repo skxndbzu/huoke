@@ -22,6 +22,8 @@ VERSION = 'social-capture-v1'
 DEFAULT_QUERIES = ['API', '模型', '中转']
 GITEE_QUERIES = ['大模型 API', '中转站', 'DeepSeek API']
 SERVER_MODES = {'feed', 'search'}
+FILTER_REVIEW_ORDER = ('no_demand_evidence', 'no_keyword', 'excluded_keyword', 'older_than_90_days')
+FILTER_SAMPLE_LIMIT = 5
 
 
 def get_policy(s, platform):
@@ -93,6 +95,7 @@ def ingest(s, platform, items, options, provenance):
              'filter_reasons': {}, 'filtered_samples': []}
     queries = [word.casefold().split() if platform == 'gitee' else [word.casefold()] for word in options['queries']]
     excluded = [word.casefold() for word in options['exclude']]
+    samples = {reason: [] for reason in FILTER_REVIEW_ORDER}
     for item in items:
         validate_capture(platform, item, options)
     for item in items:
@@ -127,8 +130,8 @@ def ingest(s, platform, items, options, provenance):
         if reason:
             stats['filtered'] += 1
             stats['filter_reasons'][reason] = stats['filter_reasons'].get(reason, 0) + 1
-            if len(stats['filtered_samples']) < 5:
-                stats['filtered_samples'].append({'title': title[:160], 'url': url, 'reason': reason})
+            if url and len(samples[reason]) < FILTER_SAMPLE_LIMIT:
+                samples[reason].append({'title': title[:160], 'url': url, 'reason': reason})
             continue
         lead = s.scalar(select(Lead).where(Lead.source_key == key))
         # Unknown OCR labels never become a cross-conversation identity.
@@ -165,6 +168,10 @@ def ingest(s, platform, items, options, provenance):
             save_candidate(s, lead, 'qq', item.sender_id, '',
                            f'授权账号 {item.account}，会话 {item.conversation}，消息 {item.event_id} 的平台发送者 ID；联系许可与私聊可达性未核实', 'authorized_chat')
         refresh_market(s, lead)
+    stats['filtered_samples'] = [
+        group[index] for index in range(FILTER_SAMPLE_LIMIT)
+        for group in samples.values() if index < len(group)
+    ][:FILTER_SAMPLE_LIMIT]
     return stats
 
 
@@ -173,6 +180,18 @@ def status_error(exc):
         code = exc.response.status_code
         return ('verification_required' if code in (401, 403, 429) else 'failed'), 'HTTP_' + str(code)
     return 'failed', type(exc).__name__
+
+
+def screening_batch(s, runs, recent):
+    sample_run = recent
+    if not sample_run or not sample_run.stats.get('filtered_samples'):
+        sample_run = s.scalar(runs.where(ChannelRun.status.in_(('success', 'imported')),
+                                         ChannelRun.stats['filtered_samples'][0]['reason'].as_string().is_not(None))
+                              .order_by(ChannelRun.id.desc()).limit(1))
+    if not sample_run:
+        return None
+    return {'finished_at': sample_run.finished_at, 'mode': sample_run.stats.get('capture_mode', ''),
+            'reasons': sample_run.stats.get('filter_reasons', {}), 'samples': sample_run.stats['filtered_samples']}
 
 
 def feed_route(s, platform, mode, checked_at):
@@ -191,7 +210,8 @@ def feed_route(s, platform, mode, checked_at):
     stale = bool(last_success and checked_at - datetime.fromisoformat(last_success) > timedelta(hours=2))
     return {'mode': mode, 'status': latest.status if latest else 'not_connected',
             'last_attempt': latest.started_at if latest else '', 'last_success': last_success,
-            'error': latest.error if latest else '', 'stats': good.stats if good else {}, 'stale': stale}
+            'error': latest.error if latest else '', 'stats': good.stats if good else {}, 'stale': stale,
+            'screening_batch': screening_batch(s, runs, good)}
 
 
 def sync_social(platform):
@@ -298,10 +318,16 @@ def register_social(app, role):
                 latest = s.scalar(runs.order_by(ChannelRun.id.desc()).limit(1))
                 good = s.scalar(runs.where(ChannelRun.status == 'success').order_by(ChannelRun.id.desc()).limit(1))
                 routes = [feed_route(s, platform, mode, checked_at) for mode in ('server_feed', 'executor')] if platform in {'v2ex', 'nodeseek', 'linuxdo'} else []
+                # Keep samples available after subsequent empty or all-cache runs.
+                samples = None
+                if platform not in {'qq', 'wechat'} and (not routes or (latest and latest.status == 'imported')):
+                    sample_runs = runs.where(ChannelRun.status == 'imported') if routes else runs
+                    samples = screening_batch(s, sample_runs, latest)
                 result.append({'platform': platform, **spec, 'version': p.version, 'enabled': p.enabled, **p.options,
                                'next_allowed_at': p.next_allowed_at, 'status': latest.status if latest else 'not_connected',
                                'last_success': good.finished_at if good else '', 'last_attempt': latest.started_at if latest else '', 'routes': routes,
-                               'error': latest.error if latest else '', 'stats': latest.stats if latest else {}, 'can_send': False})
+                               'error': latest.error if latest else '', 'stats': latest.stats if latest else {},
+                               'screening_batch': samples, 'can_send': False})
             return result
 
     @app.put('/api/social/channels/{platform}')

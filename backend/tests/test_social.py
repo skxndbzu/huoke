@@ -273,3 +273,24 @@ def test_discussion_atom_and_import_share_public_topic_identity(client):
     assert result.status_code == 200 and result.json()['cache_hits'] == 1
     body = client.get('/api/workspace/leads', params={'source': 'GitHub Discussions', 'contact': 'public_discussion'}).json()
     assert body['total'] == 1
+
+
+def test_screening_review_covers_different_reasons_and_survives_cache_only_run(client):
+    version = enable(client, 'nodeseek')
+    old = (datetime.now(timezone.utc) - timedelta(days=91)).isoformat()
+    batch = [item(event_id=str(i), url=f'https://www.nodeseek.com/post-{i}-1', published_at=old) for i in range(101,107)]
+    batch.extend([
+        item(event_id='107', url='https://www.nodeseek.com/post-107-1', title='今日天气', text='晴'),
+        item(event_id='108', url='https://www.nodeseek.com/post-108-1', title='模型 API 介绍', text='文档更新'),
+    ])
+    route = '/api/social/channels/nodeseek/capture'
+    payload = {'version': version, 'mode': 'executor', 'items': batch}
+    first = client.post(route, json=payload).json()
+    assert len(first['filtered_samples']) == 5
+    assert {x['reason'] for x in first['filtered_samples']} == {'older_than_90_days','no_keyword','no_demand_evidence'}
+    assert client.post(route, json=payload).json()['cache_hits'] == 8
+    row = next(r for r in client.get('/api/social/channels').json() if r['platform'] == 'nodeseek')
+    local = row['routes'][1]
+    assert local['stats']['cache_hits'] == 8 and local['stats']['filtered'] == 0
+    assert local['screening_batch']['samples'] == first['filtered_samples']
+    assert local['screening_batch']['reasons'] == first['filter_reasons']

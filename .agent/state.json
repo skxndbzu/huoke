@@ -1,25 +1,25 @@
 {
-  "updated_at": "2026-11-21T11:57:14.247139+08:00",
+  "updated_at": "2026-11-21T13:46:41.213498+08:00",
   "timezone": "Asia/Shanghai",
   "phase": "phase_1_assisted_workflow_live",
-  "branch": "codex/persist-collector-schedule-20261121",
+  "branch": "codex/screening-review-20261121",
   "repository": "https://github.com/skxndbzu/huoke.git",
   "deployment": {
     "host": "117.72.35.216",
     "user": "admin",
     "root": "/home/admin/huoke-staging",
-    "release": "20261121-beat-state-r1",
-    "status": "healthy_staging_durable_scheduler",
+    "release": "20261121-screening-review-r1",
+    "status": "healthy_staging_screening_review",
     "access": "http://117.72.35.216:18080",
     "real_send_enabled": false,
     "paused": false,
     "production_policy": "not_confirmed",
-    "image": "huoke:20261121-beat-state-r1",
-    "image_id": "sha256:ec2ec3233a9d5cca6b3b2fe29a21931c12c5bea961b1ff9eb26018efdf688cfe",
-    "artifact_sha256": "8eafe45a3bff0a5510b560093f399addec7db2921995ad1698d8947240a0fcfb",
+    "image": "huoke:20261121-screening-review-r1",
+    "image_id": "sha256:000dc99224601fef4cc66cecc5b207167a4610d5e6afce7d6be2163fee45017a",
+    "artifact_sha256": "8d88d7d9d37b932357db72deb63c546ffc0554a16dc93cd1985c72953fd81f04",
     "access_note": "IP HTTP access retained by owner choice. Password account configured at explicit owner request; login verified. Public homepage/assets 200 and unauthenticated API 401 previously verified.",
-    "rollback_image": "huoke:20261121-discussions-r1",
-    "backup": "/home/admin/huoke-staging/backups/20261121-before-beat-state.dump"
+    "rollback_image": "huoke:20261121-beat-state-r1",
+    "backup": "/home/admin/huoke-staging/backups/20261121-before-screening-review.dump"
   },
   "automation": {
     "id": "automation",
@@ -35,11 +35,11 @@
     "requires": "Windows computer awake and Codex app running"
   },
   "verified": {
-    "local_tests_passed": 32,
+    "local_tests_passed": 33,
     "postgres_concurrency_test": "passed: 4 workers produced exactly one simulated send",
     "frontend_build": "passed",
     "npm_audit_vulnerabilities": 0,
-    "browser": "Isolated 390px V2EX lead detail displayed profile and self-declared GitHub links, no horizontal overflow or JS error",
+    "browser": "390px: all-cache current batch and earlier screening samples visible with separate totals, no overflow or JS errors",
     "local_source_sample": {
       "listed": 26,
       "filtered": 20,
@@ -49,7 +49,7 @@
     },
     "customer_messages_sent": 0,
     "paid_model_calls": 385,
-    "postgres_tests_passed": 126,
+    "postgres_tests_passed": 127,
     "server_health": "Public health 200, web and PostgreSQL healthy, worker pong, unauthenticated API 401, messages=0 and real sending disabled",
     "celery_worker": "ping pong",
     "server_source_sample": {
@@ -58,14 +58,14 @@
       "candidates": 6
     },
     "backup_restore": "Passed: restored snapshot to isolated huoke_restore_check_20261027; 6 leads",
-    "deployed_application_manifest": "39 backend, test and web files unchanged from the 126-passed image and verified in the current container",
+    "deployed_application_manifest": "39 backend/test/static files matched current running image",
     "server_source_second_run": {
       "listed": 26,
       "fetched": 0,
       "cache_hits": 26,
       "new_leads": 0
     },
-    "server_tests_passed": 126,
+    "server_tests_passed": 127,
     "smtp_auth_probe": {
       "status": "success",
       "host": "smtp.qq.com",
@@ -200,7 +200,7 @@
     },
     "conversion_quality": "V2EX node pilot found one explicit price-comparison inquiry. It remains below the domestic threshold, with no direct contact; quality lift beyond this sample is unproven.",
     "runtime_ai_estimated_usd": 3.744794,
-    "runtime_ai_note": "Beat persistence validation did not invoke the model. Actual provider cost and Codex development fees unknown.",
+    "runtime_ai_note": "Screening review validation and four GitHub profile rereads triggered no model calls. Actual provider and development cost unknown.",
     "iteration_model_estimated_usd": null
   },
   "blockers": [
@@ -211,7 +211,7 @@
     "Inbox and billing events not connected. Real sends disabled; production policy unconfirmed; IP HTTP retained per owner."
   ],
   "next_tasks": [
-    "Verify the next naturally scheduled 12:29 Beijing run using channel history and ensure no repeated work.",
+    "Review whether exact hourly dispatch meets strict database cooldown after the first observed natural runs; test retries around the cooldown boundary if confirmed.",
     "Use filtered samples and user labels to validate actual demand, prior to expanding queries or adding more sources.",
     "Resolve Xiaohongshu runtime compatibility before normal owner login; QQ separately awaits upstream authority and WeChat is disabled until available.",
     "Investigate another permitted high-intent Chinese source as evidence warrants; continue public contact discovery and manual workflow improvements."
@@ -489,8 +489,39 @@
       "gitee": "2026-11-21T11:29:26.887414+08:00",
       "github": "2026-11-21T11:29:26.887094+08:00"
     },
-    "natural_fire_pending": true,
+    "natural_fire_pending": false,
     "verification_model_calls": 0,
+    "owner_actions": [],
+    "natural_runs": {
+      "github": {
+        "id": 1068,
+        "cache_hits": 13,
+        "listed": 14,
+        "new_leads": 0
+      },
+      "gitee": {
+        "id": 1072,
+        "cache_hits": 30,
+        "listed": 35,
+        "new_leads": 0
+      }
+    }
+  },
+  "screening_review_iteration": {
+    "samples_limit": 5,
+    "sampling": "round robin per rejection reason, public original links only",
+    "gitee_baseline_sample_older_count": 4,
+    "gitee_baseline_sample_count": 5,
+    "staging_verified_platform_samples": {
+      "gitee": 5,
+      "nodeseek": 5,
+      "v2ex": 1,
+      "github_discussions": 1
+    },
+    "same_cycle_cache_replay_test": true,
+    "domestic_existing_public_profiles_rechecked": 4,
+    "contacts_added": 0,
+    "model_calls": 0,
     "owner_actions": []
   }
 }

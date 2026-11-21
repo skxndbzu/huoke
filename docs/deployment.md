@@ -1,6 +1,12 @@
 # 部署与发布
 
-## 当前发布 `20261121-gitee-r1`
+## 当前发布 `20261121-source-health-r1`
+
+渠道卡为 NodeSeek、V2EX 和 Linux.do 分别显示服务器与本地历史。新运行记录在现有 JSON 字段中标明路径，V2EX 服务器沿用既有任务历史。最近一次成功的计数和样本随路径展示，距上次成功超过两小时标记过期。无结构变更。
+
+线上验证 NodeSeek 与 V2EX 均显示服务器连接失败和本地补采成功，Linux.do 显示服务器失败、本地尚无自动读取记录。124 项隔离 PostgreSQL 测试通过，前端构建、390px 状态展示及 39 个线上文件摘要核对通过。发布前备份 `backups/20261121-before-source-health.dump`，回滚镜像 `huoke:20261121-gitee-r1`。
+
+## 上次发布 `20261121-gitee-r1`
 
 Gitee 公开 Issue 搜索已加入 `huoke-staging` 的现有 Celery beat，每小时最多一轮。线上已通过运维接口启用并由 worker 成功执行。无数据库结构变更。备份为 `/home/admin/huoke-staging/backups/20261121-before-gitee.dump`，回滚镜像 `huoke:20261118-social-r2`。执行回滚后复查健康和真实发送开关，保留新增渠道配置与数据。
 

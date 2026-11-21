@@ -5,7 +5,7 @@ import re
 from datetime import datetime, timezone, timedelta
 from fastapi import Depends, HTTPException
 from pydantic import Field
-from sqlalchemy import select
+from sqlalchemy import and_, or_, select
 import httpx
 from .schemas import Strict
 from .db import (Session, SourcePolicy, SourceItem, ChannelRun, Lead, CaptureEvidence,
@@ -14,7 +14,7 @@ from .pipeline import clean, classify, fingerprint
 from .prospecting import intent
 from .market import refresh_market
 from .contact_discovery import extract_contacts, save_candidate
-from .social_adapters import CATALOG, Capture, feed_items, gitee_items, gitee_issue_url, validate_url
+from .social_adapters import CATALOG, FEEDS, Capture, feed_items, gitee_items, gitee_issue_url, validate_url
 from .config import settings
 
 VERSION = 'social-capture-v1'
@@ -164,9 +164,29 @@ def status_error(exc):
     return 'failed', type(exc).__name__
 
 
+def feed_route(s, platform, mode, checked_at):
+    # V2EX server collection predates the shared social connector.
+    if platform == 'v2ex' and mode == 'server_feed':
+        runs = select(ChannelRun).where(ChannelRun.channel == 'v2ex')
+    else:
+        stored_mode = ChannelRun.stats['capture_mode'].as_string()
+        legacy_status = ('failed', 'running', 'interrupted', 'config_changed') if mode == 'server_feed' else ('unavailable', 'login_required')
+        runs = select(ChannelRun).where(ChannelRun.channel == 'social:' + platform, or_(
+            stored_mode == mode, and_(stored_mode.is_(None), ChannelRun.status.in_(legacy_status))))
+    latest = s.scalar(runs.order_by(ChannelRun.id.desc()).limit(1))
+    good = latest if latest and latest.status == 'success' else s.scalar(
+        runs.where(ChannelRun.status == 'success').order_by(ChannelRun.id.desc()).limit(1))
+    last_success = good.finished_at if good else ''
+    stale = bool(last_success and checked_at - datetime.fromisoformat(last_success) > timedelta(hours=2))
+    return {'mode': mode, 'status': latest.status if latest else 'not_connected',
+            'last_attempt': latest.started_at if latest else '', 'last_success': last_success,
+            'error': latest.error if latest else '', 'stats': good.stats if good else {}, 'stale': stale}
+
+
 def sync_social(platform):
     if platform not in CATALOG or CATALOG[platform]['mode'] not in SERVER_MODES:
         return {'status': 'executor_required'}
+    provenance = 'server_search' if platform == 'gitee' else 'server_feed'
     with Session.begin() as s:
         locked_control(s)
         p = get_policy(s, platform)
@@ -177,19 +197,18 @@ def sync_social(platform):
         p.next_allowed_at = (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat()
         for old in s.scalars(select(ChannelRun).where(ChannelRun.channel == p.channel, ChannelRun.status == 'running')):
             old.status, old.finished_at, old.error = 'interrupted', now(), 'previous_run_interrupted'
-        run = ChannelRun(channel=p.channel)
+        run = ChannelRun(channel=p.channel, stats={'capture_mode': provenance})
         s.add(run)
         s.flush()
         run_id, version, queries = run.id, p.version, p.options['queries']
     try:
         with httpx.Client(timeout=20, follow_redirects=False, headers={'User-Agent': 'HuokePilot/0.3 bounded-public-source'}) as client:
             items = gitee_items(client, queries) if platform == 'gitee' else feed_items(platform, client)
-        provenance = 'server_search' if platform == 'gitee' else 'server_feed'
         with Session.begin() as s:
             locked_control(s)
             p = get_policy(s, platform)
             if p.version != version or not p.enabled:
-                result = {'status': 'config_changed'}
+                result = {'status': 'config_changed', 'capture_mode': provenance}
             else:
                 result = {'status': 'success', **ingest(s, platform, items, p.options, provenance)}
             r = s.get(ChannelRun, run_id)
@@ -210,6 +229,7 @@ def register_social(app, role):
 
     @app.get('/api/social/channels')
     def channels(actor=Depends(role)):
+        checked_at = datetime.now(timezone.utc)
         with Session.begin() as s:
             locked_control(s)
             result = []
@@ -218,9 +238,10 @@ def register_social(app, role):
                 runs = select(ChannelRun).where(ChannelRun.channel == p.channel)
                 latest = s.scalar(runs.order_by(ChannelRun.id.desc()).limit(1))
                 good = s.scalar(runs.where(ChannelRun.status == 'success').order_by(ChannelRun.id.desc()).limit(1))
+                routes = [feed_route(s, platform, mode, checked_at) for mode in ('server_feed', 'executor')] if platform in FEEDS else []
                 result.append({'platform': platform, **spec, 'version': p.version, 'enabled': p.enabled, **p.options,
                                'next_allowed_at': p.next_allowed_at, 'status': latest.status if latest else 'not_connected',
-                               'last_success': good.finished_at if good else '', 'last_attempt': latest.started_at if latest else '',
+                               'last_success': good.finished_at if good else '', 'last_attempt': latest.started_at if latest else '', 'routes': routes,
                                'error': latest.error if latest else '', 'stats': latest.stats if latest else {}, 'can_send': False})
             return result
 
@@ -292,5 +313,6 @@ def register_social(app, role):
             p = get_policy(s, platform)
             if p.version != data.version or not p.enabled:
                 raise HTTPException(409, '配置已变化或采集已停用')
-            s.add(ChannelRun(channel=p.channel, status=data.status, error=data.code, finished_at=now()))
+            s.add(ChannelRun(channel=p.channel, status=data.status, error=data.code, finished_at=now(),
+                             stats={'capture_mode': 'executor'}))
         return {'ok': True}

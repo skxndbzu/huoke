@@ -196,3 +196,28 @@ def test_gitee_search_filters_and_deduplicates_in_workspace(client, monkeypatch)
     result = client.post('/api/social/channels/gitee/capture',
                          json={'version': version, 'mode': 'manual', 'items': [duplicate]}).json()
     assert result['new_leads'] == 0 and result['cache_hits'] == 1
+
+
+def test_feed_routes_separate_failures_imports_and_stale_success(client):
+    version = enable(client, 'nodeseek')
+    old_time = (datetime.now(timezone.utc) - timedelta(hours=3)).isoformat()
+    with Session.begin() as s:
+        s.add(ChannelRun(channel='social:nodeseek', status='failed', error='ConnectError'))
+        s.add(ChannelRun(channel='social:nodeseek', status='success', finished_at=old_time,
+                         stats={'capture_mode': 'executor', 'listed': 20}))
+        s.add(ChannelRun(channel='v2ex', status='failed', error='ConnectError'))
+    status = client.post('/api/social/channels/nodeseek/status', json={
+        'version': version, 'status': 'verification_required', 'code': 'HTTP_403'})
+    assert status.status_code == 200
+    imported = client.post('/api/social/channels/nodeseek/capture', json={
+        'version': version, 'mode': 'manual', 'items': [item()]})
+    assert imported.status_code == 200
+
+    rows = {r['platform']: r for r in client.get('/api/social/channels').json()}
+    assert rows['nodeseek']['status'] == 'imported'
+    server, local = rows['nodeseek']['routes']
+    assert server['status'] == 'failed' and server['error'] == 'ConnectError'
+    assert not server['last_success']
+    assert local['status'] == 'verification_required' and local['error'] == 'HTTP_403'
+    assert local['stale'] and local['last_success'] == old_time and local['stats']['listed'] == 20
+    assert rows['v2ex']['routes'][0]['status'] == 'failed'

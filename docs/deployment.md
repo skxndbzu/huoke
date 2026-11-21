@@ -1,6 +1,10 @@
 # 部署与发布
 
-## 当前发布 `20261121-screening-review-r1`
+## 当前发布 `20261121-source-cooldown-r1`
+
+服务器公开采集在定时触发碰到数据库冷却，且剩余时间不超过两分钟时，允许在冷却完成后补跑一次。数据库仍按平台限制一小时最多一次访问。网络失败、限流、长冷却沿用原行为。独立 Redis 与真实 Celery worker 用模拟来源验证了三秒冷却后约四秒补跑，隔离 PostgreSQL 129 项通过。持续使用独立调度卷。回滚镜像 `huoke:20261121-screening-review-r1`，备份 `backups/20261121-before-source-cooldown.dump`。
+
+## 上次发布 `20261121-screening-review-r1`
 
 公开来源筛除样本按不同原因抽取，后续空批或全缓存批次保留最近的样本时间与来源。线上已核对四个公开来源真实返回记录。127 项隔离 PostgreSQL 测试和 390px 界面验证通过。回滚镜像 `huoke:20261121-beat-state-r1`，备份 `backups/20261121-before-screening-review.dump`。继续保留 Celery beat 的专用数据卷。
 

@@ -1,25 +1,25 @@
 {
-  "updated_at": "2026-11-21T13:46:41.213498+08:00",
+  "updated_at": "2026-11-21T14:06:34.801593+08:00",
   "timezone": "Asia/Shanghai",
   "phase": "phase_1_assisted_workflow_live",
-  "branch": "codex/screening-review-20261121",
+  "branch": "codex/source-cooldown-retry-20261121",
   "repository": "https://github.com/skxndbzu/huoke.git",
   "deployment": {
     "host": "117.72.35.216",
     "user": "admin",
     "root": "/home/admin/huoke-staging",
-    "release": "20261121-screening-review-r1",
-    "status": "healthy_staging_screening_review",
+    "release": "20261121-source-cooldown-r1",
+    "status": "healthy_staging_source_cooldown_retry",
     "access": "http://117.72.35.216:18080",
     "real_send_enabled": false,
     "paused": false,
     "production_policy": "not_confirmed",
-    "image": "huoke:20261121-screening-review-r1",
-    "image_id": "sha256:000dc99224601fef4cc66cecc5b207167a4610d5e6afce7d6be2163fee45017a",
-    "artifact_sha256": "8d88d7d9d37b932357db72deb63c546ffc0554a16dc93cd1985c72953fd81f04",
+    "image": "huoke:20261121-source-cooldown-r1",
+    "image_id": "sha256:ee04bfeb33466437799936af91ba65061a90e1187526d1a3c973ab00bdcb3cf0",
+    "artifact_sha256": "8c77302efa2b6f8bc0d70069b365e878c302087ea728d44388983e3dc52a9f71",
     "access_note": "IP HTTP access retained by owner choice. Password account configured at explicit owner request; login verified. Public homepage/assets 200 and unauthenticated API 401 previously verified.",
-    "rollback_image": "huoke:20261121-beat-state-r1",
-    "backup": "/home/admin/huoke-staging/backups/20261121-before-screening-review.dump"
+    "rollback_image": "huoke:20261121-screening-review-r1",
+    "backup": "/home/admin/huoke-staging/backups/20261121-before-source-cooldown.dump"
   },
   "automation": {
     "id": "automation",
@@ -35,7 +35,7 @@
     "requires": "Windows computer awake and Codex app running"
   },
   "verified": {
-    "local_tests_passed": 33,
+    "local_tests_passed": 34,
     "postgres_concurrency_test": "passed: 4 workers produced exactly one simulated send",
     "frontend_build": "passed",
     "npm_audit_vulnerabilities": 0,
@@ -49,7 +49,7 @@
     },
     "customer_messages_sent": 0,
     "paid_model_calls": 385,
-    "postgres_tests_passed": 127,
+    "postgres_tests_passed": 129,
     "server_health": "Public health 200, web and PostgreSQL healthy, worker pong, unauthenticated API 401, messages=0 and real sending disabled",
     "celery_worker": "ping pong",
     "server_source_sample": {
@@ -65,7 +65,7 @@
       "cache_hits": 26,
       "new_leads": 0
     },
-    "server_tests_passed": 127,
+    "server_tests_passed": 129,
     "smtp_auth_probe": {
       "status": "success",
       "host": "smtp.qq.com",
@@ -92,7 +92,7 @@
     },
     "model": "gpt-6.1-sol models verified and one evidence-checked inference succeeded",
     "owner_password_login": "Initial account provisioned at explicit owner request; actual login and logout verified. No reviewer token accessed, no message approval. Credentials not stored in repository.",
-    "local_validation": "32 social/workspace tests passed, 126 final PostgreSQL tests passed and 50 real discussion entries parsed",
+    "local_validation": "34 targeted social/discovery/pacing tests; 129 on final isolated PostgreSQL image",
     "market_filter": {
       "threshold": 70,
       "total_leads": 1265,
@@ -200,7 +200,7 @@
     },
     "conversion_quality": "V2EX node pilot found one explicit price-comparison inquiry. It remains below the domestic threshold, with no direct contact; quality lift beyond this sample is unproven.",
     "runtime_ai_estimated_usd": 3.744794,
-    "runtime_ai_note": "Screening review validation and four GitHub profile rereads triggered no model calls. Actual provider and development cost unknown.",
+    "runtime_ai_note": "Cooldown recovery verification was isolated and did not use a model. Supplier bill and development fees unknown.",
     "iteration_model_estimated_usd": null
   },
   "blockers": [
@@ -211,7 +211,7 @@
     "Inbox and billing events not connected. Real sends disabled; production policy unconfirmed; IP HTTP retained per owner."
   ],
   "next_tasks": [
-    "Review whether exact hourly dispatch meets strict database cooldown after the first observed natural runs; test retries around the cooldown boundary if confirmed.",
+    "Verify future natural runs after cutoff retry; compare Windows real polling timestamps after a long sleep/resume.",
     "Use filtered samples and user labels to validate actual demand, prior to expanding queries or adding more sources.",
     "Resolve Xiaohongshu runtime compatibility before normal owner login; QQ separately awaits upstream authority and WeChat is disabled until available.",
     "Investigate another permitted high-intent Chinese source as evidence warrants; continue public contact discovery and manual workflow improvements."
@@ -522,6 +522,15 @@
     "domestic_existing_public_profiles_rechecked": 4,
     "contacts_added": 0,
     "model_calls": 0,
+    "owner_actions": []
+  },
+  "source_cooldown_retry_iteration": {
+    "baseline": "13:29 beat dispatch count advanced but per-source hourly cooldown prevented a fresh run",
+    "remaining_cooldown_limit_seconds": 120,
+    "max_retries": 1,
+    "isolated_real_broker_retry_seconds": 4.0,
+    "natural_fire_pending": true,
+    "verification_model_calls": 0,
     "owner_actions": []
   }
 }

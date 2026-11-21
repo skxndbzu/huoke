@@ -224,7 +224,7 @@ def sync_social(platform):
         if not settings().source_enabled or not p.enabled:
             return {'status': 'disabled'}
         if p.next_allowed_at > now():
-            return {'status': 'cooldown'}
+            return {'status': 'cooldown', 'next_allowed_at': p.next_allowed_at}
         p.next_allowed_at = (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat()
         for old in s.scalars(select(ChannelRun).where(ChannelRun.channel == p.channel, ChannelRun.status == 'running')):
             old.status, old.finished_at, old.error = 'interrupted', now(), 'previous_run_interrupted'

@@ -143,7 +143,7 @@ def test_forum_failure_records_challenge_and_cooldown(client,monkeypatch):
         r=httpx.Response(403,request=httpx.Request('GET','https://linux.do/latest.rss'));r.raise_for_status()
     monkeypatch.setattr('app.social.feed_items',denied)
     assert sync_social('linuxdo')=={'status':'verification_required','error':'HTTP_403'}
-    assert sync_social('linuxdo')=={'status':'cooldown'}
+    assert sync_social('linuxdo')['status']=='cooldown'
 
 
 def test_manual_only_channel_rejects_executor_claim(client):
@@ -187,7 +187,8 @@ def test_gitee_search_filters_and_deduplicates_in_workspace(client, monkeypatch)
     assert result['listed'] == 3 and result['new_leads'] == 1
     assert result['filter_reasons'] == {'older_than_90_days': 1, 'no_keyword': 1}
     assert result['model_calls'] == 0 and result['capture_mode'] == 'server_search'
-    assert sync_social('gitee') == {'status': 'cooldown'}
+    cooldown = sync_social('gitee')
+    assert cooldown['status'] == 'cooldown' and datetime.fromisoformat(cooldown['next_allowed_at']) > current
     options = {'source': 'Gitee Issues', 'contact': 'public_discussion'}
     row = client.get('/api/workspace/leads', params=options).json()['items'][0]
     assert row['url'] == issue_url and row['capture']['provenance'] == 'server_search'

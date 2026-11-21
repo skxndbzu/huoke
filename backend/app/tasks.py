@@ -1,3 +1,6 @@
+from datetime import datetime, timezone
+from math import ceil
+
 from celery import Celery
 from .config import settings
 from .pipeline import sync_hn
@@ -25,10 +28,20 @@ def sync_source():
     return sync_hn()
 
 
-@celery.task(name='source.social')
-def sync_social_source(platform):
+def retry_near_cooldown(task, result):
+    # An on-time hourly tick may reach the worker before the previous run's hourly gate.
+    if result['status'] == 'cooldown' and not task.request.retries:
+        allowed = datetime.fromisoformat(result['next_allowed_at'])
+        wait = (allowed - datetime.now(timezone.utc)).total_seconds()
+        if wait <= 120:
+            raise task.retry(countdown=max(1, ceil(wait) + 1), expires=180)
+    return result
+
+
+@celery.task(name='source.social', bind=True, max_retries=1)
+def sync_social_source(self, platform):
     from .social import sync_social
-    return sync_social(platform)
+    return retry_near_cooldown(self, sync_social(platform))
 
 
 @celery.task(name='outbox.tick')
@@ -36,10 +49,10 @@ def outbox_tick():
     return dispatch_one()
 
 
-@celery.task(name='source.public')
-def sync_public_source(channel):
+@celery.task(name='source.public', bind=True, max_retries=1)
+def sync_public_source(self, channel):
     from .sources import sync_public
-    return sync_public(channel)
+    return retry_near_cooldown(self, sync_public(channel))
 
 
 @celery.task(name='source.analyze_pending')

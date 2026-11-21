@@ -1,8 +1,51 @@
+from datetime import datetime, timedelta, timezone
+from unittest.mock import Mock
+
 import httpx
 import pytest
+from celery.exceptions import Retry
 from sqlalchemy import select, func
 from app.db import Session, Lead, SourcePolicy, ChannelRun, ContactPoint, Message
 from app.sources import sync_public, analyze_pending
+
+
+@pytest.mark.parametrize('module,sync_name,task_name,channel', [
+    ('sources', 'sync_public', 'sync_public_source', 'github'),
+    ('social', 'sync_social', 'sync_social_source', 'gitee'),
+])
+def test_hourly_task_retries_only_when_cooldown_is_about_to_end(monkeypatch, module, sync_name, task_name, channel):
+    from app import tasks
+    task = getattr(tasks, task_name)
+    source = Mock()
+    retry = Mock(return_value=Retry())
+    monkeypatch.setattr(f'app.{module}.{sync_name}', source)
+    monkeypatch.setattr(task, 'retry', retry)
+    current = datetime.now(timezone.utc)
+
+    class FixedClock(datetime):
+        @classmethod
+        def now(cls, tz=None):
+            return current
+
+    monkeypatch.setattr(tasks, 'datetime', FixedClock)
+    source.return_value = {'status': 'cooldown', 'next_allowed_at': (current + timedelta(seconds=20)).isoformat()}
+    with pytest.raises(Retry):
+        task.run(channel)
+    source.assert_called_once_with(channel)
+    assert retry.call_args.kwargs['countdown'] == 21
+    assert retry.call_args.kwargs['expires'] == 180
+
+    retry.reset_mock()
+    task.push_request(retries=1)
+    try:
+        assert task.run(channel)['status'] == 'cooldown'
+    finally:
+        task.pop_request()
+    source.return_value = {'status': 'cooldown', 'next_allowed_at': (current + timedelta(minutes=10)).isoformat()}
+    assert task.run(channel)['status'] == 'cooldown'
+    source.return_value = {'status': 'failed', 'error': 'ConnectError'}
+    assert task.run(channel)['status'] == 'failed'
+    retry.assert_not_called()
 
 
 def transport(monkeypatch, handle):

@@ -247,3 +247,25 @@ def test_contact_priority_preserves_high_value_without_contacts(client):
     high=client.get('/api/workspace/leads?market=domestic&bucket=high_value').json()
     assert high['total']==1 and high['items'][0]['id']==ids[1] and high['items'][0]['high_value_no_contact']
     assert client.get('/api/workspace/metrics').json()['counts']['high_value']==1
+
+
+def test_domestic_review_prioritizes_ai_purchase_stage_within_contact_tier(client):
+    with Session.begin() as s:
+        ids = [add_cn(s, f'purchase-order-{i}') for i in range(4)]
+        for lead_id, (method, stage) in zip(ids, [
+            ('ai', 'exploring'), ('ai', 'explicit_need'),
+            ('rules', 'explicit_need'), ('ai', 'unknown'),
+        ]):
+            market = s.get(LeadMarket, lead_id)
+            market.manual, market.status = True, 'confirmed_cn'
+            s.get(Lead, lead_id).analysis = {'method': method, 'purchase_stage': stage}
+        s.add(ContactPoint(lead_id=ids[3], kind='wechat', value='public_test_id',
+                           source_url='https://example.test/business', evidence='Public business contact',
+                           verified=False))
+    expected = [ids[3], ids[1], ids[0], ids[2]]
+    for bucket in ('', 'review'):
+        result = client.get('/api/workspace/leads', params={'market': 'domestic', 'bucket': bucket})
+        assert result.status_code == 200
+        assert [lead['id'] for lead in result.json()['items']] == expected
+    all_markets = client.get('/api/workspace/leads', params={'market': 'all'}).json()
+    assert [lead['id'] for lead in all_markets['items'] if lead['id'] in ids] == ids[::-1]

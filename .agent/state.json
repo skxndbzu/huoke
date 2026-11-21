@@ -1,26 +1,26 @@
 {
-  "updated_at": "2026-11-21T16:02:52.128127+08:00",
+  "updated_at": "2026-11-21T16:14:15.617493+08:00",
   "timezone": "Asia/Shanghai",
   "phase": "phase_1_assisted_workflow_live",
-  "branch": "codex/nodeseek-polling-20261121",
+  "branch": "codex/domestic-demand-order-20261121",
   "repository": "https://github.com/skxndbzu/huoke.git",
   "deployment": {
     "host": "117.72.35.216",
     "user": "admin",
     "root": "/home/admin/huoke-staging",
-    "release": "20261121-nodeseek-window-r1",
-    "status": "healthy_staging_nodeseek_publication_window",
+    "release": "20261121-domestic-demand-r1",
+    "status": "healthy_staging_domestic_demand_order",
     "access": "http://117.72.35.216:18080",
     "real_send_enabled": false,
     "paused": false,
     "production_policy": "not_confirmed",
-    "image": "huoke:20261121-nodeseek-window-r1",
-    "image_id": "sha256:262d76a5f74c9a12e31d1f43db221695dc89aee8a6e0cc27cd34bfa3aa64c2d7",
-    "artifact_sha256": "c2a122be3b2e51378c54b199ce1214ab5ffbc2c4f0feeff518830074c05d560b",
+    "image": "huoke:20261121-domestic-demand-r1",
+    "image_id": "sha256:53736cfeb0d30ab0a21b06bd12018ffb9e5240f60ec7e1cc0b8fb7d6f01417a3",
+    "artifact_sha256": "56fd9f3c72efdebb1eb0f10bf506b376c2308b14022bf8ad2f4dc251be630105",
     "access_note": "IP HTTP access retained by owner choice. Password account configured at explicit owner request; login verified. Public homepage/assets 200 and unauthenticated API 401 previously verified.",
-    "rollback_image": "huoke:20261121-screening-history-r1",
-    "backup": "/home/admin/huoke-staging/backups/20261121-before-nodeseek-window.dump",
-    "private_backup": "/home/admin/huoke-staging/backups/20261121-before-nodeseek-window.secrets.tar"
+    "rollback_image": "huoke:20261121-nodeseek-window-r1",
+    "backup": "/home/admin/huoke-staging/backups/20261121-before-domestic-demand.dump",
+    "private_backup": "/home/admin/huoke-staging/backups/20261121-before-domestic-demand.secrets.tar"
   },
   "automation": {
     "id": "automation",
@@ -40,7 +40,7 @@
     "postgres_concurrency_test": "passed: 4 workers produced exactly one simulated send",
     "frontend_build": "passed",
     "npm_audit_vulnerabilities": 0,
-    "browser": "390px: official RSS capture and cache-only replay preserve the publication range",
+    "browser": "390px verified contact priority, AI purchase-stage badges and Chinese detail labels",
     "local_source_sample": {
       "listed": 26,
       "filtered": 20,
@@ -50,8 +50,8 @@
     },
     "customer_messages_sent": 0,
     "paid_model_calls": 385,
-    "postgres_tests_passed": 136,
-    "server_health": "Public 200, authenticated routes readable, anonymous API 401, PostgreSQL and web healthy, worker pong, real send disabled, message rows 0",
+    "postgres_tests_passed": 137,
+    "server_health": "Public 200, anonymous API 401, web and PostgreSQL healthy, worker pong, real send disabled, message rows 0",
     "celery_worker": "ping pong",
     "server_source_sample": {
       "listed": 26,
@@ -66,7 +66,7 @@
       "cache_hits": 26,
       "new_leads": 0
     },
-    "server_tests_passed": 136,
+    "server_tests_passed": 137,
     "smtp_auth_probe": {
       "status": "success",
       "host": "smtp.qq.com",
@@ -93,7 +93,7 @@
     },
     "model": "gpt-6.1-sol models verified and one evidence-checked inference succeeded",
     "owner_password_login": "Initial account provisioned at explicit owner request; actual login and logout verified. No reviewer token accessed, no message approval. Credentials not stored in repository.",
-    "local_validation": "24 social tests; final isolated PostgreSQL image 136 passed",
+    "local_validation": "36 targeted market and workspace tests; 137 isolated PostgreSQL tests",
     "market_filter": {
       "threshold": 70,
       "total_leads": 1265,
@@ -199,9 +199,9 @@
       "monthly": 100,
       "owner_monthly_ceiling": 10000
     },
-    "conversion_quality": "No new candidates from the two pilot batches. Four existing domestic matches, none with direct contact or owner qualification.",
+    "conversion_quality": "No measured conversion change. Four domestic matches, zero direct contact and owner-qualified leads. The top-ranked historical research Issue is closed.",
     "runtime_ai_estimated_usd": 3.75222,
-    "runtime_ai_note": "NodeSeek polling pilot made no model calls. Actual supplier and development costs unknown.",
+    "runtime_ai_note": "Domestic demand ordering and release verification made no model calls. Actual supplier and development costs unknown.",
     "iteration_model_estimated_usd": null
   },
   "blockers": [
@@ -212,7 +212,7 @@
     "Inbox and billing events not connected. Real sends disabled; production policy unconfirmed; IP HTTP retained per owner."
   ],
   "next_tasks": [
-    "Compare upcoming ten-minute NodeSeek batches for time gaps, recurring clear demand and explicit business contact paths. Review owner labels when available.",
+    "Recheck current authoritative GitHub Issue state for existing review candidates. Use the observed closed research Issue to distinguish historical evidence from current source availability.",
     "Use filtered samples and user labels to validate actual demand, prior to expanding queries or adding more sources.",
     "Resolve Xiaohongshu runtime compatibility before normal owner login; QQ separately awaits upstream authority and WeChat is disabled until available.",
     "Investigate another permitted high-intent Chinese source as evidence warrants; continue public contact discovery and manual workflow improvements."
@@ -769,6 +769,57 @@
       "in_live_pool": false,
       "direct_http_status": 403,
       "confirmed_demand": null
+    },
+    "model_calls": 0,
+    "owner_actions": []
+  },
+  "domestic_demand_order_iteration": {
+    "before": [
+      1197,
+      1171,
+      604,
+      493
+    ],
+    "after": [
+      1171,
+      1197,
+      604,
+      493
+    ],
+    "verified_routes": [
+      "domestic customer pool",
+      "domestic review queue"
+    ],
+    "source_check": {
+      "lead_id": 1171,
+      "url": "https://github.com/0xnicholas/blur/issues/3",
+      "status": "closed",
+      "reason": "completed",
+      "closed_at": "2026-11-16T15:18:55Z",
+      "owner_update": "https://github.com/0xnicholas/blur/issues/3#issuecomment-6920535862",
+      "ongoing_procurement": "unknown",
+      "contact_status": "public_discussion"
+    },
+    "normal_collection": {
+      "v2ex": {
+        "run_id": 1099,
+        "listed": 60,
+        "cache_hits": 58,
+        "new_leads": 0
+      },
+      "github_discussions": {
+        "run_id": 1100,
+        "listed": 50,
+        "cache_hits": 49,
+        "new_leads": 0
+      },
+      "nodeseek": {
+        "run_id": 1101,
+        "listed": 20,
+        "filtered": 20,
+        "new_leads": 0,
+        "gap_from_previous_latest_to_earliest_seconds": 221
+      }
     },
     "model_calls": 0,
     "owner_actions": []

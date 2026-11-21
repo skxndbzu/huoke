@@ -227,8 +227,20 @@ def register_workspace(app, role, reviewer):
                 stmt = stmt.where(~candidate, *(~Lead.source_key.startswith(prefix, autoescape=True) for prefix in PUBLIC_DISCUSSION_PREFIXES))
             total = s.scalar(select(func.count()).select_from(stmt.subquery()))
             contact_order = case((direct_contact(Lead.id, True), 0), (direct_contact(Lead.id), 1), (high_value(), 2), else_=3)
-            ranking = case({lead_id: i for i, lead_id in enumerate(research_ids)}, value=Lead.id, else_=len(research_ids)) if research_ids else contact_order
-            items = list(s.scalars(stmt.order_by(ranking, Lead.id.desc()).offset(offset).limit(limit)))
+            if research_ids:
+                ranking = [case({lead_id: i for i, lead_id in enumerate(research_ids)},
+                                value=Lead.id, else_=len(research_ids))]
+            else:
+                ranking = [contact_order]
+                if market == 'domestic' and bucket in ('', 'review'):
+                    assessed = Lead.analysis['method'].as_string() == 'ai'
+                    stage_value = Lead.analysis['purchase_stage'].as_string()
+                    ranking.append(case(
+                        (assessed & (stage_value == 'explicit_need'), 0),
+                        (assessed & (stage_value == 'exploring'), 1),
+                        else_=2,
+                    ))
+            items = list(s.scalars(stmt.order_by(*ranking, Lead.id.desc()).offset(offset).limit(limit)))
             return {'total': total, 'items': [view(s, l) for l in items],
                     'sources': list(s.scalars(select(Lead.source).distinct()))}
 

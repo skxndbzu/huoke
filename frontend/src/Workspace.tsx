@@ -12,6 +12,10 @@ const stages: R = {
   closed: "已结束",
 };
 const quals: R = { pending: "待核实", valid: "有效需求", invalid: "不匹配" };
+const purchaseStages: Record<string, string> = {
+  explicit_need: "明确需求",
+  exploring: "选型调研",
+};
 const contactLabels: R = {
   verified_contact: "已核实可联系",
   unverified_candidate: "有待核实联系方式",
@@ -617,7 +621,11 @@ export function CustomerWorkspace({
                     {contactLabels[l.contact_status]}
                   </span>
                   <span>
-                    {l.analysis.method === "ai" ? "AI 已分析" : "规则初筛"}
+                    {l.analysis.method === "ai"
+                      ? purchaseStages[l.analysis.purchase_stage]
+                        ? `AI · ${purchaseStages[l.analysis.purchase_stage]}`
+                        : "AI 已分析"
+                      : "规则初筛"}
                   </span>
                 </div>
                 <small>
@@ -699,12 +707,8 @@ export function CustomerWorkspace({
               />
               <p className="muted">
                 {selected.analysis.method === "ai"
-                  ? "AI 需求分析"
-                  : "规则初筛，尚未由 AI 判断"}{" "}
-                · 采购阶段：
-                {selected.analysis.purchase_stage === "unknown"
-                  ? "未知"
-                  : selected.analysis.purchase_stage}
+                  ? `AI 需求分析 · 采购阶段 ${purchaseStages[selected.analysis.purchase_stage] || "待核实"}`
+                  : "规则初筛，尚未由 AI 判断"}
               </p>
               <p>{selected.analysis.summary}</p>
               <h3>需求证据</h3>

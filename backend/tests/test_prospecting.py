@@ -1,8 +1,9 @@
 import base64
+import json
 import httpx
 import pytest
 from sqlalchemy import select, func
-from app.db import Session, Lead, LeadMarket, AnalysisCall, ContactPoint, Message
+from app.db import Session, Lead, LeadMarket, AnalysisCall, ContactPoint, Message, SourceItem
 from app.market import refresh_market, backfill
 from app.prospecting import intent, analysis_candidates
 from app.profile_research import research_profile
@@ -21,6 +22,10 @@ from app.profile_research import research_profile
     ('求推荐 API 资源：哪家模型 API 支持按量付费？', '我们正在开发客服。', True),
     ('每日信息流', '寻找稳定的大模型 API', False),
     ('OpenAI settings bug', '```\n寻找稳定的 API 供应商\n```', False),
+    ('自定义 API：两个中转站均出现 GPT 正常、Gemini 调用失败', '分别测试两家中转站的 Gemini 接入。', True),
+    ('OpenAI API 工具调用失败', '内部工具调用失败，修复参数解析。', False),
+    ('中转鸡都是当消耗品用的吗？', '萌新第一台中转鸡求推荐，想找网速快的便宜中转鸡。', False),
+    ('中转鸡上转发模型接口', '中转鸡测速正常，但是 Gemini 调用失败，请问哪家 API 可用？', True),
 ])
 def test_triage_recognizes_buyer_questions_without_treating_implementation_as_procurement(title, text, qualified):
     r = intent(title, text)
@@ -46,6 +51,40 @@ def test_focused_source_retains_real_api_question_and_filters_generic_implementa
     with Session() as s:
         assert s.scalar(select(Lead).where(Lead.source_key=='github:88'))
         assert not s.scalar(select(Lead).where(Lead.source_key=='github:89'))
+
+
+def test_rule_update_rechecks_filtered_issue_and_preserves_existing_analysis(monkeypatch):
+    from app.pipeline import clean, fingerprint
+    from app.sources import SOURCES, VERSION, sync_public
+    from test_discovery import cooldown_off, transport
+
+    options = {'queries': SOURCES['github']['queries'], 'exclude': []}
+    rows = [
+        {'id': 91, 'title': '自定义 API：两个中转站的 Gemini 调用失败', 'body': '请排查接入问题。'},
+        {'id': 92, 'title': '想请教用的哪家大模型 API', 'body': '正在比较模型接口。'},
+    ]
+    for row in rows:
+        row.update(html_url=f'https://github.com/test/app/issues/{row["id"]}',
+                   user={'login': 'developer', 'type': 'User'})
+    prior_analysis = {'method': 'ai', 'summary': 'Previously evaluated evidence'}
+    with Session.begin() as s:
+        for row in rows:
+            key = f'github:{row["id"]}'
+            text = clean(row['title'] + '\n' + row['body'])
+            digest = fingerprint(text)
+            s.add(SourceItem(key=key, fingerprint=fingerprint(digest + VERSION + json.dumps(options, sort_keys=True))))
+            if row['id'] == 92:
+                s.add(Lead(source='GitHub Issues', source_key=key, url=row['html_url'],
+                           title=row['title'], text=text, fingerprint=digest, analysis=prior_analysis))
+    transport(monkeypatch, lambda request: httpx.Response(200, json={'items': rows}))
+    first = sync_public('github')
+    assert first['new_leads'] == 1 and first['updated'] == 0 and first['model_calls'] == 0
+    cooldown_off('github')
+    again = sync_public('github')
+    assert again['new_leads'] == 0 and again['cache_hits'] == 6
+    with Session() as s:
+        existing = s.scalar(select(Lead).where(Lead.source_key == 'github:92'))
+        assert existing.analysis == prior_analysis
 
 
 def test_queue_keeps_old_demand_skips_invalid_calls_and_diversifies_authors(client):

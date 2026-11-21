@@ -12,7 +12,7 @@ from .schemas import Strict
 from .db import (Session, SourcePolicy, SourceItem, ChannelRun, Lead, LeadMarket, CaptureEvidence, Event,
                  locked_control, now, event)
 from .pipeline import clean, classify, fingerprint
-from .prospecting import intent
+from .prospecting import intent, VERSION_TRIAGE
 from .market import refresh_market
 from .contact_discovery import extract_contacts, extract_contact_text, save_candidate
 from .social_adapters import (CATALOG, HOSTS, Capture, V2EXProfile, V2EX_USERNAME,
@@ -98,7 +98,7 @@ def validate_capture(platform, item, options):
 def ingest(s, platform, items, options, provenance):
     stats = {'listed': len(items), 'filtered': 0, 'cache_hits': 0, 'new_leads': 0, 'updated': 0,
              'model_calls': 0, 'capture_mode': provenance, 'rule_version': VERSION,
-             'filter_reasons': {}, 'filtered_samples': []}
+             'filter_reasons': {}, 'filtered_samples': [], 'triage_version': VERSION_TRIAGE}
     queries = [word.casefold().split() if platform == 'gitee' else [word.casefold()] for word in options['queries']]
     excluded = [word.casefold() for word in options['exclude']]
     samples = {reason: [] for reason in FILTER_REVIEW_ORDER}
@@ -126,7 +126,7 @@ def ingest(s, platform, items, options, provenance):
         key = (platform + ':' + event_id if platform == 'v2ex' else
                platform + ':' + hashlib.sha256(json.dumps([item.account, item.conversation, event_id], ensure_ascii=False).encode()).hexdigest())
         digest = fingerprint(title + '\n' + text)
-        cached_digest = fingerprint(digest + VERSION + json.dumps(options, sort_keys=True, ensure_ascii=False))
+        cached_digest = fingerprint(digest + VERSION + VERSION_TRIAGE + json.dumps(options, sort_keys=True, ensure_ascii=False))
         cached = s.get(SourceItem, key)
         if cached and cached.fingerprint == cached_digest:
             stats['cache_hits'] += 1

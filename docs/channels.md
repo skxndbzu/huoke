@@ -1,5 +1,11 @@
 # 渠道能力与证据
 
+## 2026-11-21 GitHub 模型调用问题抽查
+
+对照现有三组和六组替代搜索，共查得 40 条不同的公开 Issue。现有搜索返回一条询问 API 选型，以及一条记录两家中转站均遇到 Gemini 调用失败的使用问题。后者旧规则为 0 分，新版为 55 分，其他 39 条初筛通过状态一致。六组替代词未发现额外明确采购需求，通过旧规则的两条分别为内部协作任务和供应商自荐。沿用现有搜词。新识别的原帖仍开放，作者未公开邮箱、所在地或网站，采购意愿待核实。 [调用问题原文](https://github.com/makecindy/cindy/issues/11462) · [选型提问](https://github.com/sweetcornna/university-helper/issues/56)
+
+17:02 NodeSeek 自然采集发现一条 VPS 中转询价被初筛误判为接口选型，后台分析估算花费 0.007206 美元。发布镜像回放确认该条现在被筛除。同样措辞伴随明确模型 API 证据的测试样本仍通过。已有误判档案保留。 [VPS 原帖](https://www.nodeseek.com/post-1070165-1)
+
 ## 2026-11-21 GitHub Issue 状态复核
 
 现有 GitHub 采集任务使用官方 Issue 详情接口，每轮最多核对五条仍待跟进的国内线索，同一条至少间隔一天。按 GitHub Issue ID 校验响应。详情与客户卡显示平台状态，详情显示最近核对时间。原帖已关闭、HTTP 410、链接指向另一条 Issue 时在同一联系优先级内往后排，状态超两天时等待复查。HTTP 404 或暂时失败保留为待核实。 [GitHub Issue 详情接口](https://docs.github.com/en/rest/issues/issues#get-an-issue)

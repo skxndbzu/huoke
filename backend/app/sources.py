@@ -15,6 +15,7 @@ from .schemas import Strict
 from .config import settings
 from .market import refresh_market, market_predicate, threshold, VERSION as MARKET_VERSION
 from .contact_discovery import extract_contacts
+from .prospecting import intent, VERSION_TRIAGE
 
 VERSION = 'discovery-v3-intent'
 AUTO_ANALYSIS_HOURLY_LIMIT = 100
@@ -185,7 +186,7 @@ def sync_public(channel):
         s.flush()
         run_id = run.id
     stats = {'listed': 0, 'filtered': 0, 'cache_hits': 0, 'duplicates': 0, 'new_leads': 0, 'updated': 0, 'model_calls': 0, 'rule_version': VERSION,
-             'domestic_candidates': 0, 'market_pending': 0, 'intent_filtered': 0}
+             'domestic_candidates': 0, 'market_pending': 0, 'intent_filtered': 0, 'triage_version': VERSION_TRIAGE}
     try:
         with httpx.Client(timeout=15, follow_redirects=False, headers={'User-Agent': 'HuokePilot/0.2 public-demand-reader', 'Accept': 'application/vnd.github+json' if channel == 'github' else 'application/atom+xml'}) as client:
             items, incomplete = candidates(client, channel, options)
@@ -196,7 +197,7 @@ def sync_public(channel):
             title = clean(item['title'])
             text = clean(title + '\n' + item['text'])
             digest = fingerprint(text)
-            cache_digest = fingerprint(digest + VERSION + json.dumps(options, sort_keys=True))
+            cache_digest = fingerprint(digest + VERSION + VERSION_TRIAGE + json.dumps(options, sort_keys=True))
             with Session.begin() as s:
                 locked_control(s)
                 cached = s.get(SourceItem, item['key'])
@@ -210,12 +211,14 @@ def sync_public(channel):
                 if not TECH.search(text) or not DEMAND.search(text) or NON_DEMAND.search(title) or any(word.lower() in text.lower() for word in options.get('exclude', [])):
                     stats['filtered'] += 1
                     continue
-                from .prospecting import intent
                 if intent(title, text)['score'] < 35:
                     stats['filtered'] += 1
                     stats['intent_filtered'] += 1
                     continue
                 lead = s.scalar(select(Lead).where(Lead.source_key == item['key']))
+                if lead and lead.fingerprint == digest:
+                    stats['cache_hits'] += 1
+                    continue
                 if not lead and s.scalar(select(Lead.id).where((Lead.fingerprint == digest) | (Lead.url == item['url']))):
                     stats['duplicates'] += 1
                     continue

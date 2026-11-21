@@ -1,26 +1,26 @@
 {
-  "updated_at": "2026-11-21T16:39:39.179360+08:00",
+  "updated_at": "2026-11-21T17:31:52.585460+08:00",
   "timezone": "Asia/Shanghai",
   "phase": "phase_1_assisted_workflow_live",
-  "branch": "codex/github-issue-state-20261121",
+  "branch": "codex/model-call-failures-20261121",
   "repository": "https://github.com/skxndbzu/huoke.git",
   "deployment": {
     "host": "117.72.35.216",
     "user": "admin",
     "root": "/home/admin/huoke-staging",
-    "release": "20261121-github-issue-state-r2",
-    "status": "healthy_staging_github_issue_state",
+    "release": "20261121-model-call-triage-r2",
+    "status": "healthy_staging_model_call_triage",
     "access": "http://117.72.35.216:18080",
     "real_send_enabled": false,
     "paused": false,
     "production_policy": "not_confirmed",
-    "image": "huoke:20261121-github-issue-state-r2",
-    "image_id": "sha256:622a055f30d59dcbd346a5d791072e7c3c5a62386dcb465e778443c7f19a3787",
-    "artifact_sha256": "d2535397fd86884db11f034710c1b9b8b9e52a7f7ddb807e2b93f212000f6561",
+    "image": "huoke:20261121-model-call-triage-r2",
+    "image_id": "sha256:1f92faa225388fe72ea5d2eed4dd7c9b018c4422353bb2f216c65cfb39853e1b",
+    "artifact_sha256": "5a5caa4e986158d1c48a2221d6a3b92a5bc992dd9b49994fdf92cc0302c02164",
     "access_note": "IP HTTP access retained by owner choice. Password account configured at explicit owner request; login verified. Public homepage/assets 200 and unauthenticated API 401 previously verified.",
-    "rollback_image": "huoke:20261121-github-issue-state-r1",
-    "backup": "/home/admin/huoke-staging/backups/20261121-before-github-issue-state-r2.dump",
-    "private_backup": "/home/admin/huoke-staging/backups/20261121-before-github-issue-state-r2.secrets.tar"
+    "rollback_image": "huoke:20261121-model-call-triage-r1",
+    "backup": "/home/admin/huoke-staging/backups/20261121-before-model-call-triage-r2.dump",
+    "private_backup": "/home/admin/huoke-staging/backups/20261121-before-model-call-triage-r2.secrets.tar"
   },
   "automation": {
     "id": "automation",
@@ -50,8 +50,8 @@
     },
     "customer_messages_sent": 0,
     "paid_model_calls": 385,
-    "postgres_tests_passed": 138,
-    "server_health": "Public 200, anonymous API 401, web and PostgreSQL healthy, worker pong, real send disabled, message rows 0",
+    "postgres_tests_passed": 143,
+    "server_health": "39 files matched, public health 200, anonymous API 401, worker pong, messages 0, real send disabled",
     "celery_worker": "ping pong",
     "server_source_sample": {
       "listed": 26,
@@ -66,7 +66,7 @@
       "cache_hits": 26,
       "new_leads": 0
     },
-    "server_tests_passed": 138,
+    "server_tests_passed": 143,
     "smtp_auth_probe": {
       "status": "success",
       "host": "smtp.qq.com",
@@ -93,7 +93,7 @@
     },
     "model": "gpt-6.1-sol models verified and one evidence-checked inference succeeded",
     "owner_password_login": "Initial account provisioned at explicit owner request; actual login and logout verified. No reviewer token accessed, no message approval. Credentials not stored in repository.",
-    "local_validation": "44 targeted tests; 138 isolated PostgreSQL tests",
+    "local_validation": "57 focused tests; 143 isolated PostgreSQL tests",
     "market_filter": {
       "threshold": 70,
       "total_leads": 1265,
@@ -199,10 +199,10 @@
       "monthly": 100,
       "owner_monthly_ceiling": 10000
     },
-    "conversion_quality": "One open original among the four domestic matches, three with closed, disabled or reassigned Issue paths. No new verified contact or owner-qualified lead.",
-    "runtime_ai_estimated_usd": 3.75222,
-    "runtime_ai_note": "GitHub public Issue state checks made no model calls. Actual supplier and development costs unknown.",
-    "iteration_model_estimated_usd": null
+    "conversion_quality": "One production acquisition recovered a real model usage issue, under the market threshold and without direct contact. No owner-qualified opportunity or measured conversion uplift.",
+    "runtime_ai_estimated_usd": 3.768644,
+    "runtime_ai_note": "Verification made no model calls. Two automatic calls in the round, including the VPS false positive and the recovered model failure, cost an estimated $0.016424. Actual supplier and development costs unknown.",
+    "iteration_model_estimated_usd": 0.016424
   },
   "blockers": [
     "QQ upstream Auth Token absent; owner deferred; no purchase or bypass.",
@@ -212,7 +212,7 @@
     "Inbox and billing events not connected. Real sends disabled; production policy unconfirmed; IP HTTP retained per owner."
   ],
   "next_tasks": [
-    "Check current high-intent GitHub queries and open sources for real procurement and publicly declared business contacts. Continue sampling NodeSeek batch coverage without increasing budget.",
+    "Evaluate high-intent public demand sources with explicitly declared business contact paths; use real positive and rejected samples to check precision before changing query scope.",
     "Use filtered samples and user labels to validate actual demand, prior to expanding queries or adding more sources.",
     "Resolve Xiaohongshu runtime compatibility before normal owner login; QQ separately awaits upstream authority and WeChat is disabled until available.",
     "Investigate another permitted high-intent Chinese source as evidence warrants; continue public contact discovery and manual workflow improvements."
@@ -862,5 +862,80 @@
     ],
     "model_calls": 0,
     "owner_actions": []
+  },
+  "model_call_triage_iteration": {
+    "benchmark": {
+      "existing_queries": 3,
+      "alternative_queries": 6,
+      "unique_issues": 40,
+      "eligibility_changes": 1
+    },
+    "recovered_issue": {
+      "key": "github:6483157591",
+      "url": "https://github.com/makecindy/cindy/issues/11462",
+      "score_before": 0,
+      "score_after": 55,
+      "state": "open",
+      "public_email": false,
+      "public_site": false,
+      "declared_location": false,
+      "purchase_intent": "unknown",
+      "lead_id": 1274,
+      "ai_market_score": 50,
+      "ai_fit": "medium",
+      "analysis_id": 472,
+      "input_tokens": 2694,
+      "output_tokens": 383,
+      "estimated_usd": 0.009218
+    },
+    "isolated_real_runs": [
+      {
+        "listed": 14,
+        "new_leads": 2,
+        "filtered": 12,
+        "old_cache_for_recovered_issue": true
+      },
+      {
+        "listed": 14,
+        "new_leads": 0,
+        "cache_hits": 14
+      }
+    ],
+    "existing_pool_replay": {
+      "leads": 1272,
+      "new_model_queue_before": 0,
+      "new_model_queue_after": 0
+    },
+    "live_github_run": {
+      "id": 1120,
+      "listed": 14,
+      "filtered": 12,
+      "cache_hits": 1,
+      "new_leads": 1,
+      "recovered_lead_id": 1274
+    },
+    "validation_model_calls": 0,
+    "owner_actions": [],
+    "node_false_positive": {
+      "run_id": 1113,
+      "lead_id": 1273,
+      "url": "https://www.nodeseek.com/post-1070165-1",
+      "prior_rule_score": 70,
+      "new_rule_score": 0,
+      "isolated_replay_filtered": true,
+      "analysis_id": 471,
+      "input_tokens": 2173,
+      "output_tokens": 286,
+      "estimated_usd": 0.007206
+    },
+    "live_other_runs": {
+      "nodeseek": [
+        1117,
+        1118
+      ],
+      "github_discussions": 1116,
+      "v2ex": 1115,
+      "gitee": 1124
+    }
   }
 }

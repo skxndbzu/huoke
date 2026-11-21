@@ -6,7 +6,11 @@ NodeSeek 在成功读取并上传非空官方 RSS 后等待 10 分钟。读取�
 
 Windows 只重启 NodeSeek 执行器，服务器沿用下方版本。回滚时恢复 `e60441d` 中的 `scripts/social-executor.py` 并仅重启 NodeSeek 执行器。八种模拟执行器路径和 `Retry-After` 日期解析通过。
 
-## 当前发布 `20261121-github-issue-state-r2`
+## 当前发布 `20261121-model-call-triage-r2`
+
+初筛识别常见模型调用失败，并要求只出现「中转鸡」等 VPS 称呼的帖子有其他模型证据。采集缓存记录规则版本，下次正常采集时重筛缓存过的内容，并保留正文未变的既有 AI 分析。57 项定向测试、143 项隔离 PostgreSQL 测试、真实 GitHub 采集与 NodeSeek 原帖回放通过。即时回滚镜像为 `huoke:20261121-model-call-triage-r1`。发布前数据库和私有配置备份为 `backups/20261121-before-model-call-triage-r2.dump` 与 `backups/20261121-before-model-call-triage-r2.secrets.tar`。
+
+## 上次发布 `20261121-github-issue-state-r2`
 
 GitHub 现有采集任务每轮最多核对 5 条国内待跟进线索，同一原帖至少间隔一天。新增 `github_issue_states` 表记录平台状态与核对时间，客户池用两日内的关闭、不可用和链接换帖结果调整同一联系优先级内的顺序。链接换帖及 HTTP 410 隐藏原帖跳转入口。44 项定向、138 项隔离 PostgreSQL 测试和 390px 界面验证通过。发布前数据库和私有配置备份为 `backups/20261121-before-github-issue-state-r2.dump` 与 `backups/20261121-before-github-issue-state-r2.secrets.tar`。即时回滚镜像为 `huoke:20261121-github-issue-state-r1`，如需撤回整个功能可用 `huoke:20261121-domestic-demand-r1`，保留新增表。
 

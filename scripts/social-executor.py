@@ -1,7 +1,10 @@
 """Local read-only acquisition. No upstream AI bot, publishing or send methods."""
 import argparse
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import subprocess
@@ -16,6 +19,24 @@ from app.social_adapters import FEEDS, feed_items, qq_items, v2ex_profile, xhs_i
 
 PROJECT_TUNNEL = 'http://127.0.0.1:18081'
 WORKBENCH_RETRY_SECONDS = 30
+NODESEEK_POLL_SECONDS = 10 * 60
+
+
+def retry_after_seconds(response):
+    value = response.headers.get('Retry-After', '').strip()
+    if not value:
+        return 0
+    try:
+        seconds = float(value)
+    except ValueError:
+        try:
+            deadline = parsedate_to_datetime(value)
+        except (ValueError, OverflowError):
+            return 0
+        if deadline.tzinfo is None:
+            deadline = deadline.replace(tzinfo=timezone.utc)
+        seconds = (deadline - datetime.now(timezone.utc)).total_seconds()
+    return seconds if math.isfinite(seconds) and seconds > 0 else 0
 
 
 def wait_until_next_poll(seconds):
@@ -171,6 +192,8 @@ def main():
                     state = {'scope': scope, 'cursors': state.get('next_cursors', cursors)}
                     save_state(path, state)
                     print(json.dumps({'platform': args.platform, 'status': 'success', **totals}), flush=True)
+                    if args.platform == 'nodeseek' and totals['listed'] > 0:
+                        delay = NODESEEK_POLL_SECONDS
                     if args.platform == 'v2ex':
                         try:
                             profiles = research_v2ex_profiles(api, reader)
@@ -187,6 +210,8 @@ def main():
                     code = 'HTTP_' + str(exc.response.status_code)
                     if exc.response.status_code in (401, 403, 429):
                         status = 'verification_required'
+                    if args.platform == 'nodeseek' and not connecting_to_workbench:
+                        delay = max(delay, retry_after_seconds(exc.response))
                 print(json.dumps({'platform': args.platform, 'status': status, 'code': code}), flush=True)
                 if config and config['enabled'] and status != 'workbench_unavailable':
                     try:

@@ -1,5 +1,13 @@
 # 渠道能力与证据
 
+## 2026-11-21 NodeSeek 补采间隔试点
+
+北京时间 15:40 试读命中一条规则候选。15:51 批次的最早发布时间晚于 15:40 整批的最晚发布时间，线上未收录该候选，原帖复查返回 403。近期官方 RSS 每次返回 20 条，最短实测跨度 5 分 15 秒。Windows 试行成功后每 10 分钟读取，失败至少等待一小时，收到限流等待时间时按较长者执行。采集仍使用官方 RSS，每轮复用既有规则和去重。 [官方 RSS](https://rss.nodeseek.com/) · [中间试读候选](https://www.nodeseek.com/post-1069991-1)
+
+试点批次 1097 和 1098 实际相隔 10 分 6 秒，共有 39 条不同帖子，第二批缓存命中 1 条。两批窗口分别为北京时间 15:45:02 至 15:50:17 和 15:50:17 至 16:01:35。39 条均被规则筛除，未新增联系人或模型分析。
+
+同日检查两个复用候选。Seameee 的派生版本 `1f222ab5215b`（2026-10-22，MIT）支持同一官方 RSS、关键词与 Telegram 通知，可自行部署，通知需要机器人账号。原版 Roddy-D `1613c2a859fa`（2026-04-02）同样用于 RSS 监控，GitHub 未返回可核实的许可证。AI-XMLY `8107b18e9914`（2026-04-24，MIT）支持 RSS 订阅、关键词和 SQLite，部署通知也需 Telegram 机器人。MIT 版本商用需保留版权和许可声明。本轮保留现有已实测的 Windows 读取，无上述依赖或机器人。 [Seameee](https://github.com/Seameee/NodeSeekRSSMonitor/tree/1f222ab5215b52e449ddedd711c85e5739608aa0) · [Roddy-D](https://github.com/Roddy-D/NodeSeekRSSMonitor/tree/1613c2a859fa9b4ec66a86442ee0aaacf92d85bc) · [AI-XMLY](https://github.com/AI-XMLY/nodeseek-rss-telegram-bot/tree/8107b18e99148127bc6c993ac8384959ac871f6d)
+
 ## 2026-11-21 NodeSeek 批次时间范围
 
 两次官方 RSS 试读均有 20 条，帖子发布时间相距约 10 分钟及 11 分 25 秒。后一次在隔离环境上传两遍，第二批 20 条全部去重，工作台手机布局仍显示北京时间 15:22:30 至 15:33:55。上线后 15:45 的单次实际验证读取 20 条，全部筛除，渠道接口显示 15:31:54 至 15:44:45。本地定时采集每小时一次，接下来对照连续定时批次和中间样本量化覆盖。 [官方 RSS](https://rss.nodeseek.com/)

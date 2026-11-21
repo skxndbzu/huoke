@@ -1,5 +1,11 @@
 # 部署与发布
 
+## Windows NodeSeek 补采试点
+
+NodeSeek 在成功读取并上传非空官方 RSS 后等待 10 分钟。读取失败、空订阅或停用时按原每小时检查。上游返回 `Retry-After` 时等待至少其指定时间。工作台传输失败仍复用待上传批次，按 30 秒重试。
+
+Windows 只重启 NodeSeek 执行器，服务器沿用下方版本。回滚时恢复 `e60441d` 中的 `scripts/social-executor.py` 并仅重启 NodeSeek 执行器。八种模拟执行器路径和 `Retry-After` 日期解析通过。
+
 ## 当前发布 `20261121-nodeseek-window-r1`
 
 NodeSeek 渠道卡显示成功采集批次中已知原帖发布时间的最早值和最晚值。筛除及缓存命中计入批次，有缺失时间时显示可统计条数。数据存在现有运行记录的 JSON 中。24 项定向测试、136 项隔离 PostgreSQL 测试、390px 官方 RSS 回放及 39 个线上文件摘要验证通过。数据库备份为 `backups/20261121-before-nodeseek-window.dump`，私有配置备份为 `backups/20261121-before-nodeseek-window.secrets.tar`，回滚镜像为 `huoke:20261121-screening-history-r1`。

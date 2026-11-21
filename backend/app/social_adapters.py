@@ -32,7 +32,7 @@ CATALOG = {
                  'description': 'KS-Downloader 是下载器且商业推广范围受限，暂不作为自动获客器。可导入已授权内容。'},
 }
 FEEDS = {'linuxdo': ['https://linux.do/latest.rss'], 'nodeseek': ['https://rss.nodeseek.com/'],
-         'v2ex': ['https://www.v2ex.com/feed/python.xml', 'https://www.v2ex.com/feed/programmer.xml']}
+         'v2ex': ['https://www.v2ex.com/feed/deepseek.xml', 'https://www.v2ex.com/feed/programmer.xml']}
 HOSTS = {'gitee': {'gitee.com'}, 'linuxdo': {'linux.do'}, 'nodeseek': {'www.nodeseek.com', 'nodeseek.com'},
          'v2ex': {'www.v2ex.com', 'v2ex.com'}, 'xiaohongshu': {'www.xiaohongshu.com', 'xiaohongshu.com'},
          'douyin': {'www.douyin.com', 'douyin.com'}, 'kuaishou': {'www.kuaishou.com', 'kuaishou.com', 'www.kuaishou.cn'}}
@@ -173,6 +173,8 @@ def feed_items(platform, client):
             except ValueError:
                 continue
             match = re.search(r'/t/(\d+)', link) if platform == 'v2ex' else None
+            if match:
+                link = f'https://www.v2ex.com/t/{match[1]}'
             key = match[1] if match else hashlib.sha256(link.split('#')[0].encode()).hexdigest()
             found.append(Capture(event_id=key, title=title[:500], text=(body or title)[:12000], url=link,
                                  author=author[:200], published_at=iso(stamp)))

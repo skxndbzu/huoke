@@ -1,5 +1,11 @@
 # 渠道能力与证据
 
+## 2026-11-21 V2EX 优先读取模型节点
+
+用 V2EX 节点目录和 Atom 源抽查 `python`、`programmer`、`aigc`、`openai`、`claude`、`claudecode`、`deepseek`、`agent`、`localllm`，每节点最多 30 条。旧组合 `python`+`programmer` 得到 1 条规则通过的迁移经验帖。`openai` 命中一条中转站统计，`localllm` 命中一条部署讨论，`deepseek` 命中一条明确询问低价模型 API 的帖子。小样本支持将本地补采的 `python` 换成 `deepseek`，保留 `programmer` 及每轮 60 条的上限。旧 `ai` 订阅未返回有效 Atom。 [公开节点目录](https://www.v2ex.com/api/nodes/all.json) · [DeepSeek 订阅](https://www.v2ex.com/feed/deepseek.xml)
+
+切换后线上接收 60 条，筛除 29、去重 30、新增候选 1271。采集证据链接指向主题原文，市场分析低于阈值，联系路径为公开讨论。该结论基于一轮对照，尚无持续有效商机或联系覆盖提升数据。 [候选原文](https://www.v2ex.com/t/1256577)
+
 ## 2026-11-21 Gitee Issues 与国内公开来源恢复
 
 Gitee 官方 OpenAPI v5 提供 `GET /api/v5/search/issues`，文档中的 `access_token` 可选。服务器实测匿名访问成功。使用默认相关度排序，按创建时间排序的试读混入了大量近期但无关的 Issue。连接器每小时最多查询三组词，每组最多 12 条，只读取开放 Issue 和原文、作者、发布时间字段，按原文链接去重。工作台“渠道与任务”可查看运行和筛除样本，客户档案显示官方 API 搜索来源。支持授权原文导入，来源可追溯。 [官方文档](https://gitee.com/api/v5/swagger) · [搜索规范](https://gitee.com/api/v5/swagger_doc/search)

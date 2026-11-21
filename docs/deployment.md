@@ -2,6 +2,8 @@
 
 ## 当前发布 `20261121-source-health-r1`
 
+Windows V2EX 执行器同日调整采集节点为 `deepseek` 和 `programmer`，并已重启验证成功。每轮仍最多 60 条。此调整由本地执行器运行，服务器沿用当前镜像，旧 V2EX 服务器任务配置照常保留。
+
 渠道卡为 NodeSeek、V2EX 和 Linux.do 分别显示服务器与本地历史。新运行记录在现有 JSON 字段中标明路径，V2EX 服务器沿用既有任务历史。最近一次成功的计数和样本随路径展示，距上次成功超过两小时标记过期。无结构变更。
 
 线上验证 NodeSeek 与 V2EX 均显示服务器连接失败和本地补采成功，Linux.do 显示服务器失败、本地尚无自动读取记录。124 项隔离 PostgreSQL 测试通过，前端构建、390px 状态展示及 39 个线上文件摘要核对通过。发布前备份 `backups/20261121-before-source-health.dump`，回滚镜像 `huoke:20261121-gitee-r1`。

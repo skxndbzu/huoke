@@ -1,12 +1,12 @@
 """Human relationship work: never approves, queues, or sends a message."""
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Literal
 import re
 import httpx
 from fastapi import Depends, HTTPException
 from pydantic import Field, field_validator
 from sqlalchemy import select, func, exists, or_, and_, case
-from .db import (Session, Lead, LeadWorkspace, Touchpoint, ContactPoint, Contact,
+from .db import (Session, Lead, LeadWorkspace, Touchpoint, ContactPoint, Contact, GithubIssueState,
                  Control, AnalysisCall, LeadMarket, MarketPolicy, CaptureEvidence, locked_control, event, now)
 from .schemas import Strict, safe_url, ContactInput
 from .social_adapters import HOSTS
@@ -19,6 +19,7 @@ QUALIFICATIONS = {'pending': '待核实', 'valid': '有效需求', 'invalid': '�
 GITHUB_LOGIN = re.compile(r'[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?\Z')
 CONTACT_KINDS = ('email', 'wechat', 'qq', 'url')
 PUBLIC_DISCUSSION_PREFIXES = ('github:', 'hn:', *(platform + ':' for platform in HOSTS))
+ISSUE_STATE_MAX_AGE = timedelta(days=2)
 
 
 def direct_contact(lead_id, verified=False):
@@ -84,7 +85,13 @@ def view(s, lead):
     from .prospecting import intent
     w = s.get(LeadWorkspace, lead.id)
     evidence = s.get(CaptureEvidence, lead.id)
+    issue = s.get(GithubIssueState, lead.id) if lead.source_key.startswith('github:') else None
+    issue_state = None if not issue else {
+        'state': issue.state, 'reason': issue.reason, 'checked_at': issue.checked_at,
+        'stale': issue.checked_at < (datetime.now(timezone.utc) - ISSUE_STATE_MAX_AGE).isoformat(),
+    }
     return {**row(lead), 'capture': row(evidence) if evidence else None, 'triage': intent(lead.title, lead.text), 'market': market_view(s, lead), 'contact_status': contact_status(s, lead),
+        'issue_state': issue_state,
         'high_value_no_contact': bool(lead.analysis.get('method') == 'ai' and lead.analysis.get('fit') == 'high'
             and lead.analysis.get('priority') == 'high' and not s.scalar(select(direct_contact(lead.id)))),
         'work': row(w) if w else {
@@ -233,6 +240,13 @@ def register_workspace(app, role, reviewer):
             else:
                 ranking = [contact_order]
                 if market == 'domestic' and bucket in ('', 'review'):
+                    issue_cutoff = (datetime.now(timezone.utc) - ISSUE_STATE_MAX_AGE).isoformat()
+                    stmt = stmt.outerjoin(GithubIssueState, GithubIssueState.lead_id == Lead.id)
+                    ranking.append(case(
+                        (and_(GithubIssueState.checked_at >= issue_cutoff,
+                              GithubIssueState.state == 'mismatch'), 2),
+                        (and_(GithubIssueState.checked_at >= issue_cutoff,
+                              GithubIssueState.state.in_(('closed', 'gone'))), 1), else_=0))
                     assessed = Lead.analysis['method'].as_string() == 'ai'
                     stage_value = Lead.analysis['purchase_stage'].as_string()
                     ranking.append(case(

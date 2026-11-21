@@ -5,7 +5,7 @@ import httpx
 import pytest
 from celery.exceptions import Retry
 from sqlalchemy import select, func
-from app.db import Session, Lead, SourcePolicy, ChannelRun, ContactPoint, Message
+from app.db import Session, Lead, LeadMarket, SourcePolicy, ChannelRun, ContactPoint, Message, GithubIssueState
 from app.sources import sync_public, analyze_pending
 
 
@@ -75,6 +75,60 @@ def test_github_bounded_dedupe_no_pr_no_contact_authorization(monkeypatch):
         l=s.scalar(select(Lead).where(Lead.source_key=='github:100'))
         assert l.analysis['contact_permission']=='unknown'
         assert s.scalar(select(func.count()).select_from(Message))==0
+
+
+def test_github_sync_rechecks_current_status_and_reorders_review(client, monkeypatch):
+    open_ids = {}
+    with Session.begin() as s:
+        for number, stage in [(1, 'explicit_need'), (2, 'unknown'), (3, 'exploring'),
+                              (4, 'explicit_need'), (5, 'explicit_need')]:
+            lead = Lead(source='GitHub Issues', source_key=f'github:{100 + number}',
+                        url=f'https://github.com/test/app/issues/{number}', title=f'Test {number}',
+                        text='Test original', fingerprint=f'test-github-{number}',
+                        analysis={'method': 'ai', 'purchase_stage': stage})
+            s.add(lead)
+            s.flush()
+            s.add(LeadMarket(lead_id=lead.id, manual=True, status='confirmed_cn'))
+            open_ids[number] = lead.id
+    visited = []
+    reopened = False
+
+    def handle(request):
+        if request.url.path == '/search/issues':
+            return httpx.Response(200, json={'items': []})
+        number = int(request.url.path.rsplit('/', 1)[1])
+        visited.append(number)
+        if number == 3:
+            return httpx.Response(410)
+        if number == 4:
+            return httpx.Response(404)
+        closed = number == 1 and not reopened
+        issue_id = 200 + number if number == 5 else 100 + number
+        return httpx.Response(200, json={'id': issue_id, 'number': number,
+                                         'state': 'closed' if closed else 'open',
+                                         'state_reason': 'completed' if closed else None})
+
+    transport(monkeypatch, handle)
+    counts = sync_public('github')['issue_state_checks']
+    assert counts == {'open': 1, 'closed': 1, 'gone': 1, 'mismatch': 1, 'unavailable': 1}
+    assert visited == [5, 4, 3, 2, 1]
+    rows = client.get('/api/workspace/leads?market=domestic&bucket=review').json()['items']
+    assert [row['id'] for row in rows] == [open_ids[n] for n in (4, 2, 1, 3, 5)]
+    assert [row['issue_state']['state'] for row in rows] == ['unavailable', 'open', 'closed', 'gone', 'mismatch']
+    assert rows[2]['issue_state']['reason'] == 'completed'
+    assert all(row['work']['qualification'] == 'pending' for row in rows)
+    cooldown_off('github')
+    assert sum(sync_public('github')['issue_state_checks'].values()) == 0
+    assert visited == [5, 4, 3, 2, 1]
+
+    with Session.begin() as s:
+        s.get(GithubIssueState, open_ids[1]).checked_at = (datetime.now(timezone.utc) - timedelta(days=3)).isoformat()
+    assert client.get(f'/api/workspace/leads/{open_ids[1]}').json()['issue_state']['stale']
+    reopened = True
+    cooldown_off('github')
+    assert sync_public('github')['issue_state_checks']['open'] == 1
+    assert visited == [5, 4, 3, 2, 1, 1]
+    assert client.get(f'/api/workspace/leads/{open_ids[1]}').json()['issue_state']['state'] == 'open'
 
 
 def test_v2ex_atom_business_evidence_and_html_are_data(monkeypatch):

@@ -61,6 +61,14 @@ class LeadMarket(Base):
     updated_at: Mapped[str] = mapped_column(default=now)
 
 
+class GithubIssueState(Base):
+    __tablename__ = 'github_issue_states'
+    lead_id: Mapped[int] = mapped_column(primary_key=True)
+    state: Mapped[str] = mapped_column(String(20))
+    reason: Mapped[str] = mapped_column(String(32), default='')
+    checked_at: Mapped[str] = mapped_column(default=now)
+
+
 class MarketPolicy(Base):
     __tablename__ = 'market_policy'
     id: Mapped[int] = mapped_column(primary_key=True, default=1)

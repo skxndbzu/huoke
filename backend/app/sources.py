@@ -7,18 +7,22 @@ from xml.etree import ElementTree as ET
 import httpx
 from fastapi import Depends, HTTPException
 from pydantic import Field
-from sqlalchemy import select, case
+from sqlalchemy import select, case, or_, func
 from .db import (Session, SourcePolicy, ChannelRun, SourceItem, Lead, LeadWorkspace, LeadMarket,
-                 ContactPoint, AnalysisCall, locked_control, event, now)
+                 GithubIssueState, ContactPoint, AnalysisCall, locked_control, event, now)
 from .pipeline import TECH, NEED, clean, fingerprint, classify
 from .schemas import Strict
 from .config import settings
-from .market import refresh_market, VERSION as MARKET_VERSION
+from .market import refresh_market, market_predicate, threshold, VERSION as MARKET_VERSION
 from .contact_discovery import extract_contacts
 
 VERSION = 'discovery-v3-intent'
 AUTO_ANALYSIS_HOURLY_LIMIT = 100
 AUTO_ANALYSIS_INTERVAL_SECONDS = 36
+GITHUB_ISSUE_RECHECK_LIMIT = 5
+GITHUB_ISSUE_URL = re.compile(
+    r'https://github\.com/([A-Za-z0-9][A-Za-z0-9-]{0,38})/([A-Za-z0-9_.-]{1,100})/issues/([1-9][0-9]{0,15})'
+)
 OLD_GITHUB_QUERIES = ['"API" "供应商"', '"模型" "接口"', '"LLM" "provider"']
 PREVIOUS_GITHUB_QUERIES = ['"API" "供应商"', '"模型" "接口"', '"API" "中国"']
 SOURCES = {
@@ -58,6 +62,65 @@ def read_bounded(client, url, params=None):
                 raise ValueError('response_too_large')
             chunks.append(chunk)
         return b''.join(chunks)
+
+
+def github_issue_state(client, source_key, url):
+    target = GITHUB_ISSUE_URL.fullmatch(url)
+    issue_id = re.fullmatch(r'github:([0-9]{1,20})', source_key)
+    if not target or not issue_id or target[2] in ('.', '..'):
+        return 'unavailable', 'unsupported_source'
+    owner, repo, number = target.groups()
+    data = json.loads(read_bounded(client, f'https://api.github.com/repos/{owner}/{repo}/issues/{number}'))
+    if (not isinstance(data, dict) or not isinstance(data.get('id'), int)
+            or data.get('number') != int(number) or 'pull_request' in data
+            or data.get('state') not in ('open', 'closed')):
+        return 'unavailable', 'unexpected_response'
+    if data['id'] != int(issue_id[1]):
+        return 'mismatch', 'issue_id_mismatch'
+    reason = data.get('state_reason')
+    return data['state'], reason if reason in ('completed', 'not_planned', 'duplicate', 'reopened') else ''
+
+
+def recheck_github_issues(client):
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
+    with Session() as s:
+        targets = s.execute(
+            select(Lead.id, Lead.source_key, Lead.url)
+            .join(LeadMarket, LeadMarket.lead_id == Lead.id)
+            .outerjoin(LeadWorkspace, LeadWorkspace.lead_id == Lead.id)
+            .outerjoin(GithubIssueState, GithubIssueState.lead_id == Lead.id)
+            .where(Lead.source_key.startswith('github:', autoescape=True),
+                   market_predicate('domestic', threshold(s)),
+                   func.coalesce(LeadWorkspace.qualification, 'pending') != 'invalid',
+                   func.coalesce(LeadWorkspace.stage, 'new').not_in(('closed', 'declined')),
+                   or_(GithubIssueState.checked_at.is_(None), GithubIssueState.checked_at < cutoff))
+            .order_by(GithubIssueState.checked_at.asc().nulls_first(), Lead.id.desc())
+            .limit(GITHUB_ISSUE_RECHECK_LIMIT)
+        ).all()
+    counts = {'open': 0, 'closed': 0, 'gone': 0, 'mismatch': 0, 'unavailable': 0}
+    for lead_id, source_key, url in targets:
+        stop = False
+        try:
+            state, reason = github_issue_state(client, source_key, url)
+        except httpx.HTTPStatusError as exc:
+            code = exc.response.status_code
+            state, reason = ('gone' if code == 410 else 'unavailable'), f'HTTP_{code}'
+            stop = code in (403, 429)
+        except httpx.RequestError as exc:
+            state, reason = 'unavailable', type(exc).__name__
+            stop = True
+        except ValueError:
+            state, reason = 'unavailable', 'invalid_response'
+        with Session.begin() as s:
+            checked = s.get(GithubIssueState, lead_id)
+            if not checked:
+                checked = GithubIssueState(lead_id=lead_id)
+                s.add(checked)
+            checked.state, checked.reason, checked.checked_at = state, reason, now()
+        counts[state] += 1
+        if stop:
+            break
+    return counts
 
 
 def candidates(client, channel, options):
@@ -126,6 +189,8 @@ def sync_public(channel):
     try:
         with httpx.Client(timeout=15, follow_redirects=False, headers={'User-Agent': 'HuokePilot/0.2 public-demand-reader', 'Accept': 'application/vnd.github+json' if channel == 'github' else 'application/atom+xml'}) as client:
             items, incomplete = candidates(client, channel, options)
+            if channel == 'github':
+                stats['issue_state_checks'] = recheck_github_issues(client)
         stats['listed'], stats['incomplete_results'] = len(items), incomplete
         for item in items:
             title = clean(item['title'])

@@ -16,12 +16,32 @@ const purchaseStages: Record<string, string> = {
   explicit_need: "明确需求",
   exploring: "选型调研",
 };
+const issueStates: Record<string, string> = {
+  open: "原帖开放",
+  closed: "原帖已关闭",
+  gone: "原帖不可用",
+  mismatch: "原链接指向另一条 Issue",
+  unavailable: "原帖状态待核实",
+};
+const issueReasons: Record<string, string> = {
+  completed: "GitHub 标为已完成",
+  not_planned: "GitHub 标为不计划处理",
+  duplicate: "GitHub 标为重复",
+};
+const issueLabel = (issue: R) =>
+  issue.stale ? "原帖状态待复查" : issueStates[issue.state];
 const contactLabels: R = {
   verified_contact: "已核实可联系",
   unverified_candidate: "有待核实联系方式",
   public_discussion: "仅有公开讨论入口",
   no_path: "暂无联系路径",
 };
+const issueLinkUnavailable = (lead: R) =>
+  ["gone", "mismatch"].includes(lead.issue_state?.state);
+const contactLabel = (lead: R) =>
+  lead.contact_status === "public_discussion" && issueLinkUnavailable(lead)
+    ? "公开讨论入口不可用"
+    : contactLabels[lead.contact_status];
 const marketScopes: R = {
   domestic: "国内目标（达到阈值）",
   unknown: "待 AI / 市场未知",
@@ -119,7 +139,8 @@ function MarketPanel({
       <p>{m?.reason}</p>
       {(m?.evidence || []).map((e: R, i: number) => (
         <blockquote key={i}>
-          {e.quote} {urlLink(e.url, "证据来源 ↗")}
+          {e.quote} {e.url === lead.url && issueLinkUnavailable(lead)
+            ? "原帖链接不可用" : urlLink(e.url, "证据来源 ↗")}
         </blockquote>
       ))}
       <p className="muted">
@@ -618,8 +639,9 @@ export function CustomerWorkspace({
                   <span className="badge">{quals[l.work.qualification]}</span>
                   <span className="badge">{stages[l.work.stage]}</span>
                   <span className="badge">
-                    {contactLabels[l.contact_status]}
+                    {contactLabel(l)}
                   </span>
+                  {l.issue_state && <span className="badge">{issueLabel(l.issue_state)}</span>}
                   <span>
                     {l.analysis.method === "ai"
                       ? purchaseStages[l.analysis.purchase_stage]
@@ -688,7 +710,8 @@ export function CustomerWorkspace({
                 {selected.capture.platform === 'qq' && <p>平台发送者 ID 不代表已允许联系，也不保证可以私聊。请先核实原会话及联系意愿。</p>}
               </div>}
               <p>
-                {urlLink(selected.url)} · 发布时间 {fmt(selected.published_at)}
+                {issueLinkUnavailable(selected) ? "原帖链接不可用" : urlLink(selected.url)}
+                {" · 发布时间 "}{fmt(selected.published_at)}
               </p>
               <MarketPanel
                 lead={selected}
@@ -711,6 +734,14 @@ export function CustomerWorkspace({
                   : "规则初筛，尚未由 AI 判断"}
               </p>
               <p>{selected.analysis.summary}</p>
+              {selected.issue_state && (
+                <p className="muted">
+                  {issueLabel(selected.issue_state)}
+                  {!selected.issue_state.stale && issueReasons[selected.issue_state.reason]
+                    ? ` · ${issueReasons[selected.issue_state.reason]}` : ""}
+                  {" · 最近核对 "}{fmt(selected.issue_state.checked_at)}
+                </p>
+              )}
               <h3>需求证据</h3>
               {(selected.analysis.evidence || []).map(
                 (e: string, i: number) => (
@@ -816,7 +847,7 @@ export function CustomerWorkspace({
             <section className="panel">
               <h2>联系客户</h2>
               <p className="muted">
-                {contactLabels[selected.contact_status]}
+                {contactLabel(selected)}
                 。联系方式与客户价值分别核实。复制话术不代表已发送，系统发送仍须逐条审核。
               </p>
               {selected.source_key?.startsWith("v2ex:") && selected.market?.profile?.status === "public_profile" && (
@@ -1028,7 +1059,7 @@ export function CustomerWorkspace({
                   </button>
                 </>
               )}
-              <p>{urlLink(selected.url, "打开原帖 / 项目入口 ↗")}</p>
+              <p>{issueLinkUnavailable(selected) ? "原帖链接不可用" : urlLink(selected.url, "打开原帖 / 项目入口 ↗")}</p>
               <button className="text" onClick={() => onEmail(selected.id)}>
                 邮件草稿与逐条审核 →
               </button>

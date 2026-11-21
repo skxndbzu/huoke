@@ -10,13 +10,14 @@ ASK = re.compile(r'(?:求推荐|求购|寻找|想找|找个|采购|有没有|哪
 PAIN = re.compile(r'(?:API|接口|中转|供应商|服务商).{0,35}(?:超时|限流|不稳定|价格|成本|计费|充值|余额|不可用)|(?:超时|限流|不稳定|太贵).{0,25}(?:API|接口|中转)|\b(?:api|provider)\b.{0,35}\b(?:cost|pricing|rate limit|latency|unreliable)\b', re.I)
 BUILD = re.compile(r'(?:正在|我们|我想|计划).{0,25}(?:开发|搭建|做).{0,35}(?:应用|客服|知识库|agent)|\b(?:building|developing)\b.{0,35}\b(?:app|agent|chatbot)\b', re.I)
 NOISE = re.compile(r'教程|周报|日报|资讯|信息流|推荐新工具|开源推荐|新增推荐|新增站点|站点推荐|收录|自荐|推广|\b(?:newsletter|digest|tutorial|research / reuse|refactor)\b|(?:spec|PRD)[:：\]]|规格', re.I)
+RESOURCE_POST = re.compile(r'^\s*[【\[]\s*(?:开发者)?资源(?:推荐|投稿)\s*[】\]]')
 
 
 def intent(title, text):
     # Large logs, quoted examples and checklists must not dominate a short actual request.
     body = re.sub(r'```.*?```|~~~.*?~~~', '', text[:12000], flags=re.S)
     body = '\n'.join(x for x in body.splitlines() if not x.lstrip().startswith(('>', '- [', '* [')))
-    if NOISE.search(title) or not MODEL.search(title + '\n' + body):
+    if RESOURCE_POST.search(title) or NOISE.search(title) or not MODEL.search(title + '\n' + body):
         return {'score': 0, 'reason': '资讯、推广或缺少模型需求，保留记录供人工查看', 'evidence': []}
     evidence, score, reason = [], 0, '仅有技术讨论，暂不优先消耗模型额度'
     for pattern, weight, label in ((ASK, 70, '有接口选型或求助表述'), (PAIN, 45, '有模型服务使用问题'), (BUILD, 35, '有应用开发场景')):

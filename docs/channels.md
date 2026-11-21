@@ -1,5 +1,9 @@
 # 渠道能力与证据
 
+## 2026-11-21 GitHub 买方需求抽查
+
+九组公开搜索词对比保留当前线上配置。抽查发现两条明确标注“开发者资源推荐”与“资源投稿”的中转站对照表通过原关键词规则，分别 45 和 70 分。更新后的规则对两条均返回 0，实际问“用的哪家 API”的试样保留 80 分。两个投稿样本未入库。后续继续基于明确需求、国内市场和联系路径判断渠道质量。 [资源推荐](https://github.com/Jackpopc/DevWeekly/issues/63) · [资源投稿](https://github.com/ruanyf/weekly/issues/13516) · [选型原文](https://github.com/sweetcornna/university-helper/issues/56)
+
 ## 2026-11-21 GitHub Discussions 双仓库试点
 
 实查 Cherry Studio、Dify、New API、FastGPT、NextChat 及其他项目的 `/discussions.atom`。前五个均在 Windows 实际返回 25 条公开讨论。新接入 Cherry Studio、Dify，选择公开应用用户反馈为试点。New API、NextChat 抽样有卖方推荐、教程或维护需求，故暂不扩大到这些仓库。只认两仓库公开讨论原文路径，同一讨论经不同链接片段导入时仍去重。GitHub Issues 搜索继续作为独立来源。 [Cherry Studio 订阅](https://github.com/CherryHQ/cherry-studio/discussions.atom) · [Dify 订阅](https://github.com/langgenius/dify/discussions.atom)

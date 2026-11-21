@@ -16,6 +16,9 @@ from app.profile_research import research_profile
     ('feat: Provider configuration', '选择 Ollama 供应商后填入 API key', False),
     ('[开源推荐] 低价模型 API 网关', '求推荐 API 供应商，欢迎使用我们的产品', False),
     ('新增站点建议：超稳 API 中转', '价格便宜，欢迎收录。', False),
+    ('【开发者资源推荐】GPT-Rankings：150 家 GPT API 中转站对照表', '按模型 API 价格和延迟整理资源。', False),
+    ('【资源投稿】GPT-Rankings：150 家国内 GPT API 中转站对照表', '选型对照表列出哪家 API 的价格最低。', False),
+    ('求推荐 API 资源：哪家模型 API 支持按量付费？', '我们正在开发客服。', True),
     ('每日信息流', '寻找稳定的大模型 API', False),
     ('OpenAI settings bug', '```\n寻找稳定的 API 供应商\n```', False),
 ])

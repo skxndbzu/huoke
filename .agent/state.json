@@ -1,25 +1,25 @@
 {
-  "updated_at": "2026-11-21T14:11:37.810453+08:00",
+  "updated_at": "2026-11-21T14:21:11.459439+08:00",
   "timezone": "Asia/Shanghai",
   "phase": "phase_1_assisted_workflow_live",
-  "branch": "codex/collector-wake-20261121",
+  "branch": "codex/exclude-source-roundups-20261121",
   "repository": "https://github.com/skxndbzu/huoke.git",
   "deployment": {
     "host": "117.72.35.216",
     "user": "admin",
     "root": "/home/admin/huoke-staging",
-    "release": "20261121-source-cooldown-r1",
-    "status": "healthy_staging_source_cooldown_retry",
+    "release": "20261121-roundup-filter-r1",
+    "status": "healthy_staging_buyer_precision",
     "access": "http://117.72.35.216:18080",
     "real_send_enabled": false,
     "paused": false,
     "production_policy": "not_confirmed",
-    "image": "huoke:20261121-source-cooldown-r1",
-    "image_id": "sha256:ee04bfeb33466437799936af91ba65061a90e1187526d1a3c973ab00bdcb3cf0",
-    "artifact_sha256": "8c77302efa2b6f8bc0d70069b365e878c302087ea728d44388983e3dc52a9f71",
+    "image": "huoke:20261121-roundup-filter-r1",
+    "image_id": "sha256:022841739ecf2ff005192c33d39f6ddd5036df5457dcfad9a34c582d0b0498dc",
+    "artifact_sha256": "55893383f08b1f44d0d610b4bbcaa995eac139ed9cc884950d92662b2bd0398a",
     "access_note": "IP HTTP access retained by owner choice. Password account configured at explicit owner request; login verified. Public homepage/assets 200 and unauthenticated API 401 previously verified.",
-    "rollback_image": "huoke:20261121-screening-review-r1",
-    "backup": "/home/admin/huoke-staging/backups/20261121-before-source-cooldown.dump"
+    "rollback_image": "huoke:20261121-source-cooldown-r1",
+    "backup": "/home/admin/huoke-staging/backups/20261121-before-roundup-filter.dump"
   },
   "automation": {
     "id": "automation",
@@ -35,7 +35,7 @@
     "requires": "Windows computer awake and Codex app running"
   },
   "verified": {
-    "local_tests_passed": 34,
+    "local_tests_passed": 49,
     "postgres_concurrency_test": "passed: 4 workers produced exactly one simulated send",
     "frontend_build": "passed",
     "npm_audit_vulnerabilities": 0,
@@ -49,7 +49,7 @@
     },
     "customer_messages_sent": 0,
     "paid_model_calls": 385,
-    "postgres_tests_passed": 129,
+    "postgres_tests_passed": 132,
     "server_health": "Public health 200, web and PostgreSQL healthy, worker pong, unauthenticated API 401, messages=0 and real sending disabled",
     "celery_worker": "ping pong",
     "server_source_sample": {
@@ -65,7 +65,7 @@
       "cache_hits": 26,
       "new_leads": 0
     },
-    "server_tests_passed": 129,
+    "server_tests_passed": 132,
     "smtp_auth_probe": {
       "status": "success",
       "host": "smtp.qq.com",
@@ -92,7 +92,7 @@
     },
     "model": "gpt-6.1-sol models verified and one evidence-checked inference succeeded",
     "owner_password_login": "Initial account provisioned at explicit owner request; actual login and logout verified. No reviewer token accessed, no message approval. Credentials not stored in repository.",
-    "local_validation": "34 targeted social/discovery/pacing tests; 129 on final isolated PostgreSQL image",
+    "local_validation": "49 targeted prospecting, discovery and social tests; final PostgreSQL image 132 passed",
     "market_filter": {
       "threshold": 70,
       "total_leads": 1265,
@@ -200,7 +200,7 @@
     },
     "conversion_quality": "V2EX node pilot found one explicit price-comparison inquiry. It remains below the domestic threshold, with no direct contact; quality lift beyond this sample is unproven.",
     "runtime_ai_estimated_usd": 3.744794,
-    "runtime_ai_note": "Collector wake validation did not call the model. Actual runtime costs and development fees unknown.",
+    "runtime_ai_note": "Roundup rule replay made no model calls. Avoided provider spend has not been measured. Actual supplier bill and development fees unknown.",
     "iteration_model_estimated_usd": null
   },
   "blockers": [
@@ -558,6 +558,21 @@
       }
     },
     "new_leads": 0,
+    "model_calls": 0,
+    "owner_actions": []
+  },
+  "roundup_filter_iteration": {
+    "public_github_search_terms_compared": 9,
+    "initial_roundup_scores": [
+      45,
+      70
+    ],
+    "live_roundup_scores": [
+      0,
+      0
+    ],
+    "live_question_score": 80,
+    "matching_roundups_in_production": 0,
     "model_calls": 0,
     "owner_actions": []
   }

@@ -174,6 +174,32 @@ def test_ai_score_is_evidence_checked_cached_and_not_retried_when_invalid(monkey
     assert len(calls)==1
 
 
+@pytest.mark.parametrize('in_title', [True, False])
+def test_analysis_keeps_rule_evidence_outside_body_limit(monkeypatch, client, in_title):
+    import json, httpx
+    model_config(monkeypatch)
+    quote = '想找稳定的大模型 API 供应商'
+    with Session.begin() as s:
+        lead = s.get(Lead, 1)
+        lead.title = quote if in_title else '接口咨询'
+        lead.text = '项目背景。' * 1300 + ('' if in_title else '\n' + quote)
+
+    result = {'summary':'接口选型','fit':'medium','priority':'medium','purchase_stage':'exploring',
+              'recency':'unknown','evidence':[quote],'unknowns':['地区'],'next_action':'核实地区',
+              'market':{'status':'assessed','score':40,'reason':'证据不足以确认','evidence':[quote]}}
+    def respond(*args, **kwargs):
+        payload = json.loads(kwargs['json']['messages'][1]['content'])
+        assert quote in payload['untrusted_source']
+        assert len(payload['untrusted_source']) <= 6400
+        return httpx.Response(200, request=httpx.Request('POST', 'https://example.test/v1/chat/completions'), json={
+            'choices':[{'message':{'content':json.dumps(result)},'finish_reason':'stop'}],
+            'usage':{'prompt_tokens':100,'completion_tokens':50}})
+
+    monkeypatch.setattr('app.analysis.httpx.post', respond)
+    assert not analyze(1)['cached']
+    assert client.get('/api/workspace/leads/1').json()['market']['evidence'][0]['url'] == 'https://example.test/post'
+
+
 def test_public_profile_fixed_endpoint_limited_fields_and_cache(monkeypatch):
     import httpx
     with Session.begin() as s:

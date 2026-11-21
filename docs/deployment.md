@@ -1,6 +1,10 @@
 # 部署与发布
 
-## 当前发布 `20261121-roundup-filter-r1`
+## 当前发布 `20261121-analysis-context-r1`
+
+模型保留原上下文并补入遗漏的规则原句，同时压缩无语义的 JSON 空白。从已有 40 次分析回放验证 138 段引文完整和补齐 4 段。实际调用费用待后续测量。隔离 PostgreSQL 134 项测试通过，线上健康检查正常。回滚镜像 `huoke:20261121-roundup-filter-r1`，备份 `backups/20261121-before-analysis-context.dump`。
+
+## 上次发布 `20261121-roundup-filter-r1`
 
 需求规则排除明确标记的资源推荐和投稿。132 项隔离 PostgreSQL 测试通过，线上三条真实标题回放与预期相符。无结构变更。回滚 `huoke:20261121-source-cooldown-r1`，备份 `backups/20261121-before-roundup-filter.dump`，保留调度卷。
 

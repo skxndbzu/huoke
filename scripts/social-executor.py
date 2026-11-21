@@ -18,6 +18,17 @@ PROJECT_TUNNEL = 'http://127.0.0.1:18081'
 WORKBENCH_RETRY_SECONDS = 30
 
 
+def wait_until_next_poll(seconds):
+    # Recheck wall time after system sleep rather than waiting out an old timer.
+    wall_deadline = time.time() + seconds
+    monotonic_deadline = time.monotonic() + seconds
+    while True:
+        remaining = min(wall_deadline - time.time(), monotonic_deadline - time.monotonic())
+        if remaining <= 0:
+            return
+        time.sleep(min(remaining, 30))
+
+
 def private_url(value):
     p = urlparse(value)
     if p.scheme not in ('http', 'https') or p.username or p.password or p.query or p.fragment:
@@ -73,7 +84,7 @@ def ssh_operator_token(platform, loop):
         if not loop:
             raise SystemExit('Unable to load the project operator token over SSH')
         print(json.dumps({'platform': platform, 'status': 'workbench_unavailable', 'code': 'operator_ssh_unavailable'}), flush=True)
-        time.sleep(WORKBENCH_RETRY_SECONDS)
+        wait_until_next_poll(WORKBENCH_RETRY_SECONDS)
 
 
 def main():
@@ -185,7 +196,7 @@ def main():
                         pass
             if not args.loop:
                 break
-            time.sleep(delay)
+            wait_until_next_poll(delay)
     if backend:
         backend.close()
 

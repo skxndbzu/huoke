@@ -18,6 +18,8 @@ Celery beat 使用命名卷 `huoke-staging_beat_state` 持久保存 `/var/lib/hu
 
 ## Windows 公开采集自动重连
 
+Windows 采集器的轮询等待以 30 秒为上限分段核对实际时间。模拟系统挂起后时钟跳跃和回拨均通过，不修改 Windows 电源设置。进程在系统恢复后按到期时间继续下一轮。
+
 `scripts/start-public-executors.ps1` 在当前 Windows 会话保留一个专用 SSH 守护进程。隧道中断后重连，并检查 18081 端口归属。每个平台仍只运行一个采集器。工作台网络中断时 30 秒后重试，未确认的上传沿用同一批缓存，成功后恢复正常采集间隔。来源平台本身的错误沿用原轮询间隔。启动时读取运维凭据失败也会重试，凭据仅用于项目专用隧道。
 
 2026-11-21 受控终止专用 SSH 后，守护进程在 11.6 秒内恢复了工作台健康接口。重新启动三条公开采集器后均成功上传，GitHub Discussions 一次工作台协议错误自动恢复。`.local/social-executor/tunnel-watch.log` 记录重连过程。Windows 重启后按原方式启动采集器。

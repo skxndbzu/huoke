@@ -1,5 +1,17 @@
 # 渠道能力与证据
 
+## 2026-11-21 下一批公开渠道小样本
+
+| 候选来源 | 实际样本与结论 |
+| --- | --- |
+| AtomGit | 官方 Issue 搜索在服务器匿名可读。六组词共返回 60 条结果，其中 23 条为近 90 天开放 Issue。仅一条通过现行规则，抽查属于模型适配任务。部分结果与 GitCode 显示相同仓库和主题，按同一候选生态复核。 |
+| Hugging Face | 本地读取 5 个公开模型的讨论列表，服务器连接失败。候选详情为适配和经验内容，未见近期明确买方需求。 |
+| 小众软件论坛 | 官方标签 RSS 本地返回 122 条结果，近 90 天共 40 条。主题侧重工具分享和使用讨论，未见规则命中的近期需求。RSS 主页服务器可读。 |
+
+2026-11-21 核对 GitHub 项目版本。`shink/gitcode-sdk` 为 Apache-2.0，提交 `215207ef221b`，2026-11-14 更新。`huggingface/huggingface_hub` 为 Apache-2.0，提交 `905aee877a2e`，2026-11-20 更新。Discourse 为 GPL-2.0，提交 `ba3bd0d0d476`，2026-11-21 更新。均未引入依赖。小样本暂不足以支持启动常驻采集。 [AtomGit Issue 搜索](https://atomgit-api-doc.atomgit.com/4.search/81.search_issues.html) · [GitCode SDK](https://github.com/shink/gitcode-sdk) · [Hugging Face SDK](https://github.com/huggingface/huggingface_hub) · [Discourse](https://github.com/discourse/discourse) · [小众软件标签订阅](https://meta.appinn.net/tag/ai.rss)
+
+联系入口补查覆盖 V2EX 1271 自报的 GitHub 资料及其个人 README，还有两位国内达标线索作者自行维护的 Issue 仓库 README。两个项目 README 请求分别为成功与 404，未找到明确商务邮箱或社交账号。不把无作者关联的项目资料当作个人联系方式。
+
 ## 2026-11-21 GitHub 买方需求抽查
 
 九组公开搜索词对比保留当前线上配置。抽查发现两条明确标注“开发者资源推荐”与“资源投稿”的中转站对照表通过原关键词规则，分别 45 和 70 分。更新后的规则对两条均返回 0，实际问“用的哪家 API”的试样保留 80 分。两个投稿样本未入库。后续继续基于明确需求、国内市场和联系路径判断渠道质量。 [资源推荐](https://github.com/Jackpopc/DevWeekly/issues/63) · [资源投稿](https://github.com/ruanyf/weekly/issues/13516) · [选型原文](https://github.com/sweetcornna/university-helper/issues/56)

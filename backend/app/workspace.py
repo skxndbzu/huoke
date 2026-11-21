@@ -222,9 +222,9 @@ def register_workspace(app, role, reviewer):
             elif contact == 'unverified_candidate':
                 stmt = stmt.where(~verified_path(Lead.id), candidate)
             elif contact == 'public_discussion':
-                stmt = stmt.where(~candidate, or_(*(Lead.source_key.startswith(prefix) for prefix in PUBLIC_DISCUSSION_PREFIXES)))
+                stmt = stmt.where(~candidate, or_(*(Lead.source_key.startswith(prefix, autoescape=True) for prefix in PUBLIC_DISCUSSION_PREFIXES)))
             elif contact == 'no_path':
-                stmt = stmt.where(~candidate, *(~Lead.source_key.startswith(prefix) for prefix in PUBLIC_DISCUSSION_PREFIXES))
+                stmt = stmt.where(~candidate, *(~Lead.source_key.startswith(prefix, autoescape=True) for prefix in PUBLIC_DISCUSSION_PREFIXES))
             total = s.scalar(select(func.count()).select_from(stmt.subquery()))
             contact_order = case((direct_contact(Lead.id, True), 0), (direct_contact(Lead.id), 1), (high_value(), 2), else_=3)
             ranking = case({lead_id: i for i, lead_id in enumerate(research_ids)}, value=Lead.id, else_=len(research_ids)) if research_ids else contact_order

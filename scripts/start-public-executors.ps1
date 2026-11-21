@@ -1,6 +1,6 @@
 param(
     [switch]$Once,
-    [ValidateSet('v2ex','nodeseek')][string[]]$Platform = @('v2ex','nodeseek')
+    [ValidateSet('v2ex','nodeseek','github_discussions')][string[]]$Platform = @('v2ex','nodeseek')
 )
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot

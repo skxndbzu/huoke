@@ -58,7 +58,7 @@ def research_v2ex_profiles(api, reader):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--platform', choices=['qq', 'wechat', 'xiaohongshu', 'v2ex', 'linuxdo', 'nodeseek'], required=True)
+    parser.add_argument('--platform', choices=['qq', 'wechat', 'xiaohongshu', *FEEDS], required=True)
     parser.add_argument('--server', default='http://127.0.0.1:18081')
     parser.add_argument('--bridge', default='')
     parser.add_argument('--wechat-source', help='Pinned upstream xiaoli_desktop directory; imports wx_backend only')

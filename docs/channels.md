@@ -1,5 +1,13 @@
 # 渠道能力与证据
 
+## 2026-11-21 GitHub Discussions 双仓库试点
+
+实查 Cherry Studio、Dify、New API、FastGPT、NextChat 及其他项目的 `/discussions.atom`。前五个均在 Windows 实际返回 25 条公开讨论。新接入 Cherry Studio、Dify，选择公开应用用户反馈为试点。New API、NextChat 抽样有卖方推荐、教程或维护需求，故暂不扩大到这些仓库。只认两仓库公开讨论原文路径，同一讨论经不同链接片段导入时仍去重。GitHub Issues 搜索继续作为独立来源。 [Cherry Studio 订阅](https://github.com/CherryHQ/cherry-studio/discussions.atom) · [Dify 订阅](https://github.com/langgenius/dify/discussions.atom)
+
+公开 Atom 无需账号，服务器对不同仓库网络成功率不同，Windows 现有网络路径实测两个试点同时可读。GitHub GraphQL 的匿名试读返回 403，REST Issue 搜索按 Issue 范围使用。试点本地每小时最多 50 条，线上首次实际读取 50 条，筛除 25 条关键词不符、19 条缺需求证据和 6 条过旧，新增候选 0。与 GitHub Issues 合算一个平台。 [GitHub GraphQL 文档](https://docs.github.com/en/graphql/guides/forming-calls-with-graphql)
+
+同日对 Gitee 默认排序、`updated_at` 与 12 组查询做小样本对比，时间排序虽增加新 Issue 数，但未见明确买方需求，其中两个规则命中是无关内容和内部网关重构。暂保留原搜词与相关度顺序。
+
 ## 2026-11-21 V2EX 作者公开资料
 
 本地 Windows 实测官方 `GET /api/members/show.json?username=...` 可读取本轮线索作者公开资料，服务端直连仍失败。使用当前已有执行器，限定候选作者、限制响应大小、核对返回账号、每天复用同一作者的结果。连接器保留公开所在地与自报 GitHub 入口，从明确联系段落提取未核实候选，避免使用未标明商务用途的邮箱字段。链接以自报身份呈现，不合并跨平台客户。新版实查两位，两个公开作者页、一个自报 GitHub 入口、零公开所在地和零新增直接联系方式。已验证工作台链接和第二轮缓存。 [V2EX API 说明](https://www.v2ex.com/help/api)

@@ -252,3 +252,24 @@ def test_v2ex_profile_requires_same_author_and_keeps_contact_unverified(client):
     detail = client.get(f'/api/workspace/leads/{job["id"]}').json()
     assert detail['market']['profile']['github'] == 'test-github'
     assert detail['market']['status'] == 'pending_ai' and detail['contact_status'] == 'unverified_candidate'
+
+
+def test_discussion_atom_and_import_share_public_topic_identity(client):
+    version = enable(client, 'github_discussions')
+    raw = f'''<feed xmlns="http://www.w3.org/2005/Atom">
+      <entry><title>哪家大模型 API 稳定？</title><content>{DEMAND}</content>
+      <link href="https://github.com/cherryHQ/cherry-studio/discussions/123#discussioncomment-1"/>
+      </entry><entry><title>同名 Issue</title><link href="https://github.com/CherryHQ/cherry-studio/issues/123"/>
+      </entry></feed>'''
+    with httpx.Client(transport=httpx.MockTransport(lambda _: httpx.Response(200, text=raw))) as source:
+        items = feed_items('github_discussions', source)
+    assert len(items) == 2  # identical feed items deduplicate when they reach the capture endpoint
+    assert items[0].url == 'https://github.com/CherryHQ/cherry-studio/discussions/123'
+    route = '/api/social/channels/github_discussions/capture'
+    result = client.post(route, json={'version': version, 'mode': 'executor', 'items': [r.model_dump() for r in items]})
+    assert result.status_code == 200 and result.json()['new_leads'] == 1
+    imported = {**items[0].model_dump(), 'url': items[0].url + '#discussioncomment-2'}
+    result = client.post(route, json={'version': version, 'mode': 'manual', 'items': [imported]})
+    assert result.status_code == 200 and result.json()['cache_hits'] == 1
+    body = client.get('/api/workspace/leads', params={'source': 'GitHub Discussions', 'contact': 'public_discussion'}).json()
+    assert body['total'] == 1

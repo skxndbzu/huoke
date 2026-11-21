@@ -14,7 +14,7 @@ from .pipeline import clean, classify, fingerprint
 from .prospecting import intent
 from .market import refresh_market
 from .contact_discovery import extract_contacts, extract_contact_text, save_candidate
-from .social_adapters import (CATALOG, FEEDS, Capture, V2EXProfile, V2EX_USERNAME,
+from .social_adapters import (CATALOG, Capture, V2EXProfile, V2EX_USERNAME,
                               feed_items, gitee_items, gitee_issue_url, validate_url)
 from .config import settings
 
@@ -98,8 +98,9 @@ def ingest(s, platform, items, options, provenance):
     for item in items:
         title = clean(item.title or item.text.split('\n')[0])[:250]
         text = clean(item.text)
-        url = gitee_issue_url(item.url) if platform == 'gitee' else item.url
-        event_id = fingerprint(url) if platform == 'gitee' or provenance == 'manual' else item.event_id
+        url = gitee_issue_url(item.url) if platform == 'gitee' else (
+            validate_url(platform, item.url) if platform == 'github_discussions' else item.url)
+        event_id = fingerprint(url) if platform in {'gitee', 'github_discussions'} or provenance == 'manual' else item.event_id
         if platform == 'v2ex':
             match = re.fullmatch(r'https://(?:www\.)?v2ex.com/t/(\d+)(?:#.*)?', item.url)
             if not match:
@@ -296,7 +297,7 @@ def register_social(app, role):
                 runs = select(ChannelRun).where(ChannelRun.channel == p.channel)
                 latest = s.scalar(runs.order_by(ChannelRun.id.desc()).limit(1))
                 good = s.scalar(runs.where(ChannelRun.status == 'success').order_by(ChannelRun.id.desc()).limit(1))
-                routes = [feed_route(s, platform, mode, checked_at) for mode in ('server_feed', 'executor')] if platform in FEEDS else []
+                routes = [feed_route(s, platform, mode, checked_at) for mode in ('server_feed', 'executor')] if platform in {'v2ex', 'nodeseek', 'linuxdo'} else []
                 result.append({'platform': platform, **spec, 'version': p.version, 'enabled': p.enabled, **p.options,
                                'next_allowed_at': p.next_allowed_at, 'status': latest.status if latest else 'not_connected',
                                'last_success': good.finished_at if good else '', 'last_attempt': latest.started_at if latest else '', 'routes': routes,

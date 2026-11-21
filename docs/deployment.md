@@ -1,6 +1,10 @@
 # 部署与发布
 
-## 当前发布 `20261121-v2ex-profile-r1`
+## 当前发布 `20261121-discussions-r1`
+
+GitHub Discussions 小范围公开订阅通过 Windows 本地执行器验证，使用 `scripts/start-public-executors.ps1 -Platform github_discussions`。无需 GitHub 登录，电脑在线时每小时一轮，GitHub Issues 仍走服务器。首次读取 50 条，全部规则筛除。隔离 PostgreSQL 126 项测试、前端构建、线上 39 个文件摘要及公开健康接口验证通过。回滚镜像 `huoke:20261121-v2ex-profile-r1`，备份 `backups/20261121-before-discussions.dump`。本轮无数据库结构变更。
+
+## 上次发布 `20261121-v2ex-profile-r1`
 
 Windows V2EX 执行器每轮从近 90 天通过需求初筛的 V2EX 线索最多补查三个公开作者资料。成功或非暂时可用结果缓存一天。同一作者避免重复请求。服务端核对采集配置版本及线索作者，保留现有客户和审核记录。`scripts/start-public-executors.ps1 -Platform v2ex` 可单独恢复 V2EX。
 

@@ -11,6 +11,9 @@ from pydantic import Field, field_validator
 from .schemas import Strict
 
 CATALOG = {
+    'github_discussions': {'name': 'GitHub Discussions', 'adapter': 'GitHub Atom', 'mode': 'executor',
+                           'repo': 'https://github.com/CherryHQ/cherry-studio/discussions.atom',
+                           'description': '本地读取 Cherry Studio 与 Dify 的公开讨论订阅，每轮最多 50 条。'},
     'gitee': {'name': 'Gitee Issues', 'adapter': 'Gitee OpenAPI v5', 'mode': 'search',
               'repo': 'https://gitee.com/api/v5/swagger',
               'description': '通过官方接口搜索公开且未关闭的 Issue。每小时最多三组词，每组最多 12 条。'},
@@ -31,9 +34,12 @@ CATALOG = {
     'kuaishou': {'name': '快手', 'adapter': '授权内容导入', 'mode': 'manual', 'repo': 'https://github.com/JoeanAmier/KS-Downloader',
                  'description': 'KS-Downloader 是下载器且商业推广范围受限，暂不作为自动获客器。可导入已授权内容。'},
 }
-FEEDS = {'linuxdo': ['https://linux.do/latest.rss'], 'nodeseek': ['https://rss.nodeseek.com/'],
+DISCUSSION_REPOS = ('CherryHQ/cherry-studio', 'langgenius/dify')
+FEEDS = {'github_discussions': [f'https://github.com/{repo}/discussions.atom' for repo in DISCUSSION_REPOS],
+         'linuxdo': ['https://linux.do/latest.rss'], 'nodeseek': ['https://rss.nodeseek.com/'],
          'v2ex': ['https://www.v2ex.com/feed/deepseek.xml', 'https://www.v2ex.com/feed/programmer.xml']}
-HOSTS = {'gitee': {'gitee.com'}, 'linuxdo': {'linux.do'}, 'nodeseek': {'www.nodeseek.com', 'nodeseek.com'},
+HOSTS = {'github_discussions': {'github.com'}, 'gitee': {'gitee.com'},
+         'linuxdo': {'linux.do'}, 'nodeseek': {'www.nodeseek.com', 'nodeseek.com'},
          'v2ex': {'www.v2ex.com', 'v2ex.com'}, 'xiaohongshu': {'www.xiaohongshu.com', 'xiaohongshu.com'},
          'douyin': {'www.douyin.com', 'douyin.com'}, 'kuaishou': {'www.kuaishou.com', 'kuaishou.com', 'www.kuaishou.cn'}}
 V2EX_USERNAME = r'[A-Za-z0-9_]{1,32}'
@@ -129,6 +135,12 @@ def validate_url(platform, url):
         raise ValueError('原文链接必须属于所选平台的 HTTPS 主站')
     if p.query:
         raise ValueError('请移除原文链接中的查询参数，不保存会话或安全令牌')
+    if platform == 'github_discussions':
+        match = re.fullmatch(r'/([^/]+/[^/]+)/discussions/([0-9]+)', p.path.rstrip('/'))
+        repo = next((r for r in DISCUSSION_REPOS if match and match[1].lower() == r.lower()), '')
+        if not repo:
+            raise ValueError('GitHub 原文必须属于试点仓库的公开讨论')
+        return f'https://github.com/{repo}/discussions/{match[2]}'
     return url
 
 
@@ -180,7 +192,7 @@ def feed_items(platform, client):
         if root.tag not in ('rss', atom + 'feed'):
             raise AdapterError('not_a_feed')
         entries = root.findall('./channel/item') if root.tag == 'rss' else root.findall(atom + 'entry')
-        for entry in entries[:30]:
+        for entry in entries[:25 if platform == 'github_discussions' else 30]:
             if root.tag == 'rss':
                 link = entry.findtext('link', '')
                 title = entry.findtext('title', '')

@@ -69,7 +69,8 @@ services:
     logging: *logging
     image: ${HUOKE_IMAGE:-huoke:staging}
     env_file: .env
-    command: [celery, -A, app.tasks.celery, beat, --loglevel=warning, --schedule=/tmp/celerybeat-schedule]
+    volumes: [beat_state:/var/lib/huoke/beat]
+    command: [celery, -A, app.tasks.celery, beat, --loglevel=warning, --schedule=/var/lib/huoke/beat/celerybeat-schedule]
     depends_on:
       init: {condition: service_completed_successfully}
       redis: {condition: service_started}
@@ -77,3 +78,4 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  beat_state:

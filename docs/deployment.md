@@ -1,12 +1,18 @@
 # 部署与发布
 
+## 当前发布 `20261121-beat-state-r1`
+
+Celery beat 使用命名卷 `huoke-staging_beat_state` 持久保存 `/var/lib/huoke/beat/celerybeat-schedule`。通过 Dockerfile 初始化 UID 10001 可写目录。保留单实例，发布和回滚不清理该卷。首次迁移在正常停止 beat 后复制旧调度文件，并在新卷初始化，避免发布从头计时。
+
+隔离环境两次启动验证同一卷保留计数、最后运行时间与剩余等待时间。线上迁移前后 Gitee/GitHub 的调度时间一致，Web/PostgreSQL 健康，worker 正常响应。后端、测试、网页 39 个摘要与此前通过 126 项测试的版本一致。回滚 `huoke:20261121-discussions-r1`，数据库与调度备份分别为 `backups/20261121-before-beat-state.dump` 和 `backups/20261121-before-beat-state.schedule`。
+
 ## Windows 公开采集自动重连
 
 `scripts/start-public-executors.ps1` 在当前 Windows 会话保留一个专用 SSH 守护进程。隧道中断后重连，并检查 18081 端口归属。每个平台仍只运行一个采集器。工作台网络中断时 30 秒后重试，未确认的上传沿用同一批缓存，成功后恢复正常采集间隔。来源平台本身的错误沿用原轮询间隔。启动时读取运维凭据失败也会重试，凭据仅用于项目专用隧道。
 
 2026-11-21 受控终止专用 SSH 后，守护进程在 11.6 秒内恢复了工作台健康接口。重新启动三条公开采集器后均成功上传，GitHub Discussions 一次工作台协议错误自动恢复。`.local/social-executor/tunnel-watch.log` 记录重连过程。Windows 重启后按原方式启动采集器。
 
-## 当前发布 `20261121-discussions-r1`
+## 上次发布 `20261121-discussions-r1`
 
 GitHub Discussions 小范围公开订阅通过 Windows 本地执行器验证，使用 `scripts/start-public-executors.ps1 -Platform github_discussions`。无需 GitHub 登录，电脑在线时每小时一轮，GitHub Issues 仍走服务器。首次读取 50 条，全部规则筛除。隔离 PostgreSQL 126 项测试、前端构建、线上 39 个文件摘要及公开健康接口验证通过。回滚镜像 `huoke:20261121-v2ex-profile-r1`，备份 `backups/20261121-before-discussions.dump`。本轮无数据库结构变更。
 

@@ -13,7 +13,7 @@ COPY backend/requirements.lock ./requirements.lock
 RUN pip install --no-cache-dir -r requirements.lock
 COPY backend/ ./
 COPY --from=frontend /build/dist ./app/static
-RUN useradd -m -u 10001 huoke
+RUN useradd -m -u 10001 huoke && install -d -m 700 -o huoke -g huoke /var/lib/huoke/beat
 USER huoke
 EXPOSE 8000
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--no-access-log"]

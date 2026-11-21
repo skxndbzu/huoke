@@ -7,7 +7,7 @@ RUN pip install --no-index --find-links=/wheels -r requirements.lock && pip chec
 COPY backend/ ./
 COPY web ./app/static
 COPY BUILD-MANIFEST.json ./BUILD-MANIFEST.json
-RUN useradd -m -u 10001 huoke
+RUN useradd -m -u 10001 huoke && install -d -m 700 -o huoke -g huoke /var/lib/huoke/beat
 USER huoke
 EXPOSE 8000
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--no-access-log"]

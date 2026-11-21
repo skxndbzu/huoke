@@ -798,7 +798,7 @@ function App() {
           )}
           {page === "渠道与任务" && (
             <>
-              <SocialChannels api={api} />
+              <SocialChannels api={api} owner={owner} />
               <DiscoverySources api={api} />
               <section className="panel">
                 <div className="section-title">

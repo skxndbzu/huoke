@@ -1,6 +1,10 @@
 # 部署与发布
 
-## 当前发布 `20261121-analysis-context-r1`
+## 当前发布 `20261121-screening-feedback-r1`
+
+所有者可在公开来源筛除样本上保存、撤回复核判断，写入现有审计记录。135 项隔离 PostgreSQL 测试、前端构建、390px 保存和撤回验证通过。无结构变更。回滚 `huoke:20261121-analysis-context-r1`，备份 `backups/20261121-before-screening-feedback.dump`。
+
+## 上次发布 `20261121-analysis-context-r1`
 
 模型保留原上下文并补入遗漏的规则原句，同时压缩无语义的 JSON 空白。从已有 40 次分析回放验证 138 段引文完整和补齐 4 段。实际调用费用待后续测量。隔离 PostgreSQL 134 项测试通过，线上健康检查正常。回滚镜像 `huoke:20261121-roundup-filter-r1`，备份 `backups/20261121-before-analysis-context.dump`。
 

@@ -3,18 +3,19 @@ import hashlib
 import json
 import re
 from datetime import datetime, timezone, timedelta
+from typing import Literal
 from fastapi import Depends, HTTPException
 from pydantic import Field
 from sqlalchemy import and_, or_, select
 import httpx
 from .schemas import Strict
-from .db import (Session, SourcePolicy, SourceItem, ChannelRun, Lead, LeadMarket, CaptureEvidence,
+from .db import (Session, SourcePolicy, SourceItem, ChannelRun, Lead, LeadMarket, CaptureEvidence, Event,
                  locked_control, now, event)
 from .pipeline import clean, classify, fingerprint
 from .prospecting import intent
 from .market import refresh_market
 from .contact_discovery import extract_contacts, extract_contact_text, save_candidate
-from .social_adapters import (CATALOG, Capture, V2EXProfile, V2EX_USERNAME,
+from .social_adapters import (CATALOG, HOSTS, Capture, V2EXProfile, V2EX_USERNAME,
                               feed_items, gitee_items, gitee_issue_url, validate_url)
 from .config import settings
 
@@ -24,6 +25,7 @@ GITEE_QUERIES = ['大模型 API', '中转站', 'DeepSeek API']
 SERVER_MODES = {'feed', 'search'}
 FILTER_REVIEW_ORDER = ('no_demand_evidence', 'no_keyword', 'excluded_keyword', 'older_than_90_days')
 FILTER_SAMPLE_LIMIT = 5
+SCREENING_REVIEW_EVENT = 'screening_sample_reviewed'
 
 
 def get_policy(s, platform):
@@ -60,6 +62,10 @@ class ExecutorStatus(Strict):
 
 class V2EXProfileUpload(V2EXProfile):
     version: int = Field(ge=1)
+
+
+class ScreeningReview(Strict):
+    decision: Literal['has_demand', 'reasonable', 'unreviewed']
 
 
 def lead_has_v2ex_author(lead):
@@ -182,6 +188,10 @@ def status_error(exc):
     return 'failed', type(exc).__name__
 
 
+def screening_key(channel, url):
+    return hashlib.sha256((channel + '\n' + url.split('#', 1)[0].rstrip('/')).encode()).hexdigest()
+
+
 def screening_batch(s, runs, recent):
     sample_run = recent
     if not sample_run or not sample_run.stats.get('filtered_samples'):
@@ -190,8 +200,16 @@ def screening_batch(s, runs, recent):
                               .order_by(ChannelRun.id.desc()).limit(1))
     if not sample_run:
         return None
-    return {'finished_at': sample_run.finished_at, 'mode': sample_run.stats.get('capture_mode', ''),
-            'reasons': sample_run.stats.get('filter_reasons', {}), 'samples': sample_run.stats['filtered_samples']}
+    samples = sample_run.stats['filtered_samples']
+    keys = [screening_key(sample_run.channel, sample['url']) if sample.get('url') else '' for sample in samples]
+    reviews = {}
+    if any(keys):
+        for record in s.scalars(select(Event).where(Event.kind == SCREENING_REVIEW_EVENT, Event.entity.in_(keys))
+                                .order_by(Event.id.desc())):
+            reviews.setdefault(record.entity, record.detail['decision'])
+    return {'id': sample_run.id, 'finished_at': sample_run.finished_at, 'mode': sample_run.stats.get('capture_mode', ''),
+            'reasons': sample_run.stats.get('filter_reasons', {}),
+            'samples': [{**sample, 'decision': reviews.get(key, 'unreviewed')} for sample, key in zip(samples, keys)]}
 
 
 def feed_route(s, platform, mode, checked_at):
@@ -253,10 +271,30 @@ def sync_social(platform):
         return {'status': status, 'error': error}
 
 
-def register_social(app, role):
+def register_social(app, role, reviewer):
     def platform_exists(platform):
         if platform not in CATALOG:
             raise HTTPException(404, '渠道不存在')
+
+    @app.put('/api/social/screening/{run_id}/{sample_index}')
+    def review_screening(run_id: int, sample_index: int, data: ScreeningReview, actor=Depends(reviewer)):
+        with Session.begin() as s:
+            locked_control(s)
+            run = s.get(ChannelRun, run_id)
+            if not run or run.channel.removeprefix('social:') not in HOSTS:
+                raise HTTPException(404, '公开筛除样本不存在')
+            samples = run.stats.get('filtered_samples', [])
+            if not 0 <= sample_index < len(samples) or not samples[sample_index].get('url'):
+                raise HTTPException(404, '公开筛除样本不存在')
+            sample = samples[sample_index]
+            key = screening_key(run.channel, sample['url'])
+            latest = s.scalar(select(Event).where(Event.kind == SCREENING_REVIEW_EVENT, Event.entity == key)
+                              .order_by(Event.id.desc()).limit(1))
+            current = latest.detail['decision'] if latest else 'unreviewed'
+            if current != data.decision:
+                event(s, SCREENING_REVIEW_EVENT, key, run_id=run_id, sample_index=sample_index,
+                      url=sample['url'], channel=run.channel, reason=sample['reason'], decision=data.decision, actor=actor)
+            return {'decision': data.decision}
 
     @app.get('/api/social/v2ex/profiles')
     def pending_v2ex_profiles(actor=Depends(role)):

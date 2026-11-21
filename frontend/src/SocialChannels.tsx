@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 type R = Record<string, any>;
 type API = (path: string, body?: unknown, method?: string) => Promise<any>;
+type ReviewSample = (id: number, index: number, decision: string) => void;
 const labels: R = {not_connected:'尚未连接',success:'最近读取成功',imported:'已导入，非自动接通',running:'采集中',failed:'读取失败',unavailable:'执行器不可用',login_required:'等待登录',verification_required:'需要平台验证',interrupted:'上轮中断',config_changed:'配置已变化'};
 const errors: R = {upstream_auth_token_required:'QQ 执行器要求项目方签发的授权令牌',windows_browser_helper_blocked:'Windows 安全软件阻止了小红书的浏览器辅助程序',ConnectError:'无法连接来源',ConnectTimeout:'连接来源超时',HTTP_403:'平台要求完成正常访问验证',HTTP_429:'平台暂时限流，请等待',account_mismatch:'执行器登录账号与采集配置不一致',conversation_mismatch:'读取到的会话与所选范围不一致'};
 const time = (s: string) => s ? new Date(s).toLocaleString('zh-CN') : '尚无';
 const filterLabels: Record<string, string> = {older_than_90_days:'超过 90 天',excluded_keyword:'命中排除词',no_keyword:'未命中关键词',no_demand_evidence:'未发现明确需求'};
 const modeLabels: Record<string, string> = {manual:'授权导入',executor:'本地补采',server_feed:'服务器订阅',server_search:'服务器搜索'};
 
-function ChannelRun({run, title}: {run: R, title?: string}) {
+function ChannelRun({run, title, onReview, busy}: {run: R, title?: string, onReview?: ReviewSample, busy: boolean}) {
   const stats = run.stats;
   const screening = run.screening_batch;
   return <div>
@@ -19,15 +20,24 @@ function ChannelRun({run, title}: {run: R, title?: string}) {
       <summary>抽查筛除样本</summary>
       <p>{time(screening.finished_at)}{modeLabels[screening.mode] && ` · ${modeLabels[screening.mode]}`}</p>
       <p>{Object.entries(screening.reasons).map(([reason,count]) => `${filterLabels[reason] || reason} ${count}`).join(' · ')}</p>
-      {screening.samples.map((sample:R,i:number) => <p key={i}>
-        {sample.title} · {filterLabels[sample.reason] || sample.reason}
-        {sample.url && <> · <a href={sample.url} target="_blank" rel="noreferrer">原文 ↗</a></>}
-      </p>)}
+      {screening.samples.map((sample:R,i:number) => <div key={i}>
+        <p>{sample.title} · {filterLabels[sample.reason] || sample.reason}
+          {sample.url && <> · <a href={sample.url} target="_blank" rel="noreferrer">原文 ↗</a></>}
+        </p>
+        {!!sample.url && <label>样本判断
+          <select aria-label={`判断 ${sample.title}`} value={sample.decision} disabled={busy || !onReview}
+                  onChange={e => onReview?.(screening.id, i, e.target.value)}>
+            <option value="unreviewed">未复核</option>
+            <option value="has_demand">疑似漏判</option>
+            <option value="reasonable">筛除合理</option>
+          </select>
+        </label>}
+      </div>)}
     </details>}
   </div>;
 }
 
-export function SocialChannels({api}: {api: API}) {
+export function SocialChannels({api, owner}: {api: API, owner: boolean}) {
   const [channels, setChannels] = useState<R[]>([]), [edit, setEdit] = useState<R|null>(null),
     [selected, setSelected] = useState<R|null>(null), [busy, setBusy] = useState(false),
     [error, setError] = useState(''), [notice, setNotice] = useState('');
@@ -39,6 +49,12 @@ export function SocialChannels({api}: {api: API}) {
     setBusy(true);setError('');setNotice('');
     try {const message=await fn();await load();setNotice(message)} catch(e){setError((e as Error).message)} finally{setBusy(false)}
   }
+  const reviewSample: ReviewSample | undefined = owner ? (id, index, decision) => {
+    void act(async () => {
+      await api(`/social/screening/${id}/${index}`, {decision}, 'PUT');
+      return '样本判断已保存';
+    });
+  } : undefined;
   return <section aria-label="社交渠道接入">
     <h2>国内社交渠道</h2>
     <p>先按关键词、需求规则和缓存去重，再进入现有 AI 分析队列。此批连接器仅采集；你核实后维护联系，自动发送尚未接通。</p>
@@ -48,11 +64,11 @@ export function SocialChannels({api}: {api: API}) {
       <div className="section-title"><h3>{c.name}</h3><span className="badge">{!c.enabled ? '已停用' : c.routes?.length ? '已启用' : labels[c.status] || c.status}</span></div>
       <p>{c.description}</p>
       {c.routes?.length ? <>
-        {c.routes.map((route:R) => <ChannelRun key={route.mode} run={route} title={route.mode === 'server_feed' ? '服务器定时读取' : '本地补采（电脑需在线）'}/>)}
-        {c.status === 'imported' && <ChannelRun run={c} title="授权原文导入"/>}
+        {c.routes.map((route:R) => <ChannelRun key={route.mode} run={route} title={route.mode === 'server_feed' ? '服务器定时读取' : '本地补采（电脑需在线）'} onReview={reviewSample} busy={busy}/>)}
+        {c.status === 'imported' && <ChannelRun run={c} title="授权原文导入" onReview={reviewSample} busy={busy}/>}
       </> : <>
         <p>{c.mode === 'search' ? '服务器每小时搜索' : c.mode === 'executor' ? '需要执行器在线' : '仅授权内容导入'}</p>
-        <ChannelRun run={c}/>
+        <ChannelRun run={c} onReview={reviewSample} busy={busy}/>
       </>}
       <div className="actions">
         <button className="secondary" disabled={busy} onClick={()=>{setEdit({...c,queryText:c.queries.join('\n'),excludeText:c.exclude.join('\n'),conversationText:c.conversations.join('\n')});setSelected(null)}}>配置 {c.name}</button>

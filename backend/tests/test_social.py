@@ -293,5 +293,29 @@ def test_screening_review_covers_different_reasons_and_survives_cache_only_run(c
     row = next(r for r in client.get('/api/social/channels').json() if r['platform'] == 'nodeseek')
     local = row['routes'][1]
     assert local['stats']['cache_hits'] == 8 and local['stats']['filtered'] == 0
-    assert local['screening_batch']['samples'] == first['filtered_samples']
+    assert local['screening_batch']['samples'] == [{**sample, 'decision': 'unreviewed'} for sample in first['filtered_samples']]
     assert local['screening_batch']['reasons'] == first['filter_reasons']
+
+
+def test_public_screening_feedback_is_owner_only_and_does_not_change_the_lead_pool(client):
+    version = enable(client, 'nodeseek')
+    rejected = item(title='独立测试样本', text='没有采集关键词。')
+    route = '/api/social/channels/nodeseek/capture'
+    client.post(route, json={'version': version, 'mode': 'executor', 'items': [rejected]}).raise_for_status()
+
+    def sample_batch():
+        row = next(row for row in client.get('/api/social/channels').json() if row['platform'] == 'nodeseek')
+        return row['routes'][1]['screening_batch']
+
+    batch = sample_batch()
+    review = f'/api/social/screening/{batch["id"]}/0'
+    rejected = client.put(review, json={'decision': 'has_demand'}, headers={'Authorization':'Bearer test-operator'})
+    assert rejected.status_code == 403
+    assert client.put(review, json={'decision': 'has_demand'}).status_code == 200
+    assert sample_batch()['samples'][0]['decision'] == 'has_demand'
+    assert client.put(review, json={'decision': 'unreviewed'}).status_code == 200
+    assert sample_batch()['samples'][0]['decision'] == 'unreviewed'
+    with Session() as s:
+        assert s.scalar(select(func.count()).select_from(Lead)) == 1  # existing test fixture only
+        assert s.scalar(select(func.count()).select_from(AnalysisCall)) == 0
+        assert s.scalar(select(func.count()).select_from(Message)) == 0

@@ -336,7 +336,7 @@ register_workspace(app, role, reviewer)
 register_login(app, reviewer)
 register_sources(app, role)
 register_providers(app, role, reviewer)
-register_social(app, role)
+register_social(app, role, reviewer)
 
 static = Path(__file__).parent / 'static'
 if static.exists():

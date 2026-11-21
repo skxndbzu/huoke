@@ -53,6 +53,8 @@ def analyze(lead_id, automatic=False):
         market = market_view(s, lead)
         if automatic and market['manual']:
             raise ValueError('已有人工市场判断，跳过自动分析')
+        if lead.source_key.startswith('v2ex:') and market['profile'].get('status') == 'public_profile':
+            profile = {key: market['profile'].get(key, '') for key in ('status', 'url', 'location')}
         payload = {'untrusted_source': lead.text[:6000], 'published_at': lead.published_at, 'product': control.product,
                    'target_market': '中国国内用户、企业和团队；服务对象，不推断国籍',
                    'owner_market_evidence': {'reason': market['reason'], 'evidence': market['evidence']} if market['manual'] else {},

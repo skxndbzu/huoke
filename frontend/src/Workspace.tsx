@@ -815,6 +815,13 @@ export function CustomerWorkspace({
                 {contactLabels[selected.contact_status]}
                 。联系方式与客户价值分别核实。复制话术不代表已发送，系统发送仍须逐条审核。
               </p>
+              {selected.source_key?.startsWith("v2ex:") && selected.market?.profile?.status === "public_profile" && (
+                <div className="contact-evidence">
+                  <p>{urlLink(selected.market.profile.url, "V2EX 作者公开资料 ↗")}</p>
+                  {selected.market.profile.github && <p>{urlLink(`https://github.com/${encodeURIComponent(selected.market.profile.github)}`, "作者填写的 GitHub 账号 ↗")}</p>}
+                  {selected.market.profile.location && <p>公开资料填写的所在地为 {selected.market.profile.location}</p>}
+                </div>
+              )}
               {selected.source_key?.startsWith("github:") && (
                 <div className="contact-evidence">
                   <button disabled={busy} onClick={() => action(async () => {

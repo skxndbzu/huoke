@@ -1,4 +1,7 @@
-param([switch]$Once)
+param(
+    [switch]$Once,
+    [ValidateSet('v2ex','nodeseek')][string[]]$Platform = @('v2ex','nodeseek')
+)
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $pythonPath = Join-Path $projectRoot '.venv\Scripts\python.exe'
@@ -20,9 +23,9 @@ if (-not $listener) {
         throw 'SSH tunnel failed; inspect .local/social-executor/tunnel.log.'
     }
 }
-foreach ($platform in @('v2ex','nodeseek')) {
-    $runnerArgs = @(('"' + $runnerPath + '"'), '--platform', $platform, '--ssh-operator')
+foreach ($selectedPlatform in $Platform) {
+    $runnerArgs = @(('"' + $runnerPath + '"'), '--platform', $selectedPlatform, '--ssh-operator')
     if (-not $Once) { $runnerArgs += '--loop' }
-    Start-Process -FilePath $pythonPath -ArgumentList $runnerArgs -WorkingDirectory $projectRoot -WindowStyle Hidden -RedirectStandardOutput (Join-Path $logDir ($platform + '.log')) -RedirectStandardError (Join-Path $logDir ($platform + '.error.log')) | Out-Null
+    Start-Process -FilePath $pythonPath -ArgumentList $runnerArgs -WorkingDirectory $projectRoot -WindowStyle Hidden -RedirectStandardOutput (Join-Path $logDir ($selectedPlatform + '.log')) -RedirectStandardError (Join-Path $logDir ($selectedPlatform + '.error.log')) | Out-Null
 }
 Write-Output 'Public feed executors started. See .local/social-executor/*.log. Per-platform locks prevent overlapping workers.'

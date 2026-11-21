@@ -6,7 +6,7 @@ import pytest
 from sqlalchemy import select, func
 from app.db import Session, Lead, CaptureEvidence, ContactPoint, Message, AnalysisCall, ChannelRun
 from app.social import get_policy, sync_social
-from app.social_adapters import (feed_items, gitee_items, qq_items, xhs_items, wechat_items, Capture,
+from app.social_adapters import (feed_items, gitee_items, v2ex_profile, qq_items, xhs_items, wechat_items, Capture,
                                  AdapterError, validate_url, milky)
 
 DEMAND = '我们正在开发 AI 应用，想找稳定的大模型 API 供应商，哪家 API 支持按量计费？'
@@ -221,3 +221,34 @@ def test_feed_routes_separate_failures_imports_and_stale_success(client):
     assert local['status'] == 'verification_required' and local['error'] == 'HTTP_403'
     assert local['stale'] and local['last_success'] == old_time and local['stats']['listed'] == 20
     assert rows['v2ex']['routes'][0]['status'] == 'failed'
+
+
+def test_v2ex_profile_requires_same_author_and_keeps_contact_unverified(client):
+    version = enable(client, 'v2ex')
+    capture = item(url='https://www.v2ex.com/t/99123', author='test_author',
+                   published_at=datetime.now(timezone.utc).isoformat())
+    result = client.post('/api/social/channels/v2ex/capture',
+                         json={'version': version, 'mode': 'executor', 'items': [capture]})
+    assert result.status_code == 200 and result.json()['new_leads'] == 1
+    route = '/api/social/v2ex/profiles'
+    job, = client.get(route).json()['items']
+    assert job['username'] == 'test_author'
+
+    def serve(request):
+        assert request.url.host == 'www.v2ex.com' and request.url.params['username'] == 'test_author'
+        return httpx.Response(200, json={'username': 'test_author', 'github': 'test-github',
+                                         'email': 'private-looking@sample.test', 'location': '公开地区',
+                                         'bio': '业务联系邮箱 contact@sample-company.org'})
+
+    with httpx.Client(transport=httpx.MockTransport(serve)) as source:
+        data = v2ex_profile(source, 'test_author').model_dump()
+    assert 'email' not in data
+    profile_route = f'{route}/{job["id"]}'
+    assert client.post(profile_route, json={**data, 'version': version, 'username': 'wrong'}).status_code == 422
+    result = client.post(profile_route, json={**data, 'version': version})
+    assert result.json() == {'status': 'public_profile', 'contacts_added': 1}
+    assert client.get(route).json()['items'] == []
+    assert client.post(profile_route, json={**data, 'version': version}).json()['status'] == 'cached'
+    detail = client.get(f'/api/workspace/leads/{job["id"]}').json()
+    assert detail['market']['profile']['github'] == 'test-github'
+    assert detail['market']['status'] == 'pending_ai' and detail['contact_status'] == 'unverified_candidate'

@@ -12,7 +12,7 @@ from urllib.parse import urlparse
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'backend'))
 import httpx
-from app.social_adapters import FEEDS, feed_items, qq_items, xhs_items, wechat_items, AdapterError
+from app.social_adapters import FEEDS, feed_items, qq_items, v2ex_profile, xhs_items, wechat_items, AdapterError, V2EXProfile
 
 
 def private_url(value):
@@ -30,6 +30,30 @@ def save_state(path, state):
         os.chmod(temp, 0o600)
         json.dump(state, f, ensure_ascii=False)
     temp.replace(path)
+
+
+def research_v2ex_profiles(api, reader):
+    route = '/api/social/v2ex/profiles'
+    response = api.get(route)
+    response.raise_for_status()
+    jobs = response.json()
+    totals = {'checked': 0, 'public_profiles': 0, 'contacts_added': 0}
+    for job in jobs['items'][:3]:
+        username = job['username']
+        try:
+            profile = v2ex_profile(reader, username)
+        except (httpx.HTTPError, ValueError):
+            profile = V2EXProfile(username=username, status='unavailable')
+        payload = {**profile.model_dump(), 'version': jobs['version']}
+        uploaded = api.post(f'{route}/{job["id"]}', json=payload)
+        if uploaded.status_code == 409:
+            break
+        uploaded.raise_for_status()
+        result = uploaded.json()
+        totals['checked'] += 1
+        totals['public_profiles'] += result['status'] == 'public_profile'
+        totals['contacts_added'] += result['contacts_added']
+    return totals
 
 
 def main():
@@ -113,6 +137,12 @@ def main():
                     state = {'scope': scope, 'cursors': state.get('next_cursors', cursors)}
                     save_state(path, state)
                     print(json.dumps({'platform': args.platform, 'status': 'success', **totals}), flush=True)
+                    if args.platform == 'v2ex':
+                        try:
+                            profiles = research_v2ex_profiles(api, reader)
+                            print(json.dumps({'platform': 'v2ex_profiles', 'status': 'finished', **profiles}), flush=True)
+                        except (httpx.HTTPError, ValueError, KeyError) as exc:
+                            print(json.dumps({'platform': 'v2ex_profiles', 'status': 'failed', 'code': type(exc).__name__}), flush=True)
             except Exception as exc:
                 code = str(exc) if isinstance(exc, AdapterError) else type(exc).__name__
                 status = 'login_required' if code == 'login_required' else 'unavailable'

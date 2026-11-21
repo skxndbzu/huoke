@@ -1,6 +1,12 @@
 # 部署与发布
 
-## 当前发布 `20261121-source-health-r1`
+## 当前发布 `20261121-v2ex-profile-r1`
+
+Windows V2EX 执行器每轮从近 90 天通过需求初筛的 V2EX 线索最多补查三个公开作者资料。成功或非暂时可用结果缓存一天。同一作者避免重复请求。服务端核对采集配置版本及线索作者，保留现有客户和审核记录。`scripts/start-public-executors.ps1 -Platform v2ex` 可单独恢复 V2EX。
+
+工作台在 V2EX 详情显示作者资料和该资料自行声明的 GitHub 入口。明确公开的联系行可成为待核实候选。已有市场分析不自动重跑，后续正常分析只加入公开资料中相关的所在地字段。无数据库结构变更。125 项隔离 PostgreSQL 测试、前端构建及 390px 客户详情测试通过。回滚镜像 `huoke:20261121-source-health-r1`，备份 `backups/20261121-before-v2ex-profile.dump`。
+
+## 上次发布 `20261121-source-health-r1`
 
 Windows V2EX 执行器同日调整采集节点为 `deepseek` 和 `programmer`，并已重启验证成功。每轮仍最多 60 条。此调整由本地执行器运行，服务器沿用当前镜像，旧 V2EX 服务器任务配置照常保留。
 

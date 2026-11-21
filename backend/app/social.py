@@ -8,13 +8,14 @@ from pydantic import Field
 from sqlalchemy import and_, or_, select
 import httpx
 from .schemas import Strict
-from .db import (Session, SourcePolicy, SourceItem, ChannelRun, Lead, CaptureEvidence,
+from .db import (Session, SourcePolicy, SourceItem, ChannelRun, Lead, LeadMarket, CaptureEvidence,
                  locked_control, now, event)
 from .pipeline import clean, classify, fingerprint
 from .prospecting import intent
 from .market import refresh_market
-from .contact_discovery import extract_contacts, save_candidate
-from .social_adapters import CATALOG, FEEDS, Capture, feed_items, gitee_items, gitee_issue_url, validate_url
+from .contact_discovery import extract_contacts, extract_contact_text, save_candidate
+from .social_adapters import (CATALOG, FEEDS, Capture, V2EXProfile, V2EX_USERNAME,
+                              feed_items, gitee_items, gitee_issue_url, validate_url)
 from .config import settings
 
 VERSION = 'social-capture-v1'
@@ -53,6 +54,15 @@ class ExecutorStatus(Strict):
     version: int = Field(ge=1)
     status: str = Field(pattern='^(login_required|unavailable|verification_required|failed)$')
     code: str = Field(pattern='^[a-zA-Z0-9_:.-]{1,100}$')
+
+
+class V2EXProfileUpload(V2EXProfile):
+    version: int = Field(ge=1)
+
+
+def lead_has_v2ex_author(lead):
+    return (lead and re.fullmatch(r'v2ex:\d+', lead.source_key)
+            and re.fullmatch(V2EX_USERNAME, lead.author or ''))
 
 
 def validate_capture(platform, item, options):
@@ -226,6 +236,54 @@ def register_social(app, role):
     def platform_exists(platform):
         if platform not in CATALOG:
             raise HTTPException(404, '渠道不存在')
+
+    @app.get('/api/social/v2ex/profiles')
+    def pending_v2ex_profiles(actor=Depends(role)):
+        checked_at = datetime.now(timezone.utc)
+        day_ago = (checked_at - timedelta(days=1)).isoformat()
+        recent = (checked_at - timedelta(days=90)).isoformat()
+        with Session() as s:
+            policy = s.get(SourcePolicy, 'social:v2ex')
+            if not policy or not policy.enabled or not settings().source_enabled:
+                return {'items': []}
+            rows = s.execute(select(Lead, LeadMarket.profile).outerjoin(LeadMarket, LeadMarket.lead_id == Lead.id)
+                             .where(Lead.source_key.startswith('v2ex:'), Lead.published_at >= recent)
+                             .order_by(Lead.id.desc()).limit(120)).all()
+            seen = {lead.author.lower() for lead, profile in rows if (profile or {}).get('checked_at', '') > day_ago}
+            pending = []
+            for lead, _ in rows:
+                if not lead_has_v2ex_author(lead) or lead.author.lower() in seen or intent(lead.title, lead.text)['score'] < 35:
+                    continue
+                seen.add(lead.author.lower())
+                pending.append({'id': lead.id, 'username': lead.author})
+                if len(pending) == 3:
+                    break
+            return {'version': policy.version, 'items': pending}
+
+    @app.post('/api/social/v2ex/profiles/{lead_id}')
+    def upload_v2ex_profile(lead_id: int, data: V2EXProfileUpload, actor=Depends(role)):
+        with Session.begin() as s:
+            locked_control(s)
+            policy = s.get(SourcePolicy, 'social:v2ex')
+            if not policy or not policy.enabled or not settings().source_enabled or policy.version != data.version:
+                raise HTTPException(409, 'V2EX 采集范围已变化或停用')
+            lead = s.get(Lead, lead_id)
+            if not lead_has_v2ex_author(lead) or lead.author.lower() != data.username.lower():
+                raise HTTPException(422, '资料与线索作者不匹配')
+            record = refresh_market(s, lead)
+            day_ago = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
+            if (record.profile or {}).get('checked_at', '') > day_ago:
+                return {'status': 'cached', 'contacts_added': 0}
+            url = f'https://www.v2ex.com/member/{lead.author}'
+            profile = {'url': url, 'status': data.status, 'checked_at': now()}
+            contacts_added = 0
+            if data.status == 'public_profile':
+                profile.update(location=clean(data.location), github=data.github)
+                contacts_added = extract_contact_text(s, lead, clean(data.bio), url, 'v2ex_public_profile', public_profile=True)
+            elif record.profile and record.profile.get('status') == 'public_profile':
+                profile = {**record.profile, 'checked_at': now(), 'refresh_status': 'unavailable'}
+            record.profile = profile
+            return {'status': data.status, 'contacts_added': contacts_added}
 
     @app.get('/api/social/channels')
     def channels(actor=Depends(role)):

@@ -36,6 +36,8 @@ FEEDS = {'linuxdo': ['https://linux.do/latest.rss'], 'nodeseek': ['https://rss.n
 HOSTS = {'gitee': {'gitee.com'}, 'linuxdo': {'linux.do'}, 'nodeseek': {'www.nodeseek.com', 'nodeseek.com'},
          'v2ex': {'www.v2ex.com', 'v2ex.com'}, 'xiaohongshu': {'www.xiaohongshu.com', 'xiaohongshu.com'},
          'douyin': {'www.douyin.com', 'douyin.com'}, 'kuaishou': {'www.kuaishou.com', 'kuaishou.com', 'www.kuaishou.cn'}}
+V2EX_USERNAME = r'[A-Za-z0-9_]{1,32}'
+GITHUB_USERNAME = r'[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?'
 
 
 class Capture(Strict):
@@ -65,6 +67,14 @@ class AdapterError(ValueError):
     pass
 
 
+class V2EXProfile(Strict):
+    username: str = Field(pattern='^' + V2EX_USERNAME + '$')
+    status: str = Field(pattern='^(public_profile|unavailable)$')
+    location: str = Field(default='', max_length=200)
+    bio: str = Field(default='', max_length=500)
+    github: str = Field(default='', pattern='^(?:' + GITHUB_USERNAME + ')?$')
+
+
 def read(client, method, url, **kwargs):
     with client.stream(method, url, **kwargs) as r:
         r.raise_for_status()
@@ -81,6 +91,21 @@ def json_read(client, method, url, **kwargs):
     if not isinstance(data, dict):
         raise AdapterError('invalid_response')
     return data
+
+
+def v2ex_profile(client, username):
+    if not re.fullmatch(V2EX_USERNAME, username):
+        raise AdapterError('invalid_profile_username')
+    data = json_read(client, 'GET', 'https://www.v2ex.com/api/members/show.json', params={'username': username})
+    returned = data.get('username')
+    if not isinstance(returned, str) or returned.lower() != username.lower():
+        raise AdapterError('profile_identity_mismatch')
+    github = data.get('github')
+    bio = '\n'.join(data[key] for key in ('tagline', 'bio') if isinstance(data.get(key), str))
+    location = data.get('location')
+    return V2EXProfile(username=username, status='public_profile', bio=bio[:500],
+                       location=location[:200] if isinstance(location, str) else '',
+                       github=github if isinstance(github, str) and re.fullmatch(GITHUB_USERNAME, github) else '')
 
 
 def iso(value):

@@ -1,5 +1,9 @@
 # 渠道能力与证据
 
+## 2026-11-21 V2EX 作者公开资料
+
+本地 Windows 实测官方 `GET /api/members/show.json?username=...` 可读取本轮线索作者公开资料，服务端直连仍失败。使用当前已有执行器，限定候选作者、限制响应大小、核对返回账号、每天复用同一作者的结果。连接器保留公开所在地与自报 GitHub 入口，从明确联系段落提取未核实候选，避免使用未标明商务用途的邮箱字段。链接以自报身份呈现，不合并跨平台客户。新版实查两位，两个公开作者页、一个自报 GitHub 入口、零公开所在地和零新增直接联系方式。已验证工作台链接和第二轮缓存。 [V2EX API 说明](https://www.v2ex.com/help/api)
+
 ## 2026-11-21 V2EX 优先读取模型节点
 
 用 V2EX 节点目录和 Atom 源抽查 `python`、`programmer`、`aigc`、`openai`、`claude`、`claudecode`、`deepseek`、`agent`、`localllm`，每节点最多 30 条。旧组合 `python`+`programmer` 得到 1 条规则通过的迁移经验帖。`openai` 命中一条中转站统计，`localllm` 命中一条部署讨论，`deepseek` 命中一条明确询问低价模型 API 的帖子。小样本支持将本地补采的 `python` 换成 `deepseek`，保留 `programmer` 及每轮 60 条的上限。旧 `ai` 订阅未返回有效 Atom。 [公开节点目录](https://www.v2ex.com/api/nodes/all.json) · [DeepSeek 订阅](https://www.v2ex.com/feed/deepseek.xml)

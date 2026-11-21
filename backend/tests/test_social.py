@@ -313,8 +313,15 @@ def test_public_screening_feedback_is_owner_only_and_does_not_change_the_lead_po
     assert rejected.status_code == 403
     assert client.put(review, json={'decision': 'has_demand'}).status_code == 200
     assert sample_batch()['samples'][0]['decision'] == 'has_demand'
+    history = '/api/social/screening-history'
+    saved = client.get(history).json()
+    assert saved['counts'] == [{'channel': 'nodeseek', 'decision': 'has_demand', 'count': 1}]
+    assert saved['items'][0]['url'] == 'https://www.nodeseek.com/post-123-1'
+    assert client.put(review, json={'decision': 'reasonable'}).status_code == 200
+    assert client.get(history).json()['counts'] == [{'channel': 'nodeseek', 'decision': 'reasonable', 'count': 1}]
     assert client.put(review, json={'decision': 'unreviewed'}).status_code == 200
     assert sample_batch()['samples'][0]['decision'] == 'unreviewed'
+    assert client.get(history).json() == {'counts': [], 'items': []}
     with Session() as s:
         assert s.scalar(select(func.count()).select_from(Lead)) == 1  # existing test fixture only
         assert s.scalar(select(func.count()).select_from(AnalysisCall)) == 0

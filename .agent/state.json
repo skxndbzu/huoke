@@ -1,25 +1,25 @@
 {
-  "updated_at": "2026-11-21T15:10:21.365771+08:00",
+  "updated_at": "2026-11-21T15:22:16.789971+08:00",
   "timezone": "Asia/Shanghai",
   "phase": "phase_1_assisted_workflow_live",
-  "branch": "codex/public-channel-benchmark-20261121",
+  "branch": "codex/screening-history-20261121",
   "repository": "https://github.com/skxndbzu/huoke.git",
   "deployment": {
     "host": "117.72.35.216",
     "user": "admin",
     "root": "/home/admin/huoke-staging",
-    "release": "20261121-screening-feedback-r1",
-    "status": "healthy_staging_screening_owner_feedback",
+    "release": "20261121-screening-history-r1",
+    "status": "healthy_staging_screening_review_history",
     "access": "http://117.72.35.216:18080",
     "real_send_enabled": false,
     "paused": false,
     "production_policy": "not_confirmed",
-    "image": "huoke:20261121-screening-feedback-r1",
-    "image_id": "sha256:e343803f151c29edb63f7c585e230bafe558bda3cc833d051d70f9cea18544ac",
-    "artifact_sha256": "b84b9420d75d2a3b457ae9dca0765a123b20f6776d23cd2c69cfb24fec18d2fa",
+    "image": "huoke:20261121-screening-history-r1",
+    "image_id": "sha256:f6c10423d498ed861b874d0274580b58dac6690f51490af023493f212bfc3867",
+    "artifact_sha256": "00c920b8a55ea910352a957a77f1745925b8cc0f168a2e7721a70b8faa2fafe3",
     "access_note": "IP HTTP access retained by owner choice. Password account configured at explicit owner request; login verified. Public homepage/assets 200 and unauthenticated API 401 previously verified.",
-    "rollback_image": "huoke:20261121-analysis-context-r1",
-    "backup": "/home/admin/huoke-staging/backups/20261121-before-screening-feedback.dump"
+    "rollback_image": "huoke:20261121-screening-feedback-r1",
+    "backup": "/home/admin/huoke-staging/backups/20261121-before-screening-history.dump"
   },
   "automation": {
     "id": "automation",
@@ -35,11 +35,11 @@
     "requires": "Windows computer awake and Codex app running"
   },
   "verified": {
-    "local_tests_passed": 34,
+    "local_tests_passed": 23,
     "postgres_concurrency_test": "passed: 4 workers produced exactly one simulated send",
     "frontend_build": "passed",
     "npm_audit_vulnerabilities": 0,
-    "browser": "390px owner isolation preview saved and cleared sample judgment",
+    "browser": "390px: saving and clearing sample decisions changes 30-day screening history",
     "local_source_sample": {
       "listed": 26,
       "filtered": 20,
@@ -92,7 +92,7 @@
     },
     "model": "gpt-6.1-sol models verified and one evidence-checked inference succeeded",
     "owner_password_login": "Initial account provisioned at explicit owner request; actual login and logout verified. No reviewer token accessed, no message approval. Credentials not stored in repository.",
-    "local_validation": "34 targeted social/workspace tests; final PostgreSQL image 135 passed",
+    "local_validation": "23 social tests; final isolated PostgreSQL image 135 passed",
     "market_filter": {
       "threshold": 70,
       "total_leads": 1265,
@@ -200,7 +200,7 @@
     },
     "conversion_quality": "V2EX node pilot found one explicit price-comparison inquiry. It remains below the domestic threshold, with no direct contact; quality lift beyond this sample is unproven.",
     "runtime_ai_estimated_usd": 3.744794,
-    "runtime_ai_note": "Public candidate-source and contact path sampling used no model. Actual supplier bill and development costs unknown.",
+    "runtime_ai_note": "Screening history verification did not use the model. Actual supplier and development costs unknown.",
     "iteration_model_estimated_usd": null
   },
   "blockers": [
@@ -633,5 +633,15 @@
     "self_declared_or_same_owner_contact_rechecks": 3,
     "contacts_added": 0,
     "model_calls": 0
+  },
+  "screening_history_iteration": {
+    "window_days": 30,
+    "limit_recent_records": 12,
+    "counts_by_source_and_latest_decision": true,
+    "production_review_count": 0,
+    "model_calls": 0,
+    "owner_actions": [
+      "Actual sample judgments are needed to estimate missed demand."
+    ]
   }
 }

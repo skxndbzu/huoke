@@ -1,6 +1,10 @@
 # 部署与发布
 
-## 当前发布 `20261121-screening-feedback-r1`
+## 当前发布 `20261121-screening-history-r1`
+
+渠道与任务页展示近 30 天样本复核汇总及最近 12 条有判断的记录。修改和撤回即时反映到汇总。沿用现有事件表。隔离 PostgreSQL 135 项测试与手机界面验证通过。回滚镜像 `huoke:20261121-screening-feedback-r1`，备份 `backups/20261121-before-screening-history.dump`。
+
+## 上次发布 `20261121-screening-feedback-r1`
 
 所有者可在公开来源筛除样本上保存、撤回复核判断，写入现有审计记录。135 项隔离 PostgreSQL 测试、前端构建、390px 保存和撤回验证通过。无结构变更。回滚 `huoke:20261121-analysis-context-r1`，备份 `backups/20261121-before-screening-feedback.dump`。
 

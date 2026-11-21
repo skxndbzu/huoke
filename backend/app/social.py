@@ -6,7 +6,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Literal
 from fastapi import Depends, HTTPException
 from pydantic import Field
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, func, or_, select
 import httpx
 from .schemas import Strict
 from .db import (Session, SourcePolicy, SourceItem, ChannelRun, Lead, LeadMarket, CaptureEvidence, Event,
@@ -275,6 +275,25 @@ def register_social(app, role, reviewer):
     def platform_exists(platform):
         if platform not in CATALOG:
             raise HTTPException(404, '渠道不存在')
+
+    @app.get('/api/social/screening-history')
+    def screening_history(actor=Depends(role)):
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
+        latest_ids = (select(func.max(Event.id)).where(Event.kind == SCREENING_REVIEW_EVENT, Event.created_at >= cutoff)
+                      .group_by(Event.entity))
+        decision = Event.detail['decision'].as_string()
+        channel = Event.detail['channel'].as_string()
+        active = (Event.id.in_(latest_ids), decision.in_(('has_demand', 'reasonable')))
+        with Session() as s:
+            counts = [{'channel': key.removeprefix('social:'), 'decision': value, 'count': count}
+                      for key, value, count in s.execute(select(channel, decision, func.count()).where(*active)
+                                                        .group_by(channel, decision))]
+            items = []
+            for record in s.scalars(select(Event).where(*active).order_by(Event.id.desc()).limit(12)):
+                detail = record.detail
+                items.append({'channel': detail['channel'].removeprefix('social:'), 'decision': detail['decision'],
+                              'url': detail['url'], 'reason': detail['reason'], 'reviewed_at': record.created_at})
+            return {'counts': counts, 'items': items}
 
     @app.put('/api/social/screening/{run_id}/{sample_index}')
     def review_screening(run_id: int, sample_index: int, data: ScreeningReview, actor=Depends(reviewer)):

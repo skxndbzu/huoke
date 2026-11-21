@@ -42,8 +42,11 @@ export function SocialChannels({api, owner}: {api: API, owner: boolean}) {
     [selected, setSelected] = useState<R|null>(null), [busy, setBusy] = useState(false),
     [error, setError] = useState(''), [notice, setNotice] = useState('');
   const [input, setInput] = useState({url:'',author:'',title:'',text:''});
+  const [history, setHistory] = useState<R|null>(null);
   const load = () => api('/social/channels').then(setChannels);
+  const loadHistory = () => api('/social/screening-history').then(setHistory);
   useEffect(()=>{load().catch(e=>setError(e.message)); const id=setInterval(()=>load().catch(e=>setError(e.message)),15000);return ()=>clearInterval(id)},[]);
+  useEffect(()=>{loadHistory().catch(e=>setError(e.message))},[]);
   useEffect(()=>{document.getElementById('social-editor')?.scrollIntoView({block:'start',behavior:'smooth'})},[edit?.platform,selected?.platform]);
   async function act(fn:()=>Promise<string>) {
     setBusy(true);setError('');setNotice('');
@@ -52,6 +55,7 @@ export function SocialChannels({api, owner}: {api: API, owner: boolean}) {
   const reviewSample: ReviewSample | undefined = owner ? (id, index, decision) => {
     void act(async () => {
       await api(`/social/screening/${id}/${index}`, {decision}, 'PUT');
+      await loadHistory();
       return '样本判断已保存';
     });
   } : undefined;
@@ -60,6 +64,18 @@ export function SocialChannels({api, owner}: {api: API, owner: boolean}) {
     <p>先按关键词、需求规则和缓存去重，再进入现有 AI 分析队列。此批连接器仅采集；你核实后维护联系，自动发送尚未接通。</p>
     {error && <p role="alert" className="error">{error}</p>}
     {notice && <p role="status" className="success">{notice}</p>}
+    {history && <details className="panel">
+      <summary>近 30 天样本复核</summary>
+      {history.items.length === 0 ? <p>暂无已复核样本。</p> : <>
+        <p>按每条原文最近一次判断计数。</p>
+        <ul>{history.counts.map((row:R) => <li key={row.channel + '/' + row.decision}>
+          {channels.find(channel => channel.platform === row.channel)?.name || row.channel} · {row.decision === 'has_demand' ? '疑似漏判' : '筛除合理'} {row.count}
+        </li>)}</ul>
+        <ul>{history.items.map((row:R) => <li key={row.channel + '/' + row.url}>
+          {time(row.reviewed_at)} · {filterLabels[row.reason] || row.reason} · {row.decision === 'has_demand' ? '疑似漏判' : '筛除合理'} · <a href={row.url} target="_blank" rel="noreferrer">原文 ↗</a>
+        </li>)}</ul>
+      </>}
+    </details>}
     <div className="columns">{channels.map(c=><article className="panel" key={c.platform}>
       <div className="section-title"><h3>{c.name}</h3><span className="badge">{!c.enabled ? '已停用' : c.routes?.length ? '已启用' : labels[c.status] || c.status}</span></div>
       <p>{c.description}</p>

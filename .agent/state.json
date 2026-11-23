@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-23T22:10:30.893621+08:00",
+  "updated_at": "2026-11-23T22:33:33.471718+08:00",
   "timezone": "Asia/Shanghai",
   "phase": "phase_1_assisted_workflow_live",
   "branch": "codex/exclude-supplier-submissions-20261123",
@@ -212,7 +212,7 @@
     "Inbox and billing events not connected. Real sends disabled; production policy unconfirmed; IP HTTP retained per owner."
   ],
   "next_tasks": [
-    "Validate the next real source cycles and target the remaining NodeSeek generic VPS relay false positive. Continue looking for buyer-side demand with explicit public business contact paths.",
+    "Investigate the remaining NodeSeek generic VPS relay false positive and continue looking for buyer-side demand with explicit public business contact paths.",
     "Use filtered samples and user labels to validate actual demand, prior to expanding queries or adding more sources.",
     "Resolve Xiaohongshu runtime compatibility before normal owner login; QQ separately awaits upstream authority and WeChat is disabled until available.",
     "Investigate another permitted high-intent Chinese source as evidence warrants; continue public contact discovery and manual workflow improvements."
@@ -1028,6 +1028,14 @@
       1197
     ],
     "model_calls_made_for_verification": 0,
-    "owner_actions": []
+    "owner_actions": [],
+    "live_github_run": {
+      "id": 1576,
+      "listed": 12,
+      "filtered": 10,
+      "cache_hits": 2,
+      "supplier_promotions": 5,
+      "new_leads": 0
+    }
   }
 }

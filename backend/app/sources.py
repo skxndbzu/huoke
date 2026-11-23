@@ -15,7 +15,7 @@ from .schemas import Strict
 from .config import settings
 from .market import refresh_market, market_predicate, threshold, VERSION as MARKET_VERSION
 from .contact_discovery import extract_contacts
-from .prospecting import intent, VERSION_TRIAGE
+from .prospecting import intent, supplier_promotion, VERSION_TRIAGE
 
 VERSION = 'discovery-v3-intent'
 AUTO_ANALYSIS_HOURLY_LIMIT = 100
@@ -211,6 +211,11 @@ def sync_public(channel):
                     cached.fingerprint, cached.checked_at = cache_digest, now()
                 else:
                     s.add(SourceItem(key=item['key'], fingerprint=cache_digest))
+                if supplier_promotion(title, text):
+                    stats['filtered'] += 1
+                    stats['intent_filtered'] += 1
+                    stats['supplier_promotions'] = stats.get('supplier_promotions', 0) + 1
+                    continue
                 if not TECH.search(text) or not DEMAND.search(text) or NON_DEMAND.search(title) or any(word.lower() in text.lower() for word in options.get('exclude', [])):
                     stats['filtered'] += 1
                     continue

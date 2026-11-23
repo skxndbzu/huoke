@@ -23,7 +23,7 @@ VERSION = 'social-capture-v1'
 DEFAULT_QUERIES = ['API', '模型', '中转']
 GITEE_QUERIES = ['大模型 API', '中转站', 'DeepSeek API']
 SERVER_MODES = {'feed', 'search'}
-FILTER_REVIEW_ORDER = ('no_demand_evidence', 'no_keyword', 'excluded_keyword', 'older_than_90_days')
+FILTER_REVIEW_ORDER = ('supplier_promotion', 'no_demand_evidence', 'no_keyword', 'excluded_keyword', 'older_than_90_days')
 FILTER_SAMPLE_LIMIT = 5
 SCREENING_REVIEW_EVENT = 'screening_sample_reviewed'
 
@@ -139,8 +139,11 @@ def ingest(s, platform, items, options, provenance):
         content = (title + '\n' + text).casefold()
         reason = ('older_than_90_days' if item.published_at and datetime.fromisoformat(item.published_at) < datetime.now(timezone.utc) - timedelta(days=90)
                   else 'excluded_keyword' if any(word in content for word in excluded)
-                  else 'no_keyword' if not any(all(word in content for word in query) for query in queries)
-                  else 'no_demand_evidence' if intent(title, text)['score'] < 35 else '')
+                  else 'no_keyword' if not any(all(word in content for word in query) for query in queries) else '')
+        if not reason:
+            triage = intent(title, text)
+            if triage['score'] < 35:
+                reason = triage.get('category', 'no_demand_evidence')
         if reason:
             stats['filtered'] += 1
             stats['filter_reasons'][reason] = stats['filter_reasons'].get(reason, 0) + 1

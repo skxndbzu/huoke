@@ -4,7 +4,7 @@ from sqlalchemy import select, func
 from .db import Lead, LeadMarket, LeadWorkspace, AnalysisCall, ContactPoint
 from .market import VERSION
 
-VERSION_TRIAGE = 'intent-triage-v4'
+VERSION_TRIAGE = 'intent-triage-v5'
 MODEL = re.compile(r'\b(?:llm|openai|gpt|claude|gemini|deepseek|model api)\b|大模型|模型.{0,8}(?:API|接口)|中转|AI\s*(?:答题|应用|客服)', re.I)
 VPS_RELAY = re.compile(r'(?:中转|转发)鸡')
 ASK = re.compile(r'(?:求推荐|求购|寻找|想找|找个|采购|有没有|哪家).{0,30}(?:API|接口|供应商|服务商|中转)|(?:API|接口|供应商|中转).{0,25}(?:求推荐|哪家|太贵|不稳定)|\b(?:looking for|recommend|need)\s+(?:(?:a|an|the|reliable|cheaper|stable|LLM|model|inference|OpenAI)\s+){0,4}(?:API|provider)\b', re.I)
@@ -18,6 +18,8 @@ PAIN = re.compile(
 BUILD = re.compile(r'(?:正在|我们|我想|计划).{0,25}(?:开发|搭建|做).{0,35}(?:应用|客服|知识库|agent)|\b(?:building|developing)\b.{0,35}\b(?:app|agent|chatbot)\b', re.I)
 NOISE = re.compile(r'教程|周报|日报|资讯|信息流|推荐新工具|开源推荐|新增推荐|新增站点|站点推荐|收录|自荐|推广|\b(?:newsletter|digest|tutorial|research / reuse|refactor)\b|(?:spec|PRD)[:：\]]|规格', re.I)
 RESOURCE_POST = re.compile(r'^\s*[【\[]\s*(?:开发者)?资源(?:推荐|投稿)\s*[】\]]')
+ADVERTISEMENT = re.compile(r'^\s*[【\[]\s*(?:AD|广告)\s*[】\]]', re.I)
+LISTING_SUBMISSION = re.compile(r'^\s*(?:[-*#]+\s*)?(?:申请收录|请求收录|提交收录)')
 PROVIDER_COMPARISON = re.compile(
     r'(?:多家|两家|多供应商|不同供应商).{0,24}(?:LLM|大模型|模型|视觉).{0,12}(?:API|接口).{0,10}(?:盲测|评测|对比)',
     re.I,
@@ -25,7 +27,19 @@ PROVIDER_COMPARISON = re.compile(
 EVALUATION_METRIC = re.compile(r'单价|成本|价格|计费|延迟|准确率')
 
 
+def supplier_promotion(title, text):
+    if ADVERTISEMENT.match(title):
+        return True
+    # Public Issue snapshots include the title as their first line.
+    first_line, _, rest = text.lstrip().partition('\n')
+    body = rest if first_line.strip() == title.strip() else text
+    return bool(LISTING_SUBMISSION.match(body) and MODEL.search(title + '\n' + body[:400]))
+
+
 def intent(title, text):
+    if supplier_promotion(title, text):
+        return {'score': 0, 'reason': '原文为广告或站点收录投稿', 'evidence': [],
+                'category': 'supplier_promotion'}
     # Large logs, quoted examples and checklists must not dominate a short actual request.
     body = re.sub(r'```.*?```|~~~.*?~~~', '', text[:12000], flags=re.S)
     body = '\n'.join(x for x in body.splitlines() if not x.lstrip().startswith(('>', '- [', '* [')))

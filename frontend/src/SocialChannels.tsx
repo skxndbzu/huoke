@@ -5,7 +5,7 @@ type ReviewSample = (id: number, index: number, decision: string) => void;
 const labels: R = {not_connected:'尚未连接',success:'最近读取成功',imported:'已导入，非自动接通',running:'采集中',failed:'读取失败',unavailable:'执行器不可用',login_required:'等待登录',verification_required:'需要平台验证',interrupted:'上轮中断',config_changed:'配置已变化'};
 const errors: R = {upstream_auth_token_required:'QQ 执行器要求项目方签发的授权令牌',windows_browser_helper_blocked:'Windows 安全软件阻止了小红书的浏览器辅助程序',ConnectError:'无法连接来源',ConnectTimeout:'连接来源超时',HTTP_403:'平台要求完成正常访问验证',HTTP_429:'平台暂时限流，请等待',account_mismatch:'执行器登录账号与采集配置不一致',conversation_mismatch:'读取到的会话与所选范围不一致'};
 const time = (s: string) => s ? new Date(s).toLocaleString('zh-CN') : '尚无';
-const filterLabels: Record<string, string> = {older_than_90_days:'超过 90 天',excluded_keyword:'命中排除词',no_keyword:'未命中关键词',no_demand_evidence:'未发现明确需求'};
+const filterLabels: Record<string, string> = {older_than_90_days:'超过 90 天',excluded_keyword:'命中排除词',no_keyword:'未命中关键词',no_demand_evidence:'未发现明确需求',supplier_promotion:'广告或站点收录投稿'};
 const modeLabels: Record<string, string> = {manual:'授权导入',executor:'本地补采',server_feed:'服务器订阅',server_search:'服务器搜索'};
 
 function PublicationWindow({window, listed}: {

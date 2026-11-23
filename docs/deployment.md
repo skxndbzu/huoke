@@ -14,7 +14,11 @@ NodeSeek 在成功读取并上传非空官方 RSS 后等待 10 分钟。读取�
 
 Windows 只重启 NodeSeek 执行器，服务器沿用下方版本。回滚时恢复 `e60441d` 中的 `scripts/social-executor.py` 并仅重启 NodeSeek 执行器。八种模拟执行器路径和 `Retry-After` 日期解析通过。
 
-## 当前发布 `20261121-provider-evaluation-r1`
+## 当前发布 `20261123-supplier-submissions-r1`
+
+初筛识别显式广告标签和正文开头的模型 API 站点收录投稿。未处理的同类历史记录可从「全部市场（含历史）」查看。99 项定向和 149 项隔离 PostgreSQL 测试、390px 工作台及线上运维接口验证通过。回滚镜像为 `huoke:20261121-provider-evaluation-r1`。数据库和私有配置备份为 `backups/20261123-before-supplier-submissions.dump` 和 `backups/20261123-before-supplier-submissions.secrets.tar`。
+
+## 上次发布 `20261121-provider-evaluation-r1`
 
 GitHub 默认查询将「API 求助」一组换为「API 盲测」。现用默认查询自动迁移，已有自定义组继续保存。初筛收录标题明确比较多家模型 API 且正文给出评测指标的帖子。61 项定向测试、146 项隔离 PostgreSQL 测试、隔离库两次真实采集通过。回滚镜像为 `huoke:20261121-model-call-triage-r2`，发布前数据库和私有配置备份为 `backups/20261121-before-provider-evaluation.dump` 与 `backups/20261121-before-provider-evaluation.secrets.tar`。如撤回试点，回滚镜像后在渠道配置恢复「API 求助」一组，保留后续自定义配置。
 

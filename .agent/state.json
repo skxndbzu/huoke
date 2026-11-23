@@ -1,26 +1,26 @@
 {
-  "updated_at": "2026-11-23T21:23:30.300187+08:00",
+  "updated_at": "2026-11-23T22:10:30.893621+08:00",
   "timezone": "Asia/Shanghai",
   "phase": "phase_1_assisted_workflow_live",
-  "branch": "codex/windows-collector-recovery-20261123",
+  "branch": "codex/exclude-supplier-submissions-20261123",
   "repository": "https://github.com/skxndbzu/huoke.git",
   "deployment": {
     "host": "117.72.35.216",
     "user": "admin",
     "root": "/home/admin/huoke-staging",
-    "release": "20261121-provider-evaluation-r1",
-    "status": "healthy_staging_provider_evaluation",
+    "release": "20261123-supplier-submissions-r1",
+    "status": "healthy_staging_supplier_submission_filter",
     "access": "http://117.72.35.216:18080",
     "real_send_enabled": false,
     "paused": false,
     "production_policy": "not_confirmed",
-    "image": "huoke:20261121-provider-evaluation-r1",
-    "image_id": "sha256:82a9de086ca6bd5e2ec9d6f953c9585a68aad52706f35ec2dac635897323f346",
-    "artifact_sha256": "bf53cbff2b247aced4b3b526e7bb3383d3dfb9ca762cca0110d059d35f89b0b9",
+    "image": "huoke:20261123-supplier-submissions-r1",
+    "image_id": "sha256:6ac35018b1b23702ba34ff4331106176dba50b30eb64c652e5e892472b7cdade",
+    "artifact_sha256": "f24aec55e01593cbf040175037d3fdf24883f7a011c6e0c699b728946fbe9c80",
     "access_note": "IP HTTP access retained by owner choice. Password account configured at explicit owner request; login verified. Public homepage/assets 200 and unauthenticated API 401 previously verified.",
-    "rollback_image": "huoke:20261121-model-call-triage-r2",
-    "backup": "/home/admin/huoke-staging/backups/20261121-before-provider-evaluation.dump",
-    "private_backup": "/home/admin/huoke-staging/backups/20261121-before-provider-evaluation.secrets.tar"
+    "rollback_image": "huoke:20261121-provider-evaluation-r1",
+    "backup": "/home/admin/huoke-staging/backups/20261123-before-supplier-submissions.dump",
+    "private_backup": "/home/admin/huoke-staging/backups/20261123-before-supplier-submissions.secrets.tar"
   },
   "automation": {
     "id": "automation",
@@ -40,7 +40,7 @@
     "postgres_concurrency_test": "passed: 4 workers produced exactly one simulated send",
     "frontend_build": "passed",
     "npm_audit_vulnerabilities": 0,
-    "browser": "390px: moved Issue label and blocked obsolete link; domestic queue still ordered by source and contact evidence",
+    "browser": "390px domestic pool and historical supplier-submission badge verified",
     "local_source_sample": {
       "listed": 26,
       "filtered": 20,
@@ -50,7 +50,7 @@
     },
     "customer_messages_sent": 0,
     "paid_model_calls": 385,
-    "postgres_tests_passed": 146,
+    "postgres_tests_passed": 149,
     "server_health": "39 files matched, public health 200, anonymous API 401, worker pong, messages 0, real send disabled",
     "celery_worker": "ping pong",
     "server_source_sample": {
@@ -66,7 +66,7 @@
       "cache_hits": 26,
       "new_leads": 0
     },
-    "server_tests_passed": 146,
+    "server_tests_passed": 149,
     "smtp_auth_probe": {
       "status": "success",
       "host": "smtp.qq.com",
@@ -93,7 +93,7 @@
     },
     "model": "gpt-6.1-sol models verified and one evidence-checked inference succeeded",
     "owner_password_login": "Initial account provisioned at explicit owner request; actual login and logout verified. No reviewer token accessed, no message approval. Credentials not stored in repository.",
-    "local_validation": "61 targeted tests; 146 isolated PostgreSQL tests",
+    "local_validation": "99 focused tests; 149 isolated PostgreSQL tests",
     "market_filter": {
       "threshold": 70,
       "total_leads": 1265,
@@ -199,9 +199,9 @@
       "monthly": 100,
       "owner_monthly_ceiling": 10000
     },
-    "conversion_quality": "1282 candidates, six domestic matches, zero domestic matches with direct contacts, zero owner-qualified leads. Two latest domestic matches are supplier listings, not candidate demand.",
+    "conversion_quality": "1282 historical records; three domestic review candidates after filtering; zero direct contact within that pool and zero owner-qualified opportunities.",
     "runtime_ai_estimated_usd": 3.79579,
-    "runtime_ai_note": "Windows collector recovery added no model calls. Four unresolved calls are excluded from cumulative known estimates. Actual supplier and development costs unknown.",
+    "runtime_ai_note": "No model calls made for this verification. The two recent supplier listings previously cost an estimated $0.018844 together. Four unresolved calls are excluded from cumulative known estimates. Actual supplier and development costs unknown.",
     "iteration_model_estimated_usd": 0.0
   },
   "blockers": [
@@ -212,7 +212,7 @@
     "Inbox and billing events not connected. Real sends disabled; production policy unconfirmed; IP HTTP retained per owner."
   ],
   "next_tasks": [
-    "Review the two newly collected supplier submissions and the remaining VPS alias false positive before measuring outreach-ready leads. Monitor automatic Windows recovery.",
+    "Validate the next real source cycles and target the remaining NodeSeek generic VPS relay false positive. Continue looking for buyer-side demand with explicit public business contact paths.",
     "Use filtered samples and user labels to validate actual demand, prior to expanding queries or adding more sources.",
     "Resolve Xiaohongshu runtime compatibility before normal owner login; QQ separately awaits upstream authority and WeChat is disabled until available.",
     "Investigate another permitted high-intent Chinese source as evidence warrants; continue public contact discovery and manual workflow improvements."
@@ -987,5 +987,47 @@
     "new_contacts": 0,
     "rollback": "Disable the local recovery task and restart collectors manually.",
     "observed_at": "2026-11-23T21:23:30.300187+08:00"
+  },
+  "supplier_submission_iteration": {
+    "replayed_lead_ids": [
+      493,
+      1274,
+      1275,
+      1276,
+      1281,
+      1282
+    ],
+    "filtered_historical_ids": [
+      493,
+      1281,
+      1282
+    ],
+    "retained_positive_scores": {
+      "1274": 55,
+      "1275": 60
+    },
+    "historical_promotion_estimated_usd": 0.018844,
+    "isolated_real_github_runs": [
+      {
+        "listed": 12,
+        "filtered": 10,
+        "supplier_promotions": 5,
+        "new_leads": 2
+      },
+      {
+        "listed": 12,
+        "cache_hits": 12,
+        "new_leads": 0
+      }
+    ],
+    "live_domestic_review_before": 6,
+    "live_domestic_review_after": 3,
+    "live_domestic_review_ids": [
+      604,
+      1171,
+      1197
+    ],
+    "model_calls_made_for_verification": 0,
+    "owner_actions": []
   }
 }

@@ -323,7 +323,7 @@ export function Today({
         <h2>获客进展：先看有效需求</h2>
         <div className="stats">
           {[["total", "收集的候选"], ["pending", "待市场分析"], ["ai_assessed", "已做市场分析"],
-            ["domestic", "达到国内阈值的需求"], ["domestic_accounts", "对应独立平台账号"], ["domestic_with_contact", "国内需求有联系方式"]].map(([key, label]) => (
+            ["domestic", "筛选后的国内线索"], ["domestic_accounts", "对应独立平台账号"], ["domestic_with_contact", "国内线索有联系方式"]].map(([key, label]) => (
             <div key={key}><span>{label}</span><strong>{data?.acquisition?.[key] ?? "—"}</strong></div>
           ))}
         </div>
@@ -629,6 +629,9 @@ export function CustomerWorkspace({
                 <h3>{l.title}</h3>
                 <p>{l.analysis.summary?.slice(0, 200)}</p>
                 <div className="tag-row">
+                  {l.triage?.category === "supplier_promotion" && (
+                    <span className="badge">广告或站点收录投稿</span>
+                  )}
                   {l.high_value_no_contact && (
                     <span className="badge">高价值 · 待补联系方式</span>
                   )}

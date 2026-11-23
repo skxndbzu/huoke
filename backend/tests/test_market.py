@@ -269,3 +269,27 @@ def test_domestic_review_prioritizes_ai_purchase_stage_within_contact_tier(clien
         assert [lead['id'] for lead in result.json()['items']] == expected
     all_markets = client.get('/api/workspace/leads', params={'market': 'all'}).json()
     assert [lead['id'] for lead in all_markets['items'] if lead['id'] in ids] == ids[::-1]
+
+
+def test_pending_supplier_submissions_remain_in_history_and_preserve_owner_decisions(client):
+    with Session.begin() as s:
+        ad_id, handled_id, buyer_id = [add_cn(s, key) for key in ('ad', 'handled-ad', 'buyer')]
+        for lead_id in (ad_id, handled_id, buyer_id):
+            market = s.get(LeadMarket, lead_id)
+            market.score, market.assessment_version = 90, VERSION
+        for lead_id in (ad_id, handled_id):
+            lead = s.get(Lead, lead_id)
+            lead.title = '补充某站模型 API 中转服务'
+            lead.text = lead.title + '\n申请收录某站，API 价格见官网。'
+        s.add(LeadWorkspace(lead_id=handled_id, qualification='valid'))
+    result = client.get('/api/workspace/leads', params={'market': 'domestic', 'bucket': 'review', 'limit': 1})
+    assert result.json()['total'] == 1
+    assert [row['id'] for row in result.json()['items']] == [buyer_id]
+    domestic = client.get('/api/workspace/leads', params={'market': 'domestic'}).json()
+    assert {row['id'] for row in domestic['items']} == {handled_id, buyer_id}
+    history = client.get('/api/workspace/leads', params={'market': 'all'}).json()['items']
+    preserved = next(row for row in history if row['id'] == ad_id)
+    assert preserved['triage']['category'] == 'supplier_promotion'
+    assert preserved['market']['score'] == 90 and preserved['work']['qualification'] == 'pending'
+    metrics = client.get('/api/workspace/metrics').json()
+    assert metrics['acquisition']['domestic'] == 2 and metrics['counts']['review'] == 1

@@ -5,7 +5,7 @@ import pytest
 from sqlalchemy import select, func
 from app.db import Session, Lead, LeadMarket, AnalysisCall, ContactPoint, Message, SourceItem
 from app.market import refresh_market, backfill
-from app.prospecting import intent, analysis_candidates
+from app.prospecting import intent, analysis_candidates, supplier_promotion
 from app.profile_research import research_profile
 
 
@@ -36,6 +36,20 @@ def test_triage_recognizes_buyer_questions_without_treating_implementation_as_pr
     assert all(q in title or q in text for q in r['evidence'])
 
 
+@pytest.mark.parametrize('title', [
+    '建议新增某站国内直连 AI API 中转与拼车服务',
+    '补充某站聚合 API 中转服务（Claude 多档报价）',
+])
+def test_supplier_submission_detected_in_raw_and_stored_issue(title):
+    body = '申请收录 **某站**。\nAPI 价格和套餐请见站点说明。'
+    for text in (body, title + '\n' + body):
+        result = intent(title, text)
+        assert result['score'] == 0 and result['category'] == 'supplier_promotion'
+    question = '哪家模型 API 适合按量计费？'
+    assert not supplier_promotion(question, '我们正在比较模型 API。\n> 申请收录某供应商。')
+    assert intent(question, '我们正在比较模型 API。\n> 申请收录某供应商。')['score'] >= 35
+
+
 def test_focused_source_collects_api_question_and_provider_evaluation(monkeypatch):
     from app.db import SourcePolicy
     from app.sources import PREVIOUS_FOCUSED_GITHUB_QUERIES, sync_public
@@ -57,17 +71,20 @@ def test_focused_source_collects_api_question_and_provider_evaluation(monkeypatc
             ]})
         return httpx.Response(200,json={'items':[
             item(88,'想请教一下 AI 答题的实际效果，以及用的哪家 API','速度怎么样'),
-            item(89,'OpenAI adapter null bug','模型 API 接入时缺少 null 检查，需要修复函数')
+            item(89,'OpenAI adapter null bug','模型 API 接入时缺少 null 检查，需要修复函数'),
+            item(93,'建议新增国内直连模型 API 中转','申请收录某站，API 价格见官网。'),
         ]})
     transport(monkeypatch,handle)
     result=sync_public('github')
     assert len(queries) == 3 and sum('"盲测"' in q for q in queries) == 1
     assert all('"求助"' not in q for q in queries)
-    assert result['new_leads']==2 and result['intent_filtered']==1 and result['model_calls']==0
+    assert result['new_leads'] == 2 and result['intent_filtered'] == 2 and result['model_calls'] == 0
+    assert result['supplier_promotions'] == 1
     with Session() as s:
         assert s.scalar(select(Lead).where(Lead.source_key=='github:88'))
         assert not s.scalar(select(Lead).where(Lead.source_key=='github:89'))
         assert s.scalar(select(Lead).where(Lead.source_key=='github:90'))
+        assert not s.scalar(select(Lead).where(Lead.source_key=='github:93'))
 
 
 def test_rule_update_rechecks_filtered_issue_and_preserves_existing_analysis(monkeypatch):

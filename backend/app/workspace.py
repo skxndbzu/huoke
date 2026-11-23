@@ -11,6 +11,7 @@ from .db import (Session, Lead, LeadWorkspace, Touchpoint, ContactPoint, Contact
 from .schemas import Strict, safe_url, ContactInput
 from .social_adapters import HOSTS
 from .market import market_view, refresh_market, market_predicate, market_state, threshold, ELIGIBLE, LABELS
+from .prospecting import intent, supplier_promotion
 
 STAGES = {'new': '待联系', 'contacted': '已联系', 'conversation': '沟通中',
           'trial': '试用中', 'paid': '已付费', 'retained': '持续使用',
@@ -81,8 +82,18 @@ def workspace(s, lead_id):
     return w
 
 
+def pending_domestic_promotions(s, cutoff):
+    rows = s.execute(
+        select(Lead.id, Lead.title, Lead.text).join(LeadMarket, LeadMarket.lead_id == Lead.id)
+        .outerjoin(LeadWorkspace, LeadWorkspace.lead_id == Lead.id)
+        .where(market_predicate('domestic', cutoff),
+               func.coalesce(LeadWorkspace.qualification, 'pending') == 'pending',
+               func.coalesce(LeadWorkspace.stage, 'new') == 'new')
+    )
+    return {lead_id for lead_id, title, text in rows if supplier_promotion(title, text)}
+
+
 def view(s, lead):
-    from .prospecting import intent
     w = s.get(LeadWorkspace, lead.id)
     evidence = s.get(CaptureEvidence, lead.id)
     issue = s.get(GithubIssueState, lead.id) if lead.source_key.startswith('github:') else None
@@ -198,7 +209,12 @@ def register_workspace(app, role, reviewer):
                 research_ids = [r['id'] for r in pending_ranked(s)]
                 stmt = stmt.where(Lead.id.in_(research_ids))
             if market != 'all':
-                stmt = stmt.where(market_predicate(market, threshold(s)))
+                cutoff = threshold(s)
+                stmt = stmt.where(market_predicate(market, cutoff))
+                if market == 'domestic':
+                    promotions = pending_domestic_promotions(s, cutoff)
+                    if promotions:
+                        stmt = stmt.where(Lead.id.not_in(promotions))
             if q:
                 stmt = stmt.where(Lead.title.icontains(q, autoescape=True) | Lead.text.icontains(q, autoescape=True) | Lead.author.icontains(q, autoescape=True))
             if source:
@@ -463,6 +479,8 @@ def register_workspace(app, role, reviewer):
             calls = list(s.scalars(select(AnalysisCall)))
             cutoff = threshold(s)
             markets = {m.lead_id: market_state(m, cutoff) for m in s.scalars(select(LeadMarket))}
+            promotions = pending_domestic_promotions(s, cutoff)
+            domestic_ids = {lead.id for lead, _ in rows if markets.get(lead.id) in ELIGIBLE} - promotions
             from .prospecting import pending_ranked
             opportunities = pending_ranked(s)
             grouped = {}
@@ -504,19 +522,19 @@ def register_workspace(app, role, reviewer):
                     'total': len(rows),
                     'pending': sum(1 for l, _ in rows if markets.get(l.id, 'pending_ai') == 'pending_ai'),
                     'ai_assessed': s.scalar(select(func.count()).select_from(LeadMarket).where(LeadMarket.assessment_version != '')),
-                    'domestic': sum(1 for l, _ in rows if markets.get(l.id) in ELIGIBLE),
-                    'domestic_accounts': len({(l.source, l.author.lower() if l.author and l.author != '未知' else str(l.id)) for l, _ in rows if markets.get(l.id) in ELIGIBLE}),
-                    'domestic_with_contact': sum(1 for l, _ in rows if markets.get(l.id) in ELIGIBLE and l.id in direct_ids),
+                    'domestic': sum(1 for l, _ in rows if l.id in domestic_ids),
+                    'domestic_accounts': len({(l.source, l.author.lower() if l.author and l.author != '未知' else str(l.id)) for l, _ in rows if l.id in domestic_ids}),
+                    'domestic_with_contact': len(domestic_ids & direct_ids),
                     'with_contact': len(direct_ids), 'priority_pending': len(opportunities),
                     'note': '待分析不是筛选失败；市场分数不是成交概率，公开联系方式仍需核实。'},
                 'market_counts': {status: sum(1 for l, _ in rows if markets.get(l.id, 'pending_ai') == status) for status in LABELS},
                 'counts': {
-                'review': sum(1 for l, w in rows if markets.get(l.id) in ELIGIBLE and (not w or w.qualification == 'pending')),
-                'contact': sum(1 for l, w in rows if markets.get(l.id) in ELIGIBLE and w and w.qualification == 'valid' and w.stage == 'new' and l.id in points),
+                'review': sum(1 for l, w in rows if l.id in domestic_ids and (not w or w.qualification == 'pending')),
+                'contact': sum(1 for l, w in rows if l.id in domestic_ids and w and w.qualification == 'valid' and w.stage == 'new' and l.id in points),
                 'market': sum(1 for l, _ in rows if markets.get(l.id, 'pending_ai') in ('unknown','pending_ai')),
-                'high_value': sum(1 for l, _ in rows if markets.get(l.id) in ELIGIBLE and l.id not in direct_ids
+                'high_value': sum(1 for l, _ in rows if l.id in domestic_ids and l.id not in direct_ids
                                   and l.analysis.get('method') == 'ai' and l.analysis.get('fit') == 'high' and l.analysis.get('priority') == 'high'),
-                'research': sum(1 for l, w in rows if markets.get(l.id) in ELIGIBLE and w and w.qualification == 'valid' and w.stage == 'new' and l.id not in points),
+                'research': sum(1 for l, w in rows if l.id in domestic_ids and w and w.qualification == 'valid' and w.stage == 'new' and l.id not in points),
                 'reply': sum(1 for _, w in rows if w and w.unread_reply),
                 'followup': sum(1 for _, w in rows if w and w.next_followup and w.next_followup <= now() and w.stage not in ('declined','closed') and w.qualification != 'invalid')},
                 'conversion_source': 'manual', 'billing_connected': False, 'inbox_connected': False,

@@ -1,5 +1,9 @@
 # 渠道能力与证据
 
+## 2026-11-23 NodeSeek 网络转发筛选
+
+回放 1,282 条历史线索。香港 VPS 中转询价从 80 分降为 0 分，已筛除的「中转鸡」帖子新增明确筛除原因。模型服务比较帖和 Gemini 中转选型帖维持 70 分和 80 分。上线后 NodeSeek 两轮定时补采均成功，合计读取 40 条次、去重 5 条、筛除 35 条。两轮未出现符合新网络转发规则的帖子。 [VPS 询价原文](https://www.nodeseek.com/post-1071444-1) · [Gemini 求推荐原文](https://www.nodeseek.com/post-1071866-1)
+
 ## 2026-11-23 区分站点投稿与买方需求
 
 回放六条历史原文，旧规则将三条广告或申请收录帖评为 45 分，新规则将三条降为 0 分。Gemini 调用问题和多供应商盲测分别保留 55 分和 60 分。隔离环境实读 GitHub 12 条，筛除 10 条，其中五条为广告或收录投稿，收录两条候选。第二批 12 条全去重。 [收录投稿一](https://github.com/shanhai-geo/awesome-ai-api-china/issues/2) · [收录投稿二](https://github.com/shanhai-geo/awesome-llm-api/issues/10)

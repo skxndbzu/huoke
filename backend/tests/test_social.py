@@ -51,6 +51,25 @@ def test_import_dedup_filters_and_never_spends_or_sends(client):
         assert s.get(CaptureEvidence,lead.id).provenance=='manual'
 
 
+def test_nodeseek_filters_network_relay_and_keeps_model_relay(client):
+    version = enable(client, 'nodeseek')
+    network = item(title='【人找车】想找一个香港中转vps 大口子 稳定连接 电信友好', text='如上')
+    buyer = item(event_id='buyer', url='https://www.nodeseek.com/post-456-1',
+                 title='求推荐gemini中转站', text='想比较两家的价格。')
+    payload = {'version': version, 'mode': 'executor', 'items': [network, buyer]}
+    route = '/api/social/channels/nodeseek/capture'
+    first = client.post(route, json=payload)
+    assert first.status_code == 200
+    assert first.json()['filter_reasons'] == {'vps_relay': 1}
+    assert first.json()['filtered_samples'][0]['url'] == network['url']
+    assert first.json()['new_leads'] == 1
+    second = client.post(route, json=payload).json()
+    assert second['cache_hits'] == 2 and second['new_leads'] == 0
+    with Session() as s:
+        assert list(s.scalars(select(Lead.url).where(Lead.source == 'NodeSeek'))) == [buyer['url']]
+        assert s.scalar(select(func.count()).select_from(AnalysisCall)) == 0
+
+
 def test_qq_scope_sender_and_unverified_contact(client):
     version=enable(client,'qq',account='12345',conversations=['group:54321'])
     data={'version':version,'mode':'executor','items':[item(url='',account='12345',conversation='group:54321',sender_id='98765',identity_verified=True)]}

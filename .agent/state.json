@@ -1,26 +1,26 @@
 {
-  "updated_at": "2026-11-23T22:33:33.471718+08:00",
+  "updated_at": "2026-11-23T23:12:01.974599+08:00",
   "timezone": "Asia/Shanghai",
   "phase": "phase_1_assisted_workflow_live",
-  "branch": "codex/exclude-supplier-submissions-20261123",
+  "branch": "codex/vps-relay-screening-20261123",
   "repository": "https://github.com/skxndbzu/huoke.git",
   "deployment": {
     "host": "117.72.35.216",
     "user": "admin",
     "root": "/home/admin/huoke-staging",
-    "release": "20261123-supplier-submissions-r1",
-    "status": "healthy_staging_supplier_submission_filter",
+    "release": "20261123-vps-relay-r1",
+    "status": "healthy_staging_vps_relay_filter",
     "access": "http://117.72.35.216:18080",
     "real_send_enabled": false,
     "paused": false,
     "production_policy": "not_confirmed",
-    "image": "huoke:20261123-supplier-submissions-r1",
-    "image_id": "sha256:6ac35018b1b23702ba34ff4331106176dba50b30eb64c652e5e892472b7cdade",
-    "artifact_sha256": "f24aec55e01593cbf040175037d3fdf24883f7a011c6e0c699b728946fbe9c80",
+    "image": "huoke:20261123-vps-relay-r1",
+    "image_id": "sha256:abfe687fbb814da66529fe31e982760620a0e16b7aa5d840eb837e435a149be1",
+    "artifact_sha256": "c8ba85e1526d50554a7af1f43d75e95dbd9ad66d0ff2ed88458b108269058294",
     "access_note": "IP HTTP access retained by owner choice. Password account configured at explicit owner request; login verified. Public homepage/assets 200 and unauthenticated API 401 previously verified.",
-    "rollback_image": "huoke:20261121-provider-evaluation-r1",
-    "backup": "/home/admin/huoke-staging/backups/20261123-before-supplier-submissions.dump",
-    "private_backup": "/home/admin/huoke-staging/backups/20261123-before-supplier-submissions.secrets.tar"
+    "rollback_image": "huoke:20261123-supplier-submissions-r1",
+    "backup": "/home/admin/huoke-staging/backups/20261123-before-vps-relay.dump",
+    "private_backup": "/home/admin/huoke-staging/backups/20261123-before-vps-relay.secrets.tar"
   },
   "automation": {
     "id": "automation",
@@ -40,7 +40,7 @@
     "postgres_concurrency_test": "passed: 4 workers produced exactly one simulated send",
     "frontend_build": "passed",
     "npm_audit_vulnerabilities": 0,
-    "browser": "390px domestic pool and historical supplier-submission badge verified",
+    "browser": "390px: VPS relay rejection reason and retained sample after cache-only run",
     "local_source_sample": {
       "listed": 26,
       "filtered": 20,
@@ -50,7 +50,7 @@
     },
     "customer_messages_sent": 0,
     "paid_model_calls": 385,
-    "postgres_tests_passed": 149,
+    "postgres_tests_passed": 154,
     "server_health": "39 files matched, public health 200, anonymous API 401, worker pong, messages 0, real send disabled",
     "celery_worker": "ping pong",
     "server_source_sample": {
@@ -66,7 +66,7 @@
       "cache_hits": 26,
       "new_leads": 0
     },
-    "server_tests_passed": 149,
+    "server_tests_passed": 154,
     "smtp_auth_probe": {
       "status": "success",
       "host": "smtp.qq.com",
@@ -93,7 +93,7 @@
     },
     "model": "gpt-6.1-sol models verified and one evidence-checked inference succeeded",
     "owner_password_login": "Initial account provisioned at explicit owner request; actual login and logout verified. No reviewer token accessed, no message approval. Credentials not stored in repository.",
-    "local_validation": "99 focused tests; 149 isolated PostgreSQL tests",
+    "local_validation": "59 focused tests; 154 isolated PostgreSQL tests",
     "market_filter": {
       "threshold": 70,
       "total_leads": 1265,
@@ -199,9 +199,9 @@
       "monthly": 100,
       "owner_monthly_ceiling": 10000
     },
-    "conversion_quality": "1282 historical records; three domestic review candidates after filtering; zero direct contact within that pool and zero owner-qualified opportunities.",
+    "conversion_quality": "1282 historical records, three domestic review candidates, zero direct contact within that pool and zero owner-qualified opportunities.",
     "runtime_ai_estimated_usd": 3.79579,
-    "runtime_ai_note": "No model calls made for this verification. The two recent supplier listings previously cost an estimated $0.018844 together. Four unresolved calls are excluded from cumulative known estimates. Actual supplier and development costs unknown.",
+    "runtime_ai_note": "Release validation made zero model calls. Historical VPS false positive has unresolved usage, one of four unresolved calls overall. Actual supplier and development costs unknown.",
     "iteration_model_estimated_usd": 0.0
   },
   "blockers": [
@@ -212,7 +212,7 @@
     "Inbox and billing events not connected. Real sends disabled; production policy unconfirmed; IP HTTP retained per owner."
   ],
   "next_tasks": [
-    "Investigate the remaining NodeSeek generic VPS relay false positive and continue looking for buyer-side demand with explicit public business contact paths.",
+    "Sample buyer-side sources likely to carry explicit business contact paths and test viable candidates, with budget and human review boundaries held.",
     "Use filtered samples and user labels to validate actual demand, prior to expanding queries or adding more sources.",
     "Resolve Xiaohongshu runtime compatibility before normal owner login; QQ separately awaits upstream authority and WeChat is disabled until available.",
     "Investigate another permitted high-intent Chinese source as evidence warrants; continue public contact discovery and manual workflow improvements."
@@ -1037,5 +1037,41 @@
       "supplier_promotions": 5,
       "new_leads": 0
     }
+  },
+  "vps_relay_iteration": {
+    "historical_replay": 1282,
+    "keep_to_filter": [
+      1276
+    ],
+    "added_reason_only": [
+      1273
+    ],
+    "retained_model_demand": {
+      "1272": 70,
+      "1279": 80
+    },
+    "historical_analysis_1276": {
+      "id": 474,
+      "status": "unknown_or_invalid",
+      "estimated_usd": null
+    },
+    "live_nodeseek_runs": [
+      {
+        "id": 1583,
+        "listed": 20,
+        "filtered": 20,
+        "cache_hits": 0,
+        "new_leads": 0
+      },
+      {
+        "id": 1585,
+        "listed": 20,
+        "filtered": 15,
+        "cache_hits": 5,
+        "new_leads": 0
+      }
+    ],
+    "validation_model_calls": 0,
+    "owner_actions": []
   }
 }

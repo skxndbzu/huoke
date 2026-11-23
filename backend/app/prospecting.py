@@ -4,9 +4,12 @@ from sqlalchemy import select, func
 from .db import Lead, LeadMarket, LeadWorkspace, AnalysisCall, ContactPoint
 from .market import VERSION
 
-VERSION_TRIAGE = 'intent-triage-v5'
-MODEL = re.compile(r'\b(?:llm|openai|gpt|claude|gemini|deepseek|model api)\b|大模型|模型.{0,8}(?:API|接口)|中转|AI\s*(?:答题|应用|客服)', re.I)
-VPS_RELAY = re.compile(r'(?:中转|转发)鸡')
+VERSION_TRIAGE = 'intent-triage-v6'
+MODEL = re.compile(
+    r'(?a:\b(?:llm|openai|gpt|claude|gemini|deepseek|model api)\b)|大模型|模型.{0,8}(?:API|接口)|AI\s*(?:答题|应用|客服)',
+    re.I,
+)
+VPS_RELAY = re.compile(r'(?:中转|转发)[ \t]*(?:鸡|(?a:VPS\b)|服务器)|(?a:\bVPS)[ \t]*(?:中转|转发)', re.I)
 ASK = re.compile(r'(?:求推荐|求购|寻找|想找|找个|采购|有没有|哪家).{0,30}(?:API|接口|供应商|服务商|中转)|(?:API|接口|供应商|中转).{0,25}(?:求推荐|哪家|太贵|不稳定)|\b(?:looking for|recommend|need)\s+(?:(?:a|an|the|reliable|cheaper|stable|LLM|model|inference|OpenAI)\s+){0,4}(?:API|provider)\b', re.I)
 PAIN = re.compile(
     r'(?:API|接口|中转|供应商|服务商).{0,35}(?:超时|限流|不稳定|价格|成本|计费|充值|余额|不可用)'
@@ -33,7 +36,8 @@ def supplier_promotion(title, text):
     # Public Issue snapshots include the title as their first line.
     first_line, _, rest = text.lstrip().partition('\n')
     body = rest if first_line.strip() == title.strip() else text
-    return bool(LISTING_SUBMISSION.match(body) and MODEL.search(title + '\n' + body[:400]))
+    excerpt = title + '\n' + body[:400]
+    return bool(LISTING_SUBMISSION.match(body) and ('中转' in excerpt or MODEL.search(excerpt)))
 
 
 def intent(title, text):
@@ -43,7 +47,13 @@ def intent(title, text):
     # Large logs, quoted examples and checklists must not dominate a short actual request.
     body = re.sub(r'```.*?```|~~~.*?~~~', '', text[:12000], flags=re.S)
     body = '\n'.join(x for x in body.splitlines() if not x.lstrip().startswith(('>', '- [', '* [')))
-    if RESOURCE_POST.search(title) or NOISE.search(title) or not MODEL.search(VPS_RELAY.sub('', title + '\n' + body)):
+    content = title + '\n' + body
+    model_signal = MODEL.search(content)
+    relay = VPS_RELAY.search(content)
+    if relay and not model_signal:
+        return {'score': 0, 'reason': '原文在找 VPS 或网络转发服务', 'evidence': [relay.group(0)],
+                'category': 'vps_relay'}
+    if RESOURCE_POST.search(title) or NOISE.search(title) or not (model_signal or '中转' in content):
         return {'score': 0, 'reason': '资讯、推广或缺少模型需求，保留记录供人工查看', 'evidence': []}
     evidence, score, reason = [], 0, '仅有技术讨论，暂不优先消耗模型额度'
     for pattern, weight, label in ((ASK, 70, '有接口选型或求助表述'), (PAIN, 45, '有模型服务使用问题'), (BUILD, 35, '有应用开发场景')):

@@ -23,7 +23,8 @@ VERSION = 'social-capture-v1'
 DEFAULT_QUERIES = ['API', '模型', '中转']
 GITEE_QUERIES = ['大模型 API', '中转站', 'DeepSeek API']
 SERVER_MODES = {'feed', 'search'}
-FILTER_REVIEW_ORDER = ('supplier_promotion', 'no_demand_evidence', 'no_keyword', 'excluded_keyword', 'older_than_90_days')
+FILTER_REVIEW_ORDER = ('supplier_promotion', 'vps_relay', 'no_demand_evidence', 'no_keyword',
+                       'excluded_keyword', 'older_than_90_days')
 FILTER_SAMPLE_LIMIT = 5
 SCREENING_REVIEW_EVENT = 'screening_sample_reviewed'
 

@@ -26,6 +26,9 @@ from app.profile_research import research_profile
     ('OpenAI API 工具调用失败', '内部工具调用失败，修复参数解析。', False),
     ('中转鸡都是当消耗品用的吗？', '萌新第一台中转鸡求推荐，想找网速快的便宜中转鸡。', False),
     ('中转鸡上转发模型接口', '中转鸡测速正常，但是 Gemini 调用失败，请问哪家 API 可用？', True),
+    ('[Benchmark] 设计并实现多家 LLM/视觉 API 盲测', '比较准确率、P95 延迟、单价和每成功任务成本。', True),
+    ('多家 LLM API 盲测框架重构', '更换脚本参数，修复测试桩。', False),
+    ('【资源推荐】多家 LLM API 盲测', '整理资料，附延迟、单价和成本。', False),
 ])
 def test_triage_recognizes_buyer_questions_without_treating_implementation_as_procurement(title, text, qualified):
     r = intent(title, text)
@@ -33,24 +36,38 @@ def test_triage_recognizes_buyer_questions_without_treating_implementation_as_pr
     assert all(q in title or q in text for q in r['evidence'])
 
 
-def test_focused_source_retains_real_api_question_and_filters_generic_implementation(monkeypatch):
-    from app.sources import sync_public
+def test_focused_source_collects_api_question_and_provider_evaluation(monkeypatch):
+    from app.db import SourcePolicy
+    from app.sources import PREVIOUS_FOCUSED_GITHUB_QUERIES, sync_public
     from test_discovery import transport
+    with Session.begin() as session:
+        session.add(SourcePolicy(channel='github', options={'queries': PREVIOUS_FOCUSED_GITHUB_QUERIES, 'exclude': []}))
+    queries = []
     def handle(r):
-        assert 'in:title' in r.url.params['q'] and 'in:title,body' not in r.url.params['q']
+        q = r.url.params['q']
+        queries.append(q)
+        assert 'in:title' in q and 'in:title,body' not in q
         def item(key,title,body):
             return {'id':key,'html_url':f'https://github.com/test/app/issues/{key}',
                     'title':title,'body':body,'user':{'login':f'test{key}','type':'User'}}
+        if '"盲测"' in q:
+            return httpx.Response(200, json={'items':[
+                item(90, '[Benchmark] 设计并实现多家 LLM/视觉 API 盲测',
+                     '定义供应商适配层。比较准确率、P95 延迟、单价和每成功任务成本。')
+            ]})
         return httpx.Response(200,json={'items':[
             item(88,'想请教一下 AI 答题的实际效果，以及用的哪家 API','速度怎么样'),
             item(89,'OpenAI adapter null bug','模型 API 接入时缺少 null 检查，需要修复函数')
         ]})
     transport(monkeypatch,handle)
     result=sync_public('github')
-    assert result['new_leads']==1 and result['intent_filtered']==1 and result['model_calls']==0
+    assert len(queries) == 3 and sum('"盲测"' in q for q in queries) == 1
+    assert all('"求助"' not in q for q in queries)
+    assert result['new_leads']==2 and result['intent_filtered']==1 and result['model_calls']==0
     with Session() as s:
         assert s.scalar(select(Lead).where(Lead.source_key=='github:88'))
         assert not s.scalar(select(Lead).where(Lead.source_key=='github:89'))
+        assert s.scalar(select(Lead).where(Lead.source_key=='github:90'))
 
 
 def test_rule_update_rechecks_filtered_issue_and_preserves_existing_analysis(monkeypatch):

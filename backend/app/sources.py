@@ -26,10 +26,11 @@ GITHUB_ISSUE_URL = re.compile(
 )
 OLD_GITHUB_QUERIES = ['"API" "供应商"', '"模型" "接口"', '"LLM" "provider"']
 PREVIOUS_GITHUB_QUERIES = ['"API" "供应商"', '"模型" "接口"', '"API" "中国"']
+PREVIOUS_FOCUSED_GITHUB_QUERIES = ['"API" "哪家"', '"API" "求助"', '"中转" "API"']
 SOURCES = {
-    'github': {'name': 'GitHub Issues', 'queries': ['"API" "哪家"', '"API" "求助"', '"中转" "API"'],
+    'github': {'name': 'GitHub Issues', 'queries': ['"API" "哪家"', '"API" "盲测"', '"中转" "API"'],
                'docs': 'https://docs.github.com/en/rest/search/search#search-issues-and-pull-requests',
-               'scope': '默认搜索近 90 天未关闭 Issue 标题中的选型、求助和中转问题；自定义词仍查近 30 天标题/正文。每小时最多 3 次搜索、每次 10 条；需求规则过滤后入库，不读取私人资料。'},
+               'scope': '默认搜索近 90 天未关闭 Issue 标题中的选型、盲测和中转问题；自定义词查近 30 天标题及正文。每小时最多 3 次搜索、每次 10 条，需求规则过滤后入库。'},
     'v2ex': {'name': 'V2EX', 'queries': ['python', 'programmer'],
              'docs': 'https://www.v2ex.com/feed/programmer.xml',
              'scope': '官方节点订阅源，每小时各读取一次；只覆盖订阅源近期帖子，不是全站搜索。'}
@@ -46,7 +47,9 @@ def policy(s, channel):
         p = SourcePolicy(channel=channel, options={'queries': SOURCES[channel]['queries'], 'exclude': []})
         s.add(p)
         s.flush()
-    elif channel == 'github' and p.options.get('queries') in (OLD_GITHUB_QUERIES, PREVIOUS_GITHUB_QUERIES):
+    elif channel == 'github' and p.options.get('queries') in (
+        OLD_GITHUB_QUERIES, PREVIOUS_GITHUB_QUERIES, PREVIOUS_FOCUSED_GITHUB_QUERIES
+    ):
         p.options = {**p.options, 'queries': SOURCES[channel]['queries']}
         p.version += 1
         event(s, 'domestic_default_queries', channel, version=p.version)

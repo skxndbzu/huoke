@@ -6,7 +6,11 @@ NodeSeek 在成功读取并上传非空官方 RSS 后等待 10 分钟。读取�
 
 Windows 只重启 NodeSeek 执行器，服务器沿用下方版本。回滚时恢复 `e60441d` 中的 `scripts/social-executor.py` 并仅重启 NodeSeek 执行器。八种模拟执行器路径和 `Retry-After` 日期解析通过。
 
-## 当前发布 `20261121-model-call-triage-r2`
+## 当前发布 `20261121-provider-evaluation-r1`
+
+GitHub 默认查询将「API 求助」一组换为「API 盲测」。现用默认查询自动迁移，已有自定义组继续保存。初筛收录标题明确比较多家模型 API 且正文给出评测指标的帖子。61 项定向测试、146 项隔离 PostgreSQL 测试、隔离库两次真实采集通过。回滚镜像为 `huoke:20261121-model-call-triage-r2`，发布前数据库和私有配置备份为 `backups/20261121-before-provider-evaluation.dump` 与 `backups/20261121-before-provider-evaluation.secrets.tar`。如撤回试点，回滚镜像后在渠道配置恢复「API 求助」一组，保留后续自定义配置。
+
+## 上次发布 `20261121-model-call-triage-r2`
 
 初筛识别常见模型调用失败，并要求只出现「中转鸡」等 VPS 称呼的帖子有其他模型证据。采集缓存记录规则版本，下次正常采集时重筛缓存过的内容，并保留正文未变的既有 AI 分析。57 项定向测试、143 项隔离 PostgreSQL 测试、真实 GitHub 采集与 NodeSeek 原帖回放通过。即时回滚镜像为 `huoke:20261121-model-call-triage-r1`。发布前数据库和私有配置备份为 `backups/20261121-before-model-call-triage-r2.dump` 与 `backups/20261121-before-model-call-triage-r2.secrets.tar`。
 

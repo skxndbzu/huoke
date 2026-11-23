@@ -7,6 +7,7 @@ import json
 import math
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 import time
@@ -113,10 +114,15 @@ def main():
     parser.add_argument('--platform', choices=['qq', 'wechat', 'xiaohongshu', *FEEDS], required=True)
     parser.add_argument('--server', default=PROJECT_TUNNEL)
     parser.add_argument('--bridge', default='')
+    parser.add_argument('--feed-proxy', help='Loopback HTTP proxy for a public feed reader')
     parser.add_argument('--wechat-source', help='Pinned upstream xiaoli_desktop directory; imports wx_backend only')
     parser.add_argument('--loop', action='store_true')
     parser.add_argument('--ssh-operator', action='store_true', help='Fetch only OPERATOR_TOKEN using authorized SSH')
     args = parser.parse_args()
+    if args.feed_proxy:
+        proxy = re.fullmatch(r'http://127\.0\.0\.1:([1-9][0-9]{0,4})', args.feed_proxy)
+        if args.platform not in FEEDS or not proxy or int(proxy[1]) > 65535:
+            parser.error('--feed-proxy requires a public feed and http://127.0.0.1:PORT')
     server = private_url(args.server)
     bridge = private_url(args.bridge or ('http://127.0.0.1:' + ('3010' if args.platform == 'qq' else '18060')))
     if args.ssh_operator and server != PROJECT_TUNNEL:
@@ -143,7 +149,8 @@ def main():
     backend = None
     interval = 60 if args.platform in ('qq', 'wechat') else 3600
     with httpx.Client(base_url=server, headers={'Authorization': 'Bearer ' + token}, timeout=30, follow_redirects=False, trust_env=False) as api, \
-            httpx.Client(timeout=45, headers=bridge_headers, follow_redirects=False, trust_env=args.platform in FEEDS) as reader:
+            httpx.Client(timeout=45, headers=bridge_headers, follow_redirects=False,
+                         proxy=args.feed_proxy, trust_env=args.platform in FEEDS and not args.feed_proxy) as reader:
         while True:
             config = None
             connecting_to_workbench = True

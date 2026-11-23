@@ -1,7 +1,8 @@
 param(
     [switch]$Once,
     [switch]$WatchTunnel,
-    [ValidateSet('v2ex','nodeseek','github_discussions')][string[]]$Platform = @('v2ex','nodeseek')
+    [ValidateSet('v2ex','nodeseek','github_discussions')][string[]]$Platform = @('v2ex','nodeseek'),
+    [ValidatePattern('^http://127\.0\.0\.1:[1-9][0-9]{0,4}$')][string]$FeedProxy
 )
 $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
@@ -66,6 +67,9 @@ foreach ($selectedPlatform in ($Platform | Select-Object -Unique)) {
     } | Select-Object -First 1
     if ($existingRunner) { continue }
     $runnerArgs = @(('"' + $runnerPath + '"'), '--platform', $selectedPlatform, '--ssh-operator')
+    if ($FeedProxy -and $selectedPlatform -in @('v2ex','nodeseek')) {
+        $runnerArgs += @('--feed-proxy', $FeedProxy)
+    }
     if (-not $Once) { $runnerArgs += '--loop' }
     Start-Process -FilePath $pythonPath -ArgumentList $runnerArgs -WorkingDirectory $projectRoot -WindowStyle Hidden -RedirectStandardOutput (Join-Path $logDir ($selectedPlatform + '.log')) -RedirectStandardError (Join-Path $logDir ($selectedPlatform + '.error.log')) | Out-Null
 }

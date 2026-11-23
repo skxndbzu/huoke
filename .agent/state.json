@@ -1,8 +1,8 @@
 {
-  "updated_at": "2026-11-23T20:54:00.912123+08:00",
+  "updated_at": "2026-11-23T21:23:30.300187+08:00",
   "timezone": "Asia/Shanghai",
   "phase": "phase_1_assisted_workflow_live",
-  "branch": "codex/github-provider-evaluation-20261121",
+  "branch": "codex/windows-collector-recovery-20261123",
   "repository": "https://github.com/skxndbzu/huoke.git",
   "deployment": {
     "host": "117.72.35.216",
@@ -199,20 +199,20 @@
       "monthly": 100,
       "owner_monthly_ceiling": 10000
     },
-    "conversion_quality": "One production acquisition recovered a real model usage issue, under the market threshold and without direct contact. No owner-qualified opportunity or measured conversion uplift.",
+    "conversion_quality": "1282 candidates, six domestic matches, zero domestic matches with direct contacts, zero owner-qualified leads. Two latest domestic matches are supplier listings, not candidate demand.",
     "runtime_ai_estimated_usd": 3.79579,
-    "runtime_ai_note": "The public provider-evaluation lead cost an estimated $0.008302. Four calls remain unresolved overall. The total covers recorded estimates only. Actual supplier and development costs unknown.",
-    "iteration_model_estimated_usd": 0.008302
+    "runtime_ai_note": "Windows collector recovery added no model calls. Four unresolved calls are excluded from cumulative known estimates. Actual supplier and development costs unknown.",
+    "iteration_model_estimated_usd": 0.0
   },
   "blockers": [
     "QQ upstream Auth Token absent; owner deferred; no purchase or bypass.",
     "Xiaohongshu Windows helper blocked by security software; engineering compatibility work needed before login.",
-    "Linux.do public feed was blocked; server V2EX and NodeSeek still cannot connect. Local polling restored via existing Windows proxy while awake.",
+    "Linux.do public feed is unavailable; NodeSeek and V2EX use the logged-in Windows collector with the configured local proxy.",
     "WeChat account unavailable; disabled. Douyin/Kuaishou automatic acquisition and messaging not connected.",
     "Inbox and billing events not connected. Real sends disabled; production policy unconfirmed; IP HTTP retained per owner."
   ],
   "next_tasks": [
-    "Recover stopped Windows collectors and verify independent background lifecycle and real uploads.",
+    "Review the two newly collected supplier submissions and the remaining VPS alias false positive before measuring outreach-ready leads. Monitor automatic Windows recovery.",
     "Use filtered samples and user labels to validate actual demand, prior to expanding queries or adding more sources.",
     "Resolve Xiaohongshu runtime compatibility before normal owner login; QQ separately awaits upstream authority and WeChat is disabled until available.",
     "Investigate another permitted high-intent Chinese source as evidence warrants; continue public contact discovery and manual workflow improvements."
@@ -965,5 +965,27 @@
     "source": "https://github.com/duo2530/pet-medical-ai-agent/issues/13",
     "validation_model_calls": 0,
     "owner_actions": []
+  },
+  "local_collector_recovery_iteration": {
+    "scheduled_task": "Huoke Public Collector Recovery",
+    "check_interval_minutes": 5,
+    "requires": "Windows awake and current user logged in. NodeSeek and V2EX also require the configured local proxy process.",
+    "login_trigger_installed": true,
+    "login_trigger_exercised": false,
+    "verified_run_ids": {
+      "github_discussions": 1561,
+      "nodeseek": 1562,
+      "v2ex": 1563
+    },
+    "listed": 130,
+    "cache_hits": 85,
+    "filtered": 45,
+    "new_leads": 0,
+    "model_calls": 0,
+    "messages_sent": 0,
+    "v2ex_profiles": 2,
+    "new_contacts": 0,
+    "rollback": "Disable the local recovery task and restart collectors manually.",
+    "observed_at": "2026-11-23T21:23:30.300187+08:00"
   }
 }

@@ -1,5 +1,13 @@
 # 部署与发布
 
+## Windows 公开采集进程恢复
+
+在运行采集器的 Windows 用户会话中执行 `scripts/install-public-executor-recovery.ps1`，安装名为 `Huoke Public Collector Recovery` 的任务。任务使用当前用户的交互会话和普通权限，在登录后及每隔五分钟检查专用 SSH 隧道、NodeSeek、V2EX 与 GitHub Discussions。采集间隔继续由各执行器负责。重复安装更新同名任务。电脑需要保持在线且用户已登录。
+
+此电脑用 `-FeedProxy http://127.0.0.1:7897` 安装。该参数仅用于 NodeSeek 和 V2EX 的公开来源请求。系统代理关闭时仍可使用此入口，前提是本地代理在运行。工作台经项目专用 SSH 隧道访问。
+
+可在任务计划程序暂停这个任务，或者用 `Disable-ScheduledTask -TaskName 'Huoke Public Collector Recovery'` 暂停自动恢复。计划停止采集进程前先停用恢复任务。再次运行安装脚本可启用恢复。
+
 ## Windows NodeSeek 补采试点
 
 NodeSeek 在成功读取并上传非空官方 RSS 后等待 10 分钟。读取失败、空订阅或停用时按原每小时检查。上游返回 `Retry-After` 时等待至少其指定时间。工作台传输失败仍复用待上传批次，按 30 秒重试。

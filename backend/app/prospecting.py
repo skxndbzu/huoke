@@ -4,13 +4,14 @@ from sqlalchemy import select, func
 from .db import Lead, LeadMarket, LeadWorkspace, AnalysisCall, ContactPoint
 from .market import VERSION
 
-VERSION_TRIAGE = 'intent-triage-v6'
+VERSION_TRIAGE = 'intent-triage-v7'
 MODEL = re.compile(
     r'(?a:\b(?:llm|openai|gpt|claude|gemini|deepseek|model api)\b)|大模型|模型.{0,8}(?:API|接口)|AI\s*(?:答题|应用|客服)',
     re.I,
 )
 VPS_RELAY = re.compile(r'(?:中转|转发)[ \t]*(?:鸡|(?a:VPS\b)|服务器)|(?a:\bVPS)[ \t]*(?:中转|转发)', re.I)
 ASK = re.compile(r'(?:求推荐|求购|寻找|想找|找个|采购|有没有|哪家).{0,30}(?:API|接口|供应商|服务商|中转)|(?:API|接口|供应商|中转).{0,25}(?:求推荐|哪家|太贵|不稳定)|\b(?:looking for|recommend|need)\s+(?:(?:a|an|the|reliable|cheaper|stable|LLM|model|inference|OpenAI)\s+){0,4}(?:API|provider)\b', re.I)
+RELAY_PROVIDER_ASK = re.compile(r'求\s*(?:个\s*)?(?:模型\s*)?中转站\s*推荐|(?:哪家|那家)\s*中转(?:站)?\s*(?:有|支持)')
 PAIN = re.compile(
     r'(?:API|接口|中转|供应商|服务商).{0,35}(?:超时|限流|不稳定|价格|成本|计费|充值|余额|不可用)'
     r'|(?:超时|限流|不稳定|太贵).{0,25}(?:API|接口|中转)'
@@ -55,6 +56,9 @@ def intent(title, text):
                 'category': 'vps_relay'}
     if RESOURCE_POST.search(title) or NOISE.search(title) or not (model_signal or '中转' in content):
         return {'score': 0, 'reason': '资讯、推广或缺少模型需求，保留记录供人工查看', 'evidence': []}
+    relay_ask = RELAY_PROVIDER_ASK.search(title)
+    if relay_ask and model_signal:
+        return {'score': 80, 'reason': '有接口选型或求助表述', 'evidence': [relay_ask.group(0), model_signal.group(0)]}
     evidence, score, reason = [], 0, '仅有技术讨论，暂不优先消耗模型额度'
     for pattern, weight, label in ((ASK, 70, '有接口选型或求助表述'), (PAIN, 45, '有模型服务使用问题'), (BUILD, 35, '有应用开发场景')):
         match = pattern.search(title) or pattern.search(body)

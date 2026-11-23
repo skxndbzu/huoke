@@ -28,7 +28,7 @@ CATALOG = {
     'nodeseek': {'name': 'NodeSeek', 'adapter': '官方 RSS', 'mode': 'feed', 'repo': 'https://github.com/tyrad/nodeseek',
                  'description': '使用站点公开 RSS，避免部署不适用服务器的 iOS 客户端；只读近期帖子。'},
     'v2ex': {'name': 'V2EX 本地补采', 'adapter': '官方 Atom', 'mode': 'executor', 'repo': 'https://github.com/coolpace/V2EX_Polish',
-             'description': '本地执行器补采服务器无法访问的官方订阅，与已有 V2EX 来源按帖子 ID 去重。'},
+             'description': '本地执行器读取 DeepSeek 与 Agent 的官方订阅，每轮最多 60 条，按帖子 ID 去重。'},
     'douyin': {'name': '抖音', 'adapter': '授权内容导入', 'mode': 'manual', 'repo': 'https://github.com/Johnserf-Seed/f2',
                'description': 'F2 的搜索/评论仍标为未来功能，暂不伪装成自动连接。可导入已授权的原文及链接进入分析。'},
     'kuaishou': {'name': '快手', 'adapter': '授权内容导入', 'mode': 'manual', 'repo': 'https://github.com/JoeanAmier/KS-Downloader',
@@ -37,7 +37,7 @@ CATALOG = {
 DISCUSSION_REPOS = ('CherryHQ/cherry-studio', 'langgenius/dify')
 FEEDS = {'github_discussions': [f'https://github.com/{repo}/discussions.atom' for repo in DISCUSSION_REPOS],
          'linuxdo': ['https://linux.do/latest.rss'], 'nodeseek': ['https://rss.nodeseek.com/'],
-         'v2ex': ['https://www.v2ex.com/feed/deepseek.xml', 'https://www.v2ex.com/feed/programmer.xml']}
+         'v2ex': ['https://www.v2ex.com/feed/deepseek.xml', 'https://www.v2ex.com/feed/agent.xml']}
 HOSTS = {'github_discussions': {'github.com'}, 'gitee': {'gitee.com'},
          'linuxdo': {'linux.do'}, 'nodeseek': {'www.nodeseek.com', 'nodeseek.com'},
          'v2ex': {'www.v2ex.com', 'v2ex.com'}, 'xiaohongshu': {'www.xiaohongshu.com', 'xiaohongshu.com'},

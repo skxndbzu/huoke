@@ -14,7 +14,13 @@ NodeSeek 在成功读取并上传非空官方 RSS 后等待 10 分钟。读取�
 
 Windows 只重启 NodeSeek 执行器，服务器沿用下方版本。回滚时恢复 `e60441d` 中的 `scripts/social-executor.py` 并仅重启 NodeSeek 执行器。八种模拟执行器路径和 `Retry-After` 日期解析通过。
 
-## 当前发布 `20261123-vps-relay-r1`
+## 当前发布 `20261123-v2ex-agent-demand-r1`
+
+初筛补上有明确模型证据的中转选型问法。Windows V2EX 执行器改读 `deepseek` + `agent`，两组官方订阅每轮最多 60 条。发布后已使用现有代理仅重启 V2EX 执行器，批次 1597 成功。70 项定向与 157 项隔离 PostgreSQL 测试、前端构建、线上 39 个文件摘要及健康检查通过。工作台渠道和详情接口已核对。无数据库结构变更。
+
+回滚服务器为 `huoke:20261123-vps-relay-r1`，保留数据卷。数据库、模型私有目录和私有环境备份位于 `backups/20261123-before-v2ex-agent-demand.dump`、`backups/20261123-before-v2ex-agent-demand.secrets.tar` 和 `backups/20261123-before-v2ex-agent-demand.env`。如果一并回退 Windows 采集节点，恢复 `bf026ba` 的 `FEEDS['v2ex']` 后，仅重启 V2EX 执行器。
+
+## 上次发布 `20261123-vps-relay-r1`
 
 初筛识别未提及模型的 VPS 中转与网络转发需求。渠道页显示筛除原因和原文样本。59 项定向测试、154 项隔离 PostgreSQL 测试、前端构建和手机宽度展示通过。数据库与私有配置备份为 `backups/20261123-before-vps-relay.dump` 和 `backups/20261123-before-vps-relay.secrets.tar`。回滚镜像为 `huoke:20261123-supplier-submissions-r1`。
 

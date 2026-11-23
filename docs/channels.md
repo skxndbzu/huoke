@@ -1,5 +1,13 @@
 # 渠道能力与证据
 
+## 2026-11-23 V2EX Agent 节点与买方问法
+
+抽查 V2EX 八个可读节点各 30 条，另一个 `developer` 未返回可解析 Atom。用现行规则分别回放 `programmer`、`deepseek`、`agent`、`aigc`。原组合 `deepseek` + `programmer` 通过 1 条。`agent` 与 `aigc` 各漏掉一条明确在找指定模型供应商的帖子，分别询问一组 GPT 模型与 Gemini Flash。另抽查了一条讨论公司开发额度的帖子，原文未提出供应商选型。三位作者的 V2EX 公开资料均未找到明确商务联系方式、公开所在地或自报 GitHub。Gemini 帖邀请私聊，但原文未给出邮箱或社交账号，仍只有平台内联系路径。 [Agent 订阅](https://www.v2ex.com/feed/agent.xml) · [GPT 选型](https://www.v2ex.com/t/1253926) · [Gemini 选型](https://www.v2ex.com/t/1250351) · [公司额度讨论](https://www.v2ex.com/t/1257521)
+
+新增「求中转站推荐」「哪家／那家中转有」问法，仅在文本有模型证据时通过。Windows 试点改为 `deepseek` + `agent`，每轮仍最多 60 条。隔离回放 60 条得到 2 条候选，原批再跑 60 条全去重。`aigc` 样本只做隔离验证。同期六组 GitHub 短语查询的前排结果中出现社区搬运、供应商推广与内部实现任务，未找到同时具备明确模型采购需求和公开商务联系的候选。 [搬运样本](https://github.com/onysakura/news-daily/issues/7918) · [推广样本](https://github.com/cunyu1943/weekly/issues/25) · [维护样本](https://github.com/yetone/magpie/issues/5028)
+
+线上批次 1597 成功读取 60 条，筛除 58 条、去重 1 条、新增候选 1283。该候选 AI 国内市场 50 分，低于 70 分阈值，仅有原帖讨论入口。当前只观察到切换后的首次在线采集，继续看自然周期中的新需求、重复率和公开商务联系覆盖。 [新增原帖](https://www.v2ex.com/t/1253926)
+
 ## 2026-11-23 NodeSeek 网络转发筛选
 
 回放 1,282 条历史线索。香港 VPS 中转询价从 80 分降为 0 分，已筛除的「中转鸡」帖子新增明确筛除原因。模型服务比较帖和 Gemini 中转选型帖维持 70 分和 80 分。上线后 NodeSeek 两轮定时补采均成功，合计读取 40 条次、去重 5 条、筛除 35 条。两轮未出现符合新网络转发规则的帖子。 [VPS 询价原文](https://www.nodeseek.com/post-1071444-1) · [Gemini 求推荐原文](https://www.nodeseek.com/post-1071866-1)

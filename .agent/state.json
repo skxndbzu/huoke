@@ -1,28 +1,28 @@
 {
-  "updated_at": "2026-11-24T21:02:41.3921996+08:00",
+  "updated_at": "2026-11-24T21:24:18.5945497+08:00",
   "timezone": "Asia/Shanghai",
   "phase": "phase_1_assisted_workflow_live",
-  "branch": "codex/explicit-supplier-submission-20261124",
+  "branch": "codex/v2ex-partial-feed-20261124",
   "repository": "https://github.com/skxndbzu/huoke.git",
   "deployment": {
     "host": "117.72.35.216",
     "user": "admin",
     "root": "/home/admin/huoke-staging",
-    "release": "20261124-operator-submission-r1",
-    "status": "healthy_staging_operator_submission_filter",
+    "release": "20261124-v2ex-partial-r1",
+    "status": "healthy_staging_v2ex_partial_feed",
     "access": "http://117.72.35.216:18080",
     "real_send_enabled": false,
     "paused": false,
     "production_policy": "not_confirmed",
-    "image": "huoke:20261124-operator-submission-r1",
-    "image_id": "sha256:013485e675e76acb261b374ca53aeb082922e45b053cabb561b4bb30cdf6e9e3",
-    "artifact_sha256": "f031e25b270ff60cb0ec8e3a1e775713dd6aa6e2458b55553ba3279aa4eef70b",
-    "artifact_verification": "Local archive SHA256 above. Reassembled the server build directory from prior verified files and this archive's changed entries. All 120 inputs matched manifest d480aeeb955cf189b32cca9014abccd3d07a01260851c53c6dc0857d34c402f2.",
+    "image": "huoke:20261124-v2ex-partial-r1",
+    "image_id": "sha256:c3b2f95a1efbd40ba4c8c9f1786df2b67ebd53eaf136e3e1df1f16d02e43f72b",
+    "artifact_sha256": "efdfc383fba21935eccd85d45325b260cb83864a272a7d84c979c06f22d8dc6c",
+    "artifact_verification": "Local archive SHA256 above. Reassembled the server build directory from prior verified files and this archive's changed entries. All 120 inputs matched manifest cf0dacbcc72fb5d79a60131270d0c53a73663adb79ff5b295fcbe9fb5cc6aba3.",
     "access_note": "IP HTTP access retained by owner choice. Password account configured at explicit owner request; login verified. Public homepage/assets 200 and unauthenticated API 401 previously verified.",
-    "rollback_image": "huoke:20261124-market-review-r1",
-    "backup": "/home/admin/huoke-staging/backups/20261124-before-operator-submission.dump",
-    "private_backup": "/home/admin/huoke-staging/backups/20261124-before-operator-submission.secrets.tar",
-    "environment_backup": "/home/admin/huoke-staging/backups/20261124-before-operator-submission.env"
+    "rollback_image": "huoke:20261124-operator-submission-r1",
+    "backup": "/home/admin/huoke-staging/backups/20261124-before-v2ex-partial.dump",
+    "private_backup": "/home/admin/huoke-staging/backups/20261124-before-v2ex-partial.secrets.tar",
+    "environment_backup": "/home/admin/huoke-staging/backups/20261124-before-v2ex-partial.env"
   },
   "automation": {
     "id": "automation",
@@ -42,7 +42,7 @@
     "postgres_concurrency_test": "passed: 4 workers produced exactly one simulated send",
     "frontend_build": "passed",
     "npm_audit_vulnerabilities": 0,
-    "browser": "390px and 1440px: Today shortcut, count, buyer cards and source evidence in isolated preview",
+    "browser": "390px: partial V2EX status, failed feed, successful counts and retained screening evidence in isolated preview",
     "local_source_sample": {
       "listed": 26,
       "filtered": 20,
@@ -68,7 +68,7 @@
       "cache_hits": 26,
       "new_leads": 0
     },
-    "server_tests_passed": 129,
+    "server_tests_passed": 64,
     "smtp_auth_probe": {
       "status": "success",
       "host": "smtp.qq.com",
@@ -95,7 +95,7 @@
     },
     "model": "gpt-6.1-sol models verified and one evidence-checked inference succeeded",
     "owner_password_login": "Initial account provisioned at explicit owner request; actual login and logout verified. No reviewer token accessed, no message approval. Credentials not stored in repository.",
-    "local_validation": "101 focused local tests; 129 focused isolated PostgreSQL tests in the release image",
+    "local_validation": "36 focused local tests; 64 isolated PostgreSQL tests in the release image; verified frontend build and executor syntax",
     "market_filter": {
       "threshold": 70,
       "total_leads": 1265,
@@ -214,6 +214,7 @@
     "Inbox and billing events not connected. Real sends disabled; production policy unconfirmed; IP HTTP retained per owner."
   ],
   "next_tasks": [
+    "Observe the V2EX partial-feed recovery during a natural failure; its first live batch 1753 fully succeeded. Keep collecting evidence for buyer sources with explicit contact paths.",
     "Check the next natural GitHub batch for the new supplier classification and continue sampling sources that expose an explicit buyer-side business contact path.",
     "Continue sampling buyer-side sources with explicit business contact paths. Use the current V2EX and GitHub samples as a baseline and add another source only when buyer evidence supports it.",
     "Continue observing natural V2EX Agent batches for new buyer demand and public business contact coverage. Runs 1733 and 1749 had only duplicates.",
@@ -1131,6 +1132,22 @@
     "domestic_review": 3,
     "market_review": 4,
     "domestic_with_direct_contact": 0,
+    "owner_qualified_opportunities": 0,
+    "verification_model_calls": 0,
+    "owner_actions": []
+  },
+  "v2ex_partial_feed_iteration": {
+    "recent_local_batches": 30,
+    "local_connection_failures": 2,
+    "standalone_agent_timeouts": 1,
+    "isolated_live_deepseek_with_simulated_agent_timeout": {"listed": 30, "filtered": 29, "new_leads": 1},
+    "isolated_repeat": {"listed": 30, "cache_hits": 30, "new_leads": 0},
+    "live_batch": {"id": 1753, "status": "success", "listed": 60, "filtered": 58, "cache_hits": 2, "new_leads": 0},
+    "live_partial_observed": false,
+    "domestic_review": 3,
+    "market_review": 4,
+    "domestic_with_direct_contact": 0,
+    "high_value_no_contact_domestic": 0,
     "owner_qualified_opportunities": 0,
     "verification_model_calls": 0,
     "owner_actions": []

@@ -109,6 +109,63 @@ def test_rss_rejects_html_entities_and_untrusted_links():
     assert len(run(raw))==1
 
 
+@pytest.mark.parametrize('failed_node', ['deepseek', 'agent'])
+def test_v2ex_preserves_other_feed_on_network_failure(client, failed_node):
+    raw = ('<feed xmlns="http://www.w3.org/2005/Atom"><entry><title>寻找大模型 API</title>'
+           '<link href="https://www.v2ex.com/t/99123#reply1"/><content>' + DEMAND + '</content></entry></feed>')
+
+    def handle(request):
+        if request.url.path == f'/feed/{failed_node}.xml':
+            raise httpx.ReadTimeout('network timeout', request=request)
+        return httpx.Response(200, text=raw)
+
+    failures = {}
+    with httpx.Client(transport=httpx.MockTransport(handle)) as reader:
+        items = feed_items('v2ex', reader, network_failures=failures)
+    assert failures == {failed_node: 'timeout'}
+    assert [post.url for post in items] == ['https://www.v2ex.com/t/99123']
+
+    version = enable(client, 'v2ex')
+    route = '/api/social/channels/v2ex/capture'
+    payload = {'version': version, 'mode': 'executor', 'items': [post.model_dump() for post in items]}
+    assert client.post(route, json={**payload, 'items': []}).json()['status'] == 'success'
+
+    def reading():
+        channel = next(row for row in client.get('/api/social/channels').json() if row['platform'] == 'v2ex')
+        return next(result for result in channel['routes'] if result['mode'] == 'executor')
+
+    last_success = reading()['last_success']
+    partial = client.post(route, json={**payload, 'feed_failures': failures}).json()
+    assert partial['status'] == 'partial' and partial['new_leads'] == 1
+    assert reading()['last_success'] == last_success
+    assert reading()['stats']['feed_failures'] == failures
+    assert client.post(route, json={**payload, 'mode': 'manual', 'feed_failures': failures}).status_code == 422
+    recovery = client.post(route, json=payload).json()
+    assert recovery['status'] == 'success' and recovery['cache_hits'] == 1
+    assert reading()['last_success'] > last_success
+    assert 'feed_failures' not in reading()['stats']
+
+
+def test_v2ex_two_network_failures_or_platform_verification_are_not_partial():
+    def unavailable(request):
+        raise httpx.ConnectError('network unavailable', request=request)
+
+    with httpx.Client(transport=httpx.MockTransport(unavailable)) as reader:
+        with pytest.raises(httpx.ConnectError):
+            feed_items('v2ex', reader, network_failures={})
+
+    calls = []
+
+    def verification(request):
+        calls.append(request.url.path)
+        return httpx.Response(403)
+
+    with httpx.Client(transport=httpx.MockTransport(verification)) as reader:
+        with pytest.raises(httpx.HTTPStatusError):
+            feed_items('v2ex', reader, network_failures={})
+    assert calls == ['/feed/deepseek.xml']
+
+
 def test_qq_adapter_only_reads_selected_identity_and_skips_self():
     calls=[]
     def serve(r):

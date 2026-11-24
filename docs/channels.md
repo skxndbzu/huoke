@@ -1,5 +1,13 @@
 # 渠道能力与证据
 
+## 2026-11-24 V2EX 订阅部分恢复
+
+最近 30 条本地运行记录有 2 条连接失败。抽查时 Agent 一次读取超时，DeepSeek 同轮可读，单独复查两者均返回 HTTP 200。更新后，一个订阅超时或连接失败时，另一订阅的数据仍可入库。渠道页显示失败订阅及最近完整读取时间。
+
+隔离验证用真实 DeepSeek 源、模拟 Agent 超时，两轮各读取 30 条，第一轮筛除 29 条、保留 1 条候选，第二轮全去重。发布后首次真实运行 1753 读取 60 条，去重 2、筛除 58、新增 0。线上的单节点故障恢复仍待实际观测。 [DeepSeek 订阅](https://www.v2ex.com/feed/deepseek.xml) · [Agent 订阅](https://www.v2ex.com/feed/agent.xml)
+
+本轮继续寻找具备公开商务联系路径的买方来源。政府采购站点试读出现访问限制或连接失败。GitHub 多组标题比对发现「中转 API」最新 10 条全部筛除，另一个偏买方的查询只有一条两个月前的简短提问，正文没有具体用量、部署或商务联系证据。同时复查了两位关联 GitHub 作者的公开资料，均无邮箱及所在地。继续以真实样本评估渠道，保留现有查询及频率。 [政府采购搜索](https://search.ccgp.gov.cn/) · [GitHub 提问样本](https://github.com/cctv18/oppo_oplus_realme_sm8750/issues/71)
+
 ## 2026-11-24 GitHub 站方自荐筛选
 
 批次 1728 和 1741 各新增 3 条，原文显示均为同一家模型 API 服务商向不同目录投稿。初筛识别正文开头的「站方自荐」「站方投稿」及两种明确的自我介绍格式。对照 1,290 条入库原文，只有这 6 条从 45 分降至 0 分。模型选型和服务对比对照原文保持原有初筛结果。隔离实读 GitHub 12 条，筛除 10 条，其中 8 条为推广投稿，保留 2 条选型相关候选。复跑同样 12 条全部去重。 [投稿样本一](https://github.com/mn-api/awesome-ai-proxy/issues/83) · [投稿样本二](https://github.com/TangYY-cloud/ai-api-hub/issues/16) · [选型样本](https://github.com/sweetcornna/university-helper/issues/56)

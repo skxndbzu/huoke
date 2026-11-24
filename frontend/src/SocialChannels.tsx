@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 type R = Record<string, any>;
 type API = (path: string, body?: unknown, method?: string) => Promise<any>;
 type ReviewSample = (id: number, index: number, decision: string) => void;
-const labels: R = {not_connected:'尚未连接',success:'最近读取成功',imported:'已导入，非自动接通',running:'采集中',failed:'读取失败',unavailable:'执行器不可用',login_required:'等待登录',verification_required:'需要平台验证',interrupted:'上轮中断',config_changed:'配置已变化'};
+const labels: R = {not_connected:'尚未连接',success:'最近读取成功',partial:'部分订阅读取成功',imported:'已导入，非自动接通',running:'采集中',failed:'读取失败',unavailable:'执行器不可用',login_required:'等待登录',verification_required:'需要平台验证',interrupted:'上轮中断',config_changed:'配置已变化'};
+const feedLabels: Record<string, string> = {agent:'Agent', deepseek:'DeepSeek'};
+const feedErrors: Record<string, string> = {connection_error:'连接失败', timeout:'读取超时'};
 const errors: R = {upstream_auth_token_required:'QQ 执行器要求项目方签发的授权令牌',windows_browser_helper_blocked:'Windows 安全软件阻止了小红书的浏览器辅助程序',ConnectError:'无法连接来源',ConnectTimeout:'连接来源超时',HTTP_403:'平台要求完成正常访问验证',HTTP_429:'平台暂时限流，请等待',account_mismatch:'执行器登录账号与采集配置不一致',conversation_mismatch:'读取到的会话与所选范围不一致'};
 const time = (s: string) => s ? new Date(s).toLocaleString('zh-CN') : '尚无';
 const filterLabels: Record<string, string> = {older_than_90_days:'超过 90 天',excluded_keyword:'命中排除词',no_keyword:'未命中关键词',no_demand_evidence:'未发现明确需求',supplier_promotion:'广告或站点收录投稿',vps_relay:'VPS 或网络转发需求'};
@@ -24,9 +26,11 @@ function ChannelRun({run, title, onReview, busy}: {run: R, title?: string, onRev
   const screening = run.screening_batch;
   return <div>
     {title && <p><strong>{title}</strong> · {labels[run.status] || run.status}{run.stale && ' · 超过 2 小时未成功'}</p>}
-    <p>{run.status !== 'imported' && <>最后读取成功 {time(run.last_success)}<br/></>}最近尝试 {time(run.last_attempt)}</p>
+    <p>{run.status !== 'imported' && <>{stats.feed_failures ? '最后完整读取' : '最后读取成功'} {time(run.last_success)}<br/></>}最近尝试 {time(run.last_attempt)}</p>
     {run.error && <p className="error">{errors[run.error] || run.error}</p>}
-    {stats.listed !== undefined && <p>{run.status === 'imported' ? '导入批次' : '上次成功批次'} · 读取 {stats.listed} · 筛除 {stats.filtered ?? 0} · 去重 {stats.cache_hits ?? 0} · 新候选 {stats.new_leads ?? 0}</p>}
+    {Object.entries(stats.feed_failures || {}).map(([node, reason]) =>
+      <p key={node} className="error">{feedLabels[node] || node} 订阅{feedErrors[String(reason)] || '读取失败'}</p>)}
+    {stats.listed !== undefined && <p>{stats.feed_failures ? '部分采集批次' : run.status === 'imported' ? '导入批次' : '上次成功批次'} · 读取 {stats.listed} · 筛除 {stats.filtered ?? 0} · 去重 {stats.cache_hits ?? 0} · 新候选 {stats.new_leads ?? 0}</p>}
     {stats.publication_window && <PublicationWindow window={stats.publication_window} listed={stats.listed}/>}
     {screening?.samples.length > 0 && <details>
       <summary>抽查筛除样本</summary>

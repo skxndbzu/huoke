@@ -169,6 +169,7 @@ def main():
                     if not pending:
                         connecting_to_workbench = False
                         next_cursors = cursors
+                        feed_failures = {}
                         if args.platform == 'qq':
                             items, next_cursors = qq_items(reader, bridge, config['account'], config['conversations'], cursors)
                         elif args.platform == 'xiaohongshu':
@@ -181,9 +182,13 @@ def main():
                                 from wx_backend import create_backend
                                 backend = create_backend('visual')
                             items = wechat_items(backend, config['account'], config['conversations'])
+                        elif args.platform == 'v2ex':
+                            items = feed_items(args.platform, reader, network_failures=feed_failures)
                         else:
                             items = feed_items(args.platform, reader)
                         pending = {'version': config['version'], 'mode': 'executor', 'items': [x.model_dump() for x in items]}
+                        if feed_failures:
+                            pending['feed_failures'] = feed_failures
                         state = {'scope': scope, 'cursors': cursors, 'next_cursors': next_cursors, 'pending': pending}
                         save_state(path, state)
                     connecting_to_workbench = True
@@ -198,7 +203,9 @@ def main():
                             totals[k] += response.json().get(k, 0)
                     state = {'scope': scope, 'cursors': state.get('next_cursors', cursors)}
                     save_state(path, state)
-                    print(json.dumps({'platform': args.platform, 'status': 'success', **totals}), flush=True)
+                    failures = pending.get('feed_failures', {})
+                    print(json.dumps({'platform': args.platform, 'status': 'partial' if failures else 'success',
+                                      **totals, **({'feed_failures': failures} if failures else {})}), flush=True)
                     if args.platform == 'nodeseek' and totals['listed'] > 0:
                         delay = NODESEEK_POLL_SECONDS
                     if args.platform == 'v2ex':

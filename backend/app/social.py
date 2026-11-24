@@ -53,6 +53,8 @@ class Batch(Strict):
     version: int = Field(ge=1)
     items: list[Capture] = Field(max_length=200)
     mode: str = Field(pattern='^(executor|manual)$')
+    feed_failures: dict[Literal['deepseek', 'agent'], Literal['connection_error', 'timeout']] = Field(
+        default_factory=dict, max_length=1)
 
 
 class ExecutorStatus(Strict):
@@ -207,7 +209,7 @@ def screening_key(channel, url):
 def screening_batch(s, runs, recent):
     sample_run = recent
     if not sample_run or not sample_run.stats.get('filtered_samples'):
-        sample_run = s.scalar(runs.where(ChannelRun.status.in_(('success', 'imported')),
+        sample_run = s.scalar(runs.where(ChannelRun.status.in_(('success', 'partial', 'imported')),
                                          ChannelRun.stats['filtered_samples'][0]['reason'].as_string().is_not(None))
                               .order_by(ChannelRun.id.desc()).limit(1))
     if not sample_run:
@@ -236,12 +238,13 @@ def feed_route(s, platform, mode, checked_at):
     latest = s.scalar(runs.order_by(ChannelRun.id.desc()).limit(1))
     good = latest if latest and latest.status == 'success' else s.scalar(
         runs.where(ChannelRun.status == 'success').order_by(ChannelRun.id.desc()).limit(1))
+    batch = latest if latest and latest.status == 'partial' else good
     last_success = good.finished_at if good else ''
     stale = bool(last_success and checked_at - datetime.fromisoformat(last_success) > timedelta(hours=2))
     return {'mode': mode, 'status': latest.status if latest else 'not_connected',
             'last_attempt': latest.started_at if latest else '', 'last_success': last_success,
-            'error': latest.error if latest else '', 'stats': good.stats if good else {}, 'stale': stale,
-            'screening_batch': screening_batch(s, runs, good)}
+            'error': latest.error if latest else '', 'stats': batch.stats if batch else {}, 'stale': stale,
+            'screening_batch': screening_batch(s, runs, batch)}
 
 
 def sync_social(platform):
@@ -442,6 +445,8 @@ def register_social(app, role, reviewer):
     @app.post('/api/social/channels/{platform}/capture')
     def capture(platform: str, data: Batch, actor=Depends(role)):
         platform_exists(platform)
+        if data.feed_failures and (platform != 'v2ex' or data.mode != 'executor'):
+            raise HTTPException(422, '部分读取记录仅用于 V2EX 本地订阅')
         if data.mode == 'executor' and CATALOG[platform]['mode'] in {'manual', 'search'}:
             raise HTTPException(409, '该渠道不接收本地执行器上传，请使用页面提供的采集方式')
         with Session.begin() as s:
@@ -456,6 +461,9 @@ def register_social(app, role, reviewer):
             except ValueError as exc:
                 raise HTTPException(422, str(exc)) from None
             status = 'imported' if data.mode == 'manual' else 'success'
+            if data.feed_failures:
+                status = 'partial'
+                stats['feed_failures'] = data.feed_failures
             s.add(ChannelRun(channel=p.channel, status=status, stats=stats, finished_at=now()))
             return {'status': status, **stats}
 

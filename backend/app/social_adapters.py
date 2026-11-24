@@ -181,16 +181,27 @@ def gitee_items(client, queries):
     return list(items.values())
 
 
-def feed_items(platform, client):
+def feed_items(platform, client, network_failures=None):
     found = []
+    completed = False
+    last_error = None
     for url in FEEDS[platform]:
-        raw = read(client, 'GET', url)
+        try:
+            raw = read(client, 'GET', url)
+        except (httpx.TimeoutException, httpx.NetworkError) as exc:
+            if platform != 'v2ex' or network_failures is None:
+                raise
+            node = url.rsplit('/', 1)[-1].removesuffix('.xml')
+            network_failures[node] = 'timeout' if isinstance(exc, httpx.TimeoutException) else 'connection_error'
+            last_error = exc
+            continue
         if b'<!DOCTYPE' in raw.upper() or b'<!ENTITY' in raw.upper():
             raise AdapterError('unsafe_xml')
         root = ET.fromstring(raw)
         atom = '{http://www.w3.org/2005/Atom}'
         if root.tag not in ('rss', atom + 'feed'):
             raise AdapterError('not_a_feed')
+        completed = True
         entries = root.findall('./channel/item') if root.tag == 'rss' else root.findall(atom + 'entry')
         for entry in entries[:25 if platform == 'github_discussions' else 30]:
             if root.tag == 'rss':
@@ -215,6 +226,8 @@ def feed_items(platform, client):
             key = match[1] if match else hashlib.sha256(link.split('#')[0].encode()).hexdigest()
             found.append(Capture(event_id=key, title=title[:500], text=(body or title)[:12000], url=link,
                                  author=author[:200], published_at=iso(stamp)))
+    if not completed and last_error:
+        raise last_error
     return found
 
 

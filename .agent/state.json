@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-24T21:24:18.5945497+08:00",
+  "updated_at": "2026-11-24T21:31:01.4597524+08:00",
   "timezone": "Asia/Shanghai",
   "phase": "phase_1_assisted_workflow_live",
   "branch": "codex/v2ex-partial-feed-20261124",
@@ -215,7 +215,6 @@
   ],
   "next_tasks": [
     "Observe the V2EX partial-feed recovery during a natural failure; its first live batch 1753 fully succeeded. Keep collecting evidence for buyer sources with explicit contact paths.",
-    "Check the next natural GitHub batch for the new supplier classification and continue sampling sources that expose an explicit buyer-side business contact path.",
     "Continue sampling buyer-side sources with explicit business contact paths. Use the current V2EX and GitHub samples as a baseline and add another source only when buyer evidence supports it.",
     "Continue observing natural V2EX Agent batches for new buyer demand and public business contact coverage. Runs 1733 and 1749 had only duplicates.",
     "Use filtered samples and user labels to validate actual demand, prior to expanding queries or adding more sources.",
@@ -1121,6 +1120,7 @@
     "historical_records": 1290,
     "filtered_existing_ids": [1285, 1286, 1287, 1288, 1289, 1290],
     "origin_batches": [1728, 1741],
+    "live_post_release_batch": {"id": 1757, "listed": 12, "filtered": 10, "supplier_promotions": 8, "cache_hits": 2, "new_leads": 0},
     "previous_triage_score": 45,
     "current_triage_score": 0,
     "historical_analysis_call_ids": [481, 482],

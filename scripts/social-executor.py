@@ -16,7 +16,8 @@ from urllib.parse import urlparse
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'backend'))
 import httpx
-from app.social_adapters import FEEDS, feed_items, qq_items, v2ex_profile, xhs_items, wechat_items, AdapterError, V2EXProfile
+from app.social_adapters import (FEEDS, feed_items, qq_items, v2ex_author_replies, v2ex_profile,
+                                 xhs_items, wechat_items, AdapterError, V2EXProfile)
 
 PROJECT_TUNNEL = 'http://127.0.0.1:18081'
 WORKBENCH_RETRY_SECONDS = 30
@@ -89,6 +90,35 @@ def research_v2ex_profiles(api, reader):
         totals['checked'] += 1
         totals['public_profiles'] += result['status'] == 'public_profile'
         totals['contacts_added'] += result['contacts_added']
+    return totals
+
+
+def research_v2ex_author_replies(api, reader):
+    route = '/api/social/v2ex/author-replies'
+    response = api.get(route)
+    response.raise_for_status()
+    jobs = response.json()
+    totals = {'checked': 0, 'replies': 0, 'unavailable': 0}
+    for job in jobs['items'][:2]:
+        topic_id, username = job['topic_id'], job['username']
+        status, stop = 'success', False
+        try:
+            replies = v2ex_author_replies(reader, topic_id, username)
+        except (httpx.HTTPError, ValueError) as exc:
+            status, replies = 'unavailable', []
+            stop = isinstance(exc, httpx.HTTPStatusError) and exc.response.status_code in (401, 403, 429)
+        response = api.post(f'{route}/{job["id"]}', json={
+            'version': jobs['version'], 'topic_id': topic_id, 'username': username,
+            'status': status, 'replies': [reply.model_dump() for reply in replies],
+        })
+        if response.status_code == 409:
+            break
+        response.raise_for_status()
+        totals['checked'] += 1
+        totals['replies'] += len(replies)
+        totals['unavailable'] += status == 'unavailable'
+        if stop:
+            break
     return totals
 
 
@@ -209,11 +239,13 @@ def main():
                     if args.platform == 'nodeseek' and totals['listed'] > 0:
                         delay = NODESEEK_POLL_SECONDS
                     if args.platform == 'v2ex':
-                        try:
-                            profiles = research_v2ex_profiles(api, reader)
-                            print(json.dumps({'platform': 'v2ex_profiles', 'status': 'finished', **profiles}), flush=True)
-                        except (httpx.HTTPError, ValueError, KeyError) as exc:
-                            print(json.dumps({'platform': 'v2ex_profiles', 'status': 'failed', 'code': type(exc).__name__}), flush=True)
+                        for name, run in (('v2ex_profiles', research_v2ex_profiles),
+                                          ('v2ex_author_replies', research_v2ex_author_replies)):
+                            try:
+                                result = run(api, reader)
+                                print(json.dumps({'platform': name, 'status': 'finished', **result}), flush=True)
+                            except (httpx.HTTPError, ValueError, KeyError) as exc:
+                                print(json.dumps({'platform': name, 'status': 'failed', 'code': type(exc).__name__}), flush=True)
             except Exception as exc:
                 code = str(exc) if isinstance(exc, AdapterError) else type(exc).__name__
                 status = 'login_required' if code == 'login_required' else 'unavailable'

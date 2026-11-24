@@ -9,13 +9,13 @@ from pydantic import Field
 from sqlalchemy import and_, func, or_, select
 import httpx
 from .schemas import Strict
-from .db import (Session, SourcePolicy, SourceItem, ChannelRun, Lead, LeadMarket, CaptureEvidence, Event,
+from .db import (Session, SourcePolicy, SourceItem, ChannelRun, Lead, LeadMarket, LeadWorkspace, CaptureEvidence, Event,
                  locked_control, now, event)
 from .pipeline import clean, classify, fingerprint
 from .prospecting import intent, VERSION_TRIAGE
 from .market import refresh_market
 from .contact_discovery import extract_contacts, extract_contact_text, save_candidate
-from .social_adapters import (CATALOG, HOSTS, Capture, V2EXProfile, V2EX_USERNAME, V2EX_FEED_NODES,
+from .social_adapters import (CATALOG, HOSTS, Capture, V2EXAuthorReply, V2EXProfile, V2EX_USERNAME, V2EX_FEED_NODES,
                               feed_items, gitee_items, gitee_issue_url, validate_url)
 from .config import settings
 
@@ -65,6 +65,14 @@ class ExecutorStatus(Strict):
 
 class V2EXProfileUpload(V2EXProfile):
     version: int = Field(ge=1)
+
+
+class V2EXReplyUpload(Strict):
+    version: int = Field(ge=1)
+    topic_id: int = Field(gt=0)
+    username: str = Field(pattern='^' + V2EX_USERNAME + '$')
+    status: Literal['success', 'unavailable']
+    replies: list[V2EXAuthorReply] = Field(max_length=3)
 
 
 class ScreeningReview(Strict):
@@ -375,8 +383,68 @@ def register_social(app, role, reviewer):
                 contacts_added = extract_contact_text(s, lead, clean(data.bio), url, 'v2ex_public_profile', public_profile=True)
             elif record.profile and record.profile.get('status') == 'public_profile':
                 profile = {**record.profile, 'checked_at': now(), 'refresh_status': 'unavailable'}
+            if 'v2ex_author_replies' in (record.profile or {}):
+                profile['v2ex_author_replies'] = record.profile['v2ex_author_replies']
             record.profile = profile
             return {'status': data.status, 'contacts_added': contacts_added}
+
+    @app.get('/api/social/v2ex/author-replies')
+    def pending_v2ex_author_replies(actor=Depends(role)):
+        checked_at = datetime.now(timezone.utc)
+        day_ago = (checked_at - timedelta(days=1)).isoformat()
+        recent = (checked_at - timedelta(days=90)).date().isoformat()
+        with Session() as s:
+            policy = s.get(SourcePolicy, 'social:v2ex')
+            if not policy or not policy.enabled or not settings().source_enabled:
+                return {'items': []}
+            checked = LeadMarket.profile['v2ex_author_replies']['checked_at'].as_string()
+            rows = s.scalars(select(Lead).outerjoin(LeadMarket, LeadMarket.lead_id == Lead.id)
+                             .outerjoin(LeadWorkspace, LeadWorkspace.lead_id == Lead.id)
+                             .where(Lead.source_key.startswith('v2ex:'), Lead.published_at >= recent,
+                                    func.coalesce(checked, '') <= day_ago,
+                                    func.coalesce(LeadWorkspace.qualification, 'pending') != 'invalid',
+                                    func.coalesce(LeadWorkspace.stage, 'new').in_(('new', 'contacted', 'conversation')))
+                             .order_by(Lead.published_at.desc()).limit(120))
+            pending = []
+            for lead in rows:
+                if not lead_has_v2ex_author(lead) or intent(lead.title, lead.text)['score'] < 70:
+                    continue
+                pending.append({'id': lead.id, 'topic_id': int(lead.source_key.split(':')[1]), 'username': lead.author})
+                if len(pending) == 2:
+                    break
+            return {'version': policy.version, 'items': pending}
+
+    @app.post('/api/social/v2ex/author-replies/{lead_id}')
+    def upload_v2ex_author_replies(lead_id: int, data: V2EXReplyUpload, actor=Depends(role)):
+        if data.status == 'unavailable' and data.replies:
+            raise HTTPException(422, '不可读的主题不能携带回复')
+        with Session.begin() as s:
+            locked_control(s)
+            policy = s.get(SourcePolicy, 'social:v2ex')
+            if not policy or not policy.enabled or not settings().source_enabled or policy.version != data.version:
+                raise HTTPException(409, 'V2EX 采集范围已变化或停用')
+            lead = s.get(Lead, lead_id)
+            if (not lead_has_v2ex_author(lead) or lead.source_key != f'v2ex:{data.topic_id}'
+                    or lead.author.casefold() != data.username.casefold()):
+                raise HTTPException(422, '回复与原帖或作者不匹配')
+            record = s.get(LeadMarket, lead_id) or refresh_market(s, lead)
+            profile = record.profile or {}
+            previous = profile.get('v2ex_author_replies', {})
+            day_ago = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
+            if previous.get('checked_at', '') > day_ago:
+                return {'status': 'cached', 'replies': len(previous.get('replies', []))}
+            snapshot = {**previous, 'status': data.status, 'checked_at': now()}
+            if data.status == 'success':
+                replies = {}
+                for reply in data.replies:
+                    text = clean(reply.text)
+                    if text:
+                        replies[reply.id] = {'id': reply.id, 'text': text, 'published_at': reply.published_at,
+                                             'url': f'https://www.v2ex.com/t/{data.topic_id}#r_{reply.id}'}
+                snapshot['replies'] = list(replies.values())
+                snapshot['last_success'] = snapshot['checked_at']
+            record.profile = {**profile, 'v2ex_author_replies': snapshot}
+            return {'status': data.status, 'replies': len(snapshot.get('replies', []))}
 
     @app.get('/api/social/channels')
     def channels(actor=Depends(role)):

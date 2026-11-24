@@ -766,6 +766,20 @@ export function CustomerWorkspace({
                 <summary>展开完整原文</summary>
                 <pre>{selected.text}</pre>
               </details>
+              {selected.market?.profile?.v2ex_author_replies?.replies?.length > 0 && (
+                <div className="contact-evidence">
+                  <h3>楼主的公开回复</h3>
+                  {selected.market.profile.v2ex_author_replies.replies.map((reply: R) => (
+                    <div key={reply.id}>
+                      <blockquote>{reply.text}</blockquote>
+                      <p className="muted">{fmt(reply.published_at)} · {urlLink(reply.url, "查看原回复 ↗")}</p>
+                    </div>
+                  ))}
+                  {selected.market.profile.v2ex_author_replies.status === "unavailable" && (
+                    <p className="muted">最近一次读取失败，显示 {fmt(selected.market.profile.v2ex_author_replies.last_success)} 的记录。</p>
+                  )}
+                </div>
+              )}
               <button
                 className="secondary"
                 disabled={busy}

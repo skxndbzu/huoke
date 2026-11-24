@@ -82,6 +82,17 @@ class V2EXProfile(Strict):
     github: str = Field(default='', pattern='^(?:' + GITHUB_USERNAME + ')?$')
 
 
+class V2EXAuthorReply(Strict):
+    id: int = Field(gt=0)
+    text: str = Field(min_length=1, max_length=480)
+    published_at: str = Field(min_length=1, max_length=50)
+
+    @field_validator('published_at')
+    @classmethod
+    def timestamp(cls, value):
+        return Capture.timestamp(value)
+
+
 def read(client, method, url, **kwargs):
     with client.stream(method, url, **kwargs) as r:
         r.raise_for_status()
@@ -113,6 +124,36 @@ def v2ex_profile(client, username):
     return V2EXProfile(username=username, status='public_profile', bio=bio[:500],
                        location=location[:200] if isinstance(location, str) else '',
                        github=github if isinstance(github, str) and re.fullmatch(GITHUB_USERNAME, github) else '')
+
+
+def v2ex_author_replies(client, topic_id, username):
+    if type(topic_id) is not int or topic_id < 1 or not re.fullmatch(V2EX_USERNAME, username):
+        raise AdapterError('invalid_v2ex_topic')
+    base = 'https://www.v2ex.com/api/'
+    topics = json.loads(read(client, 'GET', base + 'topics/show.json', params={'id': topic_id}))
+    if not isinstance(topics, list) or len(topics) != 1 or not isinstance(topics[0], dict):
+        raise AdapterError('invalid_v2ex_topic')
+    topic = topics[0]
+    member = topic.get('member')
+    if (topic.get('id') != topic_id or topic.get('deleted') != 0 or not isinstance(member, dict)
+            or str(member.get('username', '')).casefold() != username.casefold()
+            or type(member.get('id')) is not int or member['id'] <= 0):
+        raise AdapterError('topic_author_mismatch')
+    if type(topic.get('replies')) is int and topic['replies'] == 0:
+        return []
+    replies = json.loads(read(client, 'GET', base + 'replies/show.json', params={'topic_id': topic_id}))
+    if not isinstance(replies, list):
+        raise AdapterError('invalid_v2ex_replies')
+    authored = {}
+    for reply in replies:
+        if not isinstance(reply, dict) or reply.get('topic_id') != topic_id or reply.get('member_id') != member['id']:
+            continue
+        reply_id, content = reply.get('id'), reply.get('content')
+        timestamp = reply.get('created')
+        published_at = iso(timestamp) if type(timestamp) in (str, int, float) else ''
+        if type(reply_id) is int and reply_id > 0 and isinstance(content, str) and content.strip() and published_at:
+            authored[reply_id] = V2EXAuthorReply(id=reply_id, text=content.strip()[:480], published_at=published_at)
+    return sorted(authored.values(), key=lambda reply: (reply.published_at, reply.id), reverse=True)[:3]
 
 
 def iso(value):

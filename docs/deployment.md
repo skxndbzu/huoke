@@ -14,7 +14,13 @@ NodeSeek 在成功读取并上传非空官方 RSS 后等待 10 分钟。读取�
 
 Windows 只重启 NodeSeek 执行器，服务器沿用下方版本。回滚时恢复 `e60441d` 中的 `scripts/social-executor.py` 并仅重启 NodeSeek 执行器。八种模拟执行器路径和 `Retry-After` 日期解析通过。
 
-## 当前发布 `20261124-failed-analysis-review-r1`
+## 当前发布 `20261124-v2ex-author-replies-r1`
+
+V2EX 本地采集器在每轮订阅读取后最多核对两个近期选型主题，同一主题至少间隔 24 小时。使用公开主题和回复接口，核对原帖主题编号、作者账号和回复作者 ID，最多保留每帖三条作者回复。工作台展示发布时间和原回复链接。74 项本地及 102 项隔离 PostgreSQL 测试、前端构建、390px 和 1440px 界面验证通过。
+
+回滚镜像为 `huoke:20261124-failed-analysis-review-r1`，备份前缀为 `backups/20261124-before-v2ex-author-replies`。Windows 回滚时恢复 `ba9e26e` 的执行器代码并单独重启 V2EX 采集器。
+
+## 上次发布 `20261124-failed-analysis-review-r1`
 
 最近一次 AI 分析失败且需求初筛达到 80 分的线索，可进入「选型需求待核实地区」。工作台展示失败状态、初筛原句和原帖，供人工核实。43 项本地及 71 项隔离 PostgreSQL 测试、前端构建、390px 和 1440px 界面验证通过。线上 39 个文件摘要匹配。
 

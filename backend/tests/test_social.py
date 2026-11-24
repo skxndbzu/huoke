@@ -6,7 +6,7 @@ import pytest
 from sqlalchemy import select, func
 from app.db import Session, Lead, CaptureEvidence, ContactPoint, Message, AnalysisCall, ChannelRun
 from app.social import get_policy, sync_social
-from app.social_adapters import (feed_items, gitee_items, v2ex_profile, qq_items, xhs_items, wechat_items, Capture,
+from app.social_adapters import (feed_items, gitee_items, v2ex_author_replies, v2ex_profile, qq_items, xhs_items, wechat_items, Capture,
                                  AdapterError, validate_url, milky)
 
 DEMAND = '我们正在开发 AI 应用，想找稳定的大模型 API 供应商，哪家 API 支持按量计费？'
@@ -331,6 +331,59 @@ def test_v2ex_profile_requires_same_author_and_keeps_contact_unverified(client):
     detail = client.get(f'/api/workspace/leads/{job["id"]}').json()
     assert detail['market']['profile']['github'] == 'test-github'
     assert detail['market']['status'] == 'pending_ai' and detail['contact_status'] == 'unverified_candidate'
+
+
+def test_v2ex_author_replies_match_topic_and_author_and_preserve_profile(client):
+    version = enable(client, 'v2ex')
+    timestamp = datetime.now(timezone.utc)
+    response = client.post('/api/social/channels/v2ex/capture', json={
+        'version': version, 'mode': 'executor',
+        'items': [item(url='https://www.v2ex.com/t/99123', author='test_author',
+                       published_at=timestamp.isoformat())],
+    })
+    assert response.json()['new_leads'] == 1
+    route = '/api/social/v2ex/author-replies'
+    job, = client.get(route).json()['items']
+
+    def serve(request):
+        assert request.url.host == 'www.v2ex.com'
+        if request.url.path == '/api/topics/show.json':
+            assert request.url.params['id'] == '99123'
+            return httpx.Response(200, json=[{'id': 99123, 'deleted': 0, 'replies': 6,
+                                             'member': {'id': 5, 'username': 'test_author'}}])
+        assert request.url.path == '/api/replies/show.json' and request.url.params['topic_id'] == '99123'
+        common = {'topic_id': 99123, 'member_id': 5, 'created': int(timestamp.timestamp())}
+        return httpx.Response(200, json=[
+            {**common, 'id': number, 'content': f'供应商对比信息 {number}'} for number in range(1, 5)
+        ] + [
+            {**common, 'id': 6, 'content': '其他作者', 'member_id': 6},
+            {**common, 'id': 7, 'content': '其他话题', 'topic_id': 99124},
+        ])
+
+    with httpx.Client(transport=httpx.MockTransport(serve)) as reader:
+        replies = v2ex_author_replies(reader, job['topic_id'], job['username'])
+        assert [reply.id for reply in replies] == [4, 3, 2]
+        with pytest.raises(AdapterError, match='topic_author_mismatch'):
+            v2ex_author_replies(reader, job['topic_id'], 'other_author')
+    upload = {'version': version, 'topic_id': job['topic_id'], 'username': job['username'],
+              'status': 'success', 'replies': [reply.model_dump() for reply in replies]}
+    target = f'{route}/{job["id"]}'
+    assert client.post(target, json={**upload, 'topic_id': 99124}).status_code == 422
+    assert client.post(target, json={**upload, 'version': version + 1}).status_code == 409
+    assert client.post(target, json=upload).json() == {'status': 'success', 'replies': 3}
+    assert client.get(route).json()['items'] == []
+    assert client.post(target, json=upload).json()['status'] == 'cached'
+    assert client.post(f'/api/social/v2ex/profiles/{job["id"]}', json={
+        'version': version, 'username': job['username'], 'status': 'public_profile', 'github': 'test-github',
+    }).status_code == 200
+    detail = client.get(f'/api/workspace/leads/{job["id"]}').json()
+    profile = detail['market']['profile']
+    assert profile['github'] == 'test-github'
+    assert profile['v2ex_author_replies']['replies'][0]['url'] == 'https://www.v2ex.com/t/99123#r_4'
+    assert detail['contact_status'] == 'public_discussion' and detail['points'] == []
+    with Session() as s:
+        assert s.scalar(select(func.count()).select_from(AnalysisCall)) == 0
+        assert s.scalar(select(func.count()).select_from(Message)) == 0
 
 
 def test_discussion_atom_and_import_share_public_topic_identity(client):

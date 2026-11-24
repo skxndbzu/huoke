@@ -4,7 +4,7 @@ from sqlalchemy import select, func
 from .db import Lead, LeadMarket, LeadWorkspace, AnalysisCall, ContactPoint
 from .market import VERSION
 
-VERSION_TRIAGE = 'intent-triage-v7'
+VERSION_TRIAGE = 'intent-triage-v8'
 MODEL = re.compile(
     r'(?a:\b(?:llm|openai|gpt|claude|gemini|deepseek|model api)\b)|大模型|模型.{0,8}(?:API|接口)|AI\s*(?:答题|应用|客服)',
     re.I,
@@ -23,7 +23,10 @@ BUILD = re.compile(r'(?:正在|我们|我想|计划).{0,25}(?:开发|搭建|做)
 NOISE = re.compile(r'教程|周报|日报|资讯|信息流|推荐新工具|开源推荐|新增推荐|新增站点|站点推荐|收录|自荐|推广|\b(?:newsletter|digest|tutorial|research / reuse|refactor)\b|(?:spec|PRD)[:：\]]|规格', re.I)
 RESOURCE_POST = re.compile(r'^\s*[【\[]\s*(?:开发者)?资源(?:推荐|投稿)\s*[】\]]')
 ADVERTISEMENT = re.compile(r'^\s*[【\[]\s*(?:AD|广告)\s*[】\]]', re.I)
-LISTING_SUBMISSION = re.compile(r'^\s*(?:[-*#]+\s*)?(?:申请收录|请求收录|提交收录)')
+LISTING_SUBMISSION = re.compile(
+    r'^\s*(?:[-*#]+\s*)?(?:申请收录|请求收录|提交收录|站方(?:投稿|自荐)'
+    r'|我是[^\n]{1,60}的站方投稿联系人|服务商名称[：:][^\n]{1,80}[（(]站方自荐[）)])',
+)
 PROVIDER_COMPARISON = re.compile(
     r'(?:多家|两家|多供应商|不同供应商).{0,24}(?:LLM|大模型|模型|视觉).{0,12}(?:API|接口).{0,10}(?:盲测|评测|对比)',
     re.I,

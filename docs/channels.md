@@ -1,5 +1,11 @@
 # 渠道能力与证据
 
+## 2026-11-24 GitHub 站方自荐筛选
+
+批次 1728 和 1741 各新增 3 条，原文显示均为同一家模型 API 服务商向不同目录投稿。初筛识别正文开头的「站方自荐」「站方投稿」及两种明确的自我介绍格式。对照 1,290 条入库原文，只有这 6 条从 45 分降至 0 分。模型选型和服务对比对照原文保持原有初筛结果。隔离实读 GitHub 12 条，筛除 10 条，其中 8 条为推广投稿，保留 2 条选型相关候选。复跑同样 12 条全部去重。 [投稿样本一](https://github.com/mn-api/awesome-ai-proxy/issues/83) · [投稿样本二](https://github.com/TangYY-cloud/ai-api-hub/issues/16) · [选型样本](https://github.com/sweetcornna/university-helper/issues/56)
+
+抽查四个 V2EX 原帖的公开回复接口，共返回 50 条回复，未发现商务联系方式信号。已入库的四条地区待核实线索均只有公开讨论入口。Agent 组合在自然批次 1733 和 1749 分别读取 60 条，均全部去重。一次试读 Agent 订阅超时，其他抽查节点正常响应。 [公开回复样本](https://www.v2ex.com/api/replies/show.json?topic_id=1256577)
+
 ## 2026-11-23 V2EX Agent 节点与买方问法
 
 抽查 V2EX 八个可读节点各 30 条，另一个 `developer` 未返回可解析 Atom。用现行规则分别回放 `programmer`、`deepseek`、`agent`、`aigc`。原组合 `deepseek` + `programmer` 通过 1 条。`agent` 与 `aigc` 各漏掉一条明确在找指定模型供应商的帖子，分别询问一组 GPT 模型与 Gemini Flash。另抽查了一条讨论公司开发额度的帖子，原文未提出供应商选型。三位作者的 V2EX 公开资料均未找到明确商务联系方式、公开所在地或自报 GitHub。Gemini 帖邀请私聊，但原文未给出邮箱或社交账号，仍只有平台内联系路径。 [Agent 订阅](https://www.v2ex.com/feed/agent.xml) · [GPT 选型](https://www.v2ex.com/t/1253926) · [Gemini 选型](https://www.v2ex.com/t/1250351) · [公司额度讨论](https://www.v2ex.com/t/1257521)

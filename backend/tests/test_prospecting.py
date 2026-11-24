@@ -57,6 +57,19 @@ def test_supplier_submission_detected_in_raw_and_stored_issue(title):
     assert intent(question, '我们正在比较模型 API。\n> 申请收录某供应商。')['score'] >= 35
 
 
+@pytest.mark.parametrize('body', [
+    '我是示例 API 的站方投稿联系人，申请加入目录。',
+    '站方自荐，请加入数据表。',
+    '服务商名称：示例 API（站方自荐）',
+    '站方投稿，申请加入每日签到清单。',
+])
+def test_explicit_operator_submission_is_filtered_before_api_pricing_signals(body):
+    title = '补充中转服务商资料'
+    text = f'{title}\n{body}\nAPI 按模型计费。'
+    assert intent(title, text)['category'] == 'supplier_promotion'
+    assert intent('求中转站推荐', f'> {body}\n希望支持 Gemini。')['score'] >= 35
+
+
 def test_focused_source_collects_api_question_and_provider_evaluation(monkeypatch):
     from app.db import SourcePolicy
     from app.sources import PREVIOUS_FOCUSED_GITHUB_QUERIES, sync_public
@@ -79,7 +92,7 @@ def test_focused_source_collects_api_question_and_provider_evaluation(monkeypatc
         return httpx.Response(200,json={'items':[
             item(88,'想请教一下 AI 答题的实际效果，以及用的哪家 API','速度怎么样'),
             item(89,'OpenAI adapter null bug','模型 API 接入时缺少 null 检查，需要修复函数'),
-            item(93,'建议新增国内直连模型 API 中转','申请收录某站，API 价格见官网。'),
+            item(93,'建议新增国内直连模型 API 中转','站方自荐，申请加入目录。API 价格见官网。'),
         ]})
     transport(monkeypatch,handle)
     result=sync_public('github')

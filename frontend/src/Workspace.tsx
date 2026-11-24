@@ -648,6 +648,7 @@ export function CustomerWorkspace({
                   <span className="badge">
                     {contactLabel(l)}
                   </span>
+                  {l.contact_invitation && <span className="badge">原文提到私聊</span>}
                   {l.issue_state && <span className="badge">{issueLabel(l.issue_state)}</span>}
                   <span>
                     {l.analysis.method === "ai"
@@ -859,6 +860,14 @@ export function CustomerWorkspace({
                 {contactLabel(selected)}
                 。联系方式与客户价值分别核实。复制话术不代表已发送，系统发送仍须逐条审核。
               </p>
+              {selected.contact_invitation && (
+                <div className="contact-evidence">
+                  <strong>原文提到私聊</strong>
+                  <p>「{selected.contact_invitation.quote}」</p>
+                  <p className="muted">发布于 {fmt(selected.published_at)} · 当前联系意愿待核实</p>
+                  <p>{urlLink(selected.contact_invitation.url, "查看联系线索原文 ↗")}</p>
+                </div>
+              )}
               {selected.source_key?.startsWith("v2ex:") && selected.market?.profile?.status === "public_profile" && (
                 <div className="contact-evidence">
                   <p>{urlLink(selected.market.profile.url, "V2EX 作者公开资料 ↗")}</p>

@@ -10,7 +10,7 @@ from .db import (Session, Lead, LeadWorkspace, Touchpoint, ContactPoint, Contact
                  Control, AnalysisCall, LeadMarket, MarketPolicy, CaptureEvidence, locked_control, event, now)
 from .schemas import Strict, safe_url, ContactInput
 from .social_adapters import HOSTS
-from .market import market_view, refresh_market, market_predicate, market_state, threshold, ELIGIBLE, LABELS
+from .market import authored_text, market_view, refresh_market, market_predicate, market_state, threshold, ELIGIBLE, LABELS
 from .prospecting import intent, supplier_promotion
 
 STAGES = {'new': '待联系', 'contacted': '已联系', 'conversation': '沟通中',
@@ -21,6 +21,10 @@ GITHUB_LOGIN = re.compile(r'[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?\Z')
 CONTACT_KINDS = ('email', 'wechat', 'qq', 'url')
 PUBLIC_DISCUSSION_PREFIXES = ('github:', 'hn:', *(platform + ':' for platform in HOSTS))
 ISSUE_STATE_MAX_AGE = timedelta(days=2)
+V2EX_PRIVATE_INVITATION = re.compile(
+    r'(?:^|[\n，,。！？；])\s*((?:有(?:知道|了解|推荐)的\s*)?'
+    r'(?:请|欢迎|麻烦)(?:直接)?(?:私聊|私信|站内信)我(?:地址|链接|详情)?)(?=$|[\s，,。！？；!?：:])'
+)
 
 
 def direct_contact(lead_id, verified=False):
@@ -120,7 +124,15 @@ def view(s, lead):
         'state': issue.state, 'reason': issue.reason, 'checked_at': issue.checked_at,
         'stale': issue.checked_at < (datetime.now(timezone.utc) - ISSUE_STATE_MAX_AGE).isoformat(),
     }
-    return {**row(lead), 'capture': row(evidence) if evidence else None, 'triage': intent(lead.title, lead.text), 'market': market_view(s, lead), 'contact_status': contact_status(s, lead),
+    triage = intent(lead.title, lead.text)
+    contact = contact_status(s, lead)
+    invitation = None
+    if triage['score'] >= 70 and contact == 'public_discussion' and lead.source_key.startswith('v2ex:'):
+        match = V2EX_PRIVATE_INVITATION.search(authored_text(lead.text))
+        if match and match[1] in lead.text:
+            invitation = {'quote': match[1], 'url': lead.url}
+    return {**row(lead), 'capture': row(evidence) if evidence else None, 'triage': triage, 'market': market_view(s, lead), 'contact_status': contact,
+        'contact_invitation': invitation,
         'issue_state': issue_state,
         'high_value_no_contact': bool(lead.analysis.get('method') == 'ai' and lead.analysis.get('fit') == 'high'
             and lead.analysis.get('priority') == 'high' and not s.scalar(select(direct_contact(lead.id)))),

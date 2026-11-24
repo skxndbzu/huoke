@@ -1,4 +1,5 @@
 from sqlalchemy import select, func
+import pytest
 from app.db import Session, LeadWorkspace, Touchpoint, Message, Lead, Contact, ContactPoint
 
 
@@ -61,6 +62,28 @@ def test_contact_point_operator_cannot_verify_and_invalid_url_rejected(client):
     with Session() as s:
         assert s.scalar(select(Contact).where(Contact.address=='biz@example.test')).verified
     assert client.post('/api/workspace/leads/1/points',json={**data,'kind':'url','value':'javascript:alert(1)'}).status_code==422
+
+
+@pytest.mark.parametrize(('text', 'quote'), [
+    ('原来的渠道已停止，有知道的请私聊我地址 谢谢了', '有知道的请私聊我地址'),
+    ('> 有知道的请私聊我地址', None),
+    ('可在评论区回复，请不要私聊我。', None),
+    ('其他团队的采购，请私聊我们的合作方。', None),
+])
+def test_v2ex_contact_invitation_is_evidence_without_contact_details(client, text, quote):
+    with Session.begin() as s:
+        lead = Lead(source='V2EX', source_key='v2ex:98765', author='test',
+                    url='https://www.v2ex.com/t/98765', title='哪家中转有 Gemini 模型 API？',
+                    text=text, fingerprint='test-v2ex-invitation')
+        s.add(lead)
+        s.flush()
+        lead_id, url = lead.id, lead.url
+    data = client.get(f'/api/workspace/leads/{lead_id}').json()
+    assert data['contact_invitation'] == ({'quote': quote, 'url': url} if quote else None)
+    assert data['contact_status'] == 'public_discussion' and data['points'] == []
+    assert client.get('/api/workspace/leads?bucket=contact').json()['total'] == 0
+    with Session() as s:
+        assert s.scalar(select(func.count()).select_from(Message)) == 0
 
 
 def test_contact_queue_requires_verified_path_and_research_queue_tracks_missing_path(client):

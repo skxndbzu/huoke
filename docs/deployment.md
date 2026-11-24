@@ -14,7 +14,13 @@ NodeSeek 在成功读取并上传非空官方 RSS 后等待 10 分钟。读取�
 
 Windows 只重启 NodeSeek 执行器，服务器沿用下方版本。回滚时恢复 `e60441d` 中的 `scripts/social-executor.py` 并仅重启 NodeSeek 执行器。八种模拟执行器路径和 `Retry-After` 日期解析通过。
 
-## 当前发布 `20261124-v2ex-aigc-r1`
+## 当前发布 `20261124-v2ex-contact-invitation-r1`
+
+工作台为符合选型初筛的 V2EX 线索展示第一人称私聊表述。联系区显示原句、发布时间和原帖。42 项本地及 70 项隔离 PostgreSQL 测试、前端构建、390px 和 1440px 工作台验证通过。线上 39 个文件摘要匹配。本次发布只需更新服务器镜像。
+
+回滚镜像为 `huoke:20261124-v2ex-aigc-r1`，备份前缀为 `backups/20261124-before-v2ex-contact-invitation`。
+
+## 上次发布 `20261124-v2ex-aigc-r1`
 
 Windows V2EX 执行器增加 AIGC 官方订阅。DeepSeek、Agent 和 AIGC 每轮各最多 30 条。允许一至两个节点网络失败时上传其余节点结果，渠道页记录失败节点。发布后只重启 V2EX 执行器，线上批次 1761 成功读取 90 条。38 项本地和 66 项隔离 PostgreSQL 测试、前端构建、390px 渠道状态验证通过。线上 39 个文件摘要匹配。
 

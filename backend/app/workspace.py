@@ -26,6 +26,43 @@ V2EX_PRIVATE_INVITATION = re.compile(
     r'(?:^|[\n，,。！？；])\s*((?:有(?:知道|了解|推荐)的\s*)?'
     r'(?:请|欢迎|麻烦)(?:直接)?(?:私聊|私信|站内信)我(?:地址|链接|详情)?)(?=$|[\s，,。！？；!?：:])'
 )
+GREETING_MODEL_VERSION = re.compile(
+    r'(?a:\b(?:gemini|claude|deepseek|gpt)(?:[-.][a-z][a-z0-9]*){0,3}[-.]?\d[a-z0-9]*(?:[.-][a-z0-9]+){0,4}\b)', re.I,
+)
+GREETING_MODEL_FAMILY = re.compile(r'(?a:\b(?:gemini|claude|deepseek|gpt)\b)', re.I)
+GREETING_CRITERIA = (
+    (re.compile(r'缓存命中率|缓存读写'), '你现在还在比较服务商吗？主要想核对缓存命中率，还是带缓存后的实际调用成本？'),
+    (re.compile(r'折扣|按量计费|价格|单价'), '你现在还在比较报价吗？你更关注输入和输出的单价，还是带缓存后每次请求的实际费用？'),
+    (re.compile(r'调用失败|超时|限流|不稳定'), '帖子里提到的调用问题现在还在吗？方便说下使用的客户端或接口协议吗？'),
+)
+
+
+def greeting_question(lead, market):
+    original = lead.title + '\n' + authored_text(lead.text)
+    match = GREETING_MODEL_VERSION.search(original)
+    if match:
+        model = match.group(0)
+        return f'你现在还在找支持 {model} 的接口吗？计划用哪个客户端或接口协议接入？', {
+            'quote': model, 'url': lead.url,
+        }
+
+    snapshot = (market.profile or {}).get('v2ex_author_replies', {}) if market else {}
+    sources = [(original, lead.url)]
+    if snapshot.get('status') == 'success':
+        sources = [(authored_text(reply['text']), reply['url']) for reply in snapshot.get('replies', [])] + sources
+    for pattern, question in GREETING_CRITERIA:
+        for content, url in sources:
+            match = pattern.search(content)
+            if match:
+                return question, {'quote': match.group(0), 'url': url}
+
+    match = GREETING_MODEL_FAMILY.search(original)
+    if match:
+        model = match.group(0)
+        return f'你现在还在评估 {model} 的接口吗？主要用于哪个客户端或业务场景？', {
+            'quote': model, 'url': lead.url,
+        }
+    return '你现在还在评估模型接口吗？方便说说目前的使用场景吗？', None
 
 
 def direct_contact(lead_id, verified=False):
@@ -521,8 +558,11 @@ def register_workspace(app, role, reviewer):
                 raise HTTPException(409, '该客户已停止跟进或标记为不匹配')
             if not p.get('confirmed'):
                 raise HTTPException(409, '产品资料尚未确认')
-            return {'method': 'confirmed_facts_template', 'body': f'你好，看到你发布的「{l.title[:100]}」。我们{p["description"]}\n想了解一下，你目前还在评估模型接口吗？主要的模型和使用场景是什么？如果不方便联系，请告诉我。',
-                    'evidence_url': l.url, 'authorization': 'none', 'product_version': p.get('version')}
+            question, question_evidence = greeting_question(l, s.get(LeadMarket, lead_id))
+            return {'method': 'confirmed_facts_template',
+                    'body': f'你好，看到你发布的「{l.title[:100]}」。我们{p["description"]}\n{question}如果不方便联系，请告诉我。',
+                    'evidence_url': l.url, 'question_evidence': question_evidence,
+                    'authorization': 'none', 'product_version': p.get('version')}
 
     @app.get('/api/workspace/metrics')
     def metrics(actor=Depends(role)):

@@ -384,6 +384,7 @@ export function CustomerWorkspace({
     [started, setStarted] = useState(Date.now());
   const [research, setResearch] = useState<R | null>(null);
   const [body, setBody] = useState(""),
+    [questionEvidence, setQuestionEvidence] = useState<{ quote: string; url: string } | null>(null),
     [note, setNote] = useState(""),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false);
@@ -435,6 +436,7 @@ export function CustomerWorkspace({
     setResearch(null);
     setStarted(Date.now());
     setBody("");
+    setQuestionEvidence(null);
     setNote("");
     setPoint({ kind: "wechat", value: "", source_url: d.url, evidence: "" });
     setTouch({
@@ -1065,6 +1067,7 @@ export function CustomerWorkspace({
                       "/workspace/leads/" + selected.id + "/suggestion",
                     );
                     setBody(d.body);
+                    setQuestionEvidence(d.question_evidence ?? null);
                   }, "已基于确认产品事实生成，可编辑后复制")
                 }
               >
@@ -1072,6 +1075,9 @@ export function CustomerWorkspace({
               </button>
               {body && (
                 <>
+                  {questionEvidence && <p className="muted">
+                    提问依据「{questionEvidence.quote}」 · {urlLink(questionEvidence.url, "查看出处 ↗")}
+                  </p>}
                   <textarea
                     aria-label="建议招呼语"
                     rows={6}

@@ -1,28 +1,28 @@
 {
-  "updated_at": "2026-11-24T22:27:14.546480+08:00",
+  "updated_at": "2026-11-24T22:41:41.5109269+08:00",
   "timezone": "Asia/Shanghai",
   "phase": "phase_1_assisted_workflow_live",
-  "branch": "codex/v2ex-author-replies-20261124",
+  "branch": "codex/evidence-based-greetings-20261124",
   "repository": "https://github.com/skxndbzu/huoke.git",
   "deployment": {
     "host": "117.72.35.216",
     "user": "admin",
     "root": "/home/admin/huoke-staging",
-    "release": "20261124-v2ex-author-replies-r1",
-    "status": "healthy_staging_v2ex_author_replies",
+    "release": "20261124-evidence-greeting-r1",
+    "status": "healthy_staging_evidence_greeting",
     "access": "http://117.72.35.216:18080",
     "real_send_enabled": false,
     "paused": false,
     "production_policy": "not_confirmed",
-    "image": "huoke:20261124-v2ex-author-replies-r1",
-    "image_id": "sha256:f13fe926c2d9f8be45785d177cbedcedb112afd2b130124a3a72335e74832234",
-    "artifact_sha256": "cf9711f17bb1bc4eb351b8731c1a4d8fa96d72fc30be574ba4fd1fcba2f51ff0",
-    "artifact_verification": "Local archive SHA256 above. All 120 build inputs matched manifest dbd501eb35f1bcce18de46737a383048aac0599888b7633af18d0d2fbbcef44c.",
+    "image": "huoke:20261124-evidence-greeting-r1",
+    "image_id": "sha256:3b2457e020d482a7d06d87d4cc76be50c61d76fadd1f05a5d2b45a214d115c82",
+    "artifact_sha256": "a7093ce8dc442822b5bc87d008baa13524f306fe053013cdd5c9a5bd6c6a41de",
+    "artifact_verification": "Local archive SHA256 above. All 120 build inputs matched manifest 212ee0196b8826c23ec0f56e00e723073098a571e63460a95de0d6e74b9e5442.",
     "access_note": "IP HTTP access retained by owner choice. Password account configured at explicit owner request; login verified. Public homepage/assets 200 and unauthenticated API 401 previously verified.",
-    "rollback_image": "huoke:20261124-failed-analysis-review-r1",
-    "backup": "/home/admin/huoke-staging/backups/20261124-before-v2ex-author-replies.dump",
-    "private_backup": "/home/admin/huoke-staging/backups/20261124-before-v2ex-author-replies.secrets.tar",
-    "environment_backup": "/home/admin/huoke-staging/backups/20261124-before-v2ex-author-replies.env"
+    "rollback_image": "huoke:20261124-v2ex-author-replies-r1",
+    "backup": "/home/admin/huoke-staging/backups/20261124-before-evidence-greeting.dump",
+    "private_backup": "/home/admin/huoke-staging/backups/20261124-before-evidence-greeting.secrets.tar",
+    "environment_backup": "/home/admin/huoke-staging/backups/20261124-before-evidence-greeting.env"
   },
   "automation": {
     "id": "automation",
@@ -42,7 +42,7 @@
     "postgres_concurrency_test": "passed: 4 workers produced exactly one simulated send",
     "frontend_build": "passed",
     "npm_audit_vulnerabilities": 0,
-    "browser": "390px and 1440px: public V2EX author replies and reply links in isolated preview",
+    "browser": "390px and 1440px editing and source links for evidence-based greetings",
     "local_source_sample": {
       "listed": 26,
       "filtered": 20,
@@ -68,7 +68,7 @@
       "cache_hits": 26,
       "new_leads": 0
     },
-    "server_tests_passed": 102,
+    "server_tests_passed": 76,
     "smtp_auth_probe": {
       "status": "success",
       "host": "smtp.qq.com",
@@ -95,7 +95,7 @@
     },
     "model": "gpt-6.1-sol models verified and one evidence-checked inference succeeded",
     "owner_password_login": "Initial account provisioned at explicit owner request; actual login and logout verified. No reviewer token accessed, no message approval. Credentials not stored in repository.",
-    "local_validation": "74 focused local tests and 102 isolated PostgreSQL tests in the release image, plus frontend build",
+    "local_validation": "48 focused local tests and 76 isolated PostgreSQL tests in the release image, plus frontend build",
     "market_filter": {
       "threshold": 70,
       "total_leads": 1265,
@@ -203,7 +203,7 @@
     },
     "conversion_quality": "1291 total records, three domestic review candidates, six procurement candidates awaiting market review including one failed analysis, zero direct contacts in either queue, zero owner-qualified opportunities.",
     "runtime_ai_estimated_usd": 3.827024,
-    "runtime_ai_note": "483 ledger records, four with unresolved cost. Public replies and release checks made no inference calls. Actual supplier and development costs unknown.",
+    "runtime_ai_note": "483 ledger records, four with unresolved cost. Greeting generation and release checks made no inference calls. Actual supplier and development costs unknown.",
     "iteration_model_estimated_usd": 0.0
   },
   "blockers": [
@@ -1208,6 +1208,20 @@
     "live_topic_counts": {"1270": 3, "1271": 2},
     "pending_topic_checks": 2,
     "live_batch": {"id": 1769, "listed": 90, "cache_hits": 90, "new_leads": 0},
+    "market_review": 6,
+    "domestic_review": 3,
+    "direct_contacts_in_queues": 0,
+    "owner_qualified_opportunities": 0,
+    "verification_model_calls": 0,
+    "owner_actions": []
+  },
+  "evidence_greeting_iteration": {
+    "workbench_rows_replayed": 6,
+    "old_generic_questions": 6,
+    "new_questions_with_source_evidence": 5,
+    "new_generic_questions": 1,
+    "model_version_example_lead": 1291,
+    "author_reply_example_lead": 1271,
     "market_review": 6,
     "domestic_review": 3,
     "direct_contacts_in_queues": 0,

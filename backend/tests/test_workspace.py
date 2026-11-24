@@ -1,6 +1,6 @@
 from sqlalchemy import select, func
 import pytest
-from app.db import Session, LeadWorkspace, Touchpoint, Message, Lead, Contact, ContactPoint
+from app.db import AnalysisCall, Contact, ContactPoint, Control, Lead, LeadMarket, LeadWorkspace, Message, Session, Touchpoint
 
 
 def work(client, **changes):
@@ -24,6 +24,37 @@ def test_due_followup_closure_and_invalid_stop_contact(client):
     with Session() as s:
         assert s.get(Lead,1).human_takeover
     assert client.get('/api/workspace/leads/1/suggestion').status_code == 409
+
+
+@pytest.mark.parametrize(('title', 'text', 'reply_status', 'quote', 'question'), [
+    ('哪家 API 支持 Gemini-3.8-flash-low？', '正在比较方案。', 'success',
+     'Gemini-3.8-flash-low', '找支持 Gemini-3.8-flash-low 的接口'),
+    ('求推荐模型 API', '主要想了解价格。', 'success', '缓存命中率', '带缓存后的实际调用成本'),
+    ('求推荐模型 API', '主要想了解价格。', 'unavailable', '价格', '每次请求的实际费用'),
+    ('求推荐gemini中转站', '之前的接口已经停用。', 'unavailable', 'gemini', '评估 gemini 的接口'),
+    ('寻找模型 API', '> Gemini-3.8-flash-low', 'unavailable', None, '目前的使用场景'),
+])
+def test_greeting_questions_cite_public_evidence_without_model_or_send(client, title, text, reply_status, quote, question):
+    reply_url = 'https://www.v2ex.com/t/1#r_123'
+    topic_url = 'https://www.v2ex.com/t/1'
+    product_description = '提供统一的模型 API 接口。'
+    with Session.begin() as s:
+        lead = s.get(Lead, 1)
+        lead.title, lead.text, lead.url = title, text, topic_url
+        s.get(Control, 1).product = {'confirmed': True, 'description': product_description, 'version': 2}
+        s.add(LeadMarket(lead_id=1, profile={'v2ex_author_replies': {
+            'status': reply_status, 'replies': [{'text': '上家缓存命中率不理想。', 'url': reply_url}],
+        }}))
+    response = client.get('/api/workspace/leads/1/suggestion')
+    assert response.status_code == 200
+    data = response.json()
+    assert question in data['body'] and product_description in data['body']
+    assert data['authorization'] == 'none' and data['product_version'] == 2
+    source_url = reply_url if quote == '缓存命中率' else topic_url
+    assert data['question_evidence'] == ({'quote': quote, 'url': source_url} if quote else None)
+    with Session() as s:
+        assert s.scalar(select(func.count()).select_from(Message)) == 0
+        assert s.scalar(select(func.count()).select_from(AnalysisCall)) == 0
 
 
 def test_touchpoints_idempotent_no_messages_no_fake_receipts(client):

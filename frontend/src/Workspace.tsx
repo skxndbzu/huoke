@@ -527,7 +527,7 @@ export function CustomerWorkspace({
           <MarketThreshold api={api} owner={owner} onSaved={load} />
           <p className="muted">
             {queue === "market_review"
-              ? "这些线索已有 API 选型或明确需求。打开档案核对原文、地区证据和联系路径。"
+              ? "打开档案核对 API 需求、地区证据和联系路径。分析失败的线索可依据初筛原文核实。"
               : "列表优先展示已核实的邮箱/社交账号，其次为公开待核实联系方式，再展示高价值待补联系方式。低分和待评估记录仍保留，市场匹配与采购意愿分别核实。"}
           </p>
           <div className="filters">
@@ -655,7 +655,7 @@ export function CustomerWorkspace({
                       ? purchaseStages[l.analysis.purchase_stage]
                         ? `AI · ${purchaseStages[l.analysis.purchase_stage]}`
                         : "AI 已分析"
-                      : "规则初筛"}
+                      : l.analysis_failed ? "AI 分析失败 · 待人工核实" : "规则初筛"}
                   </span>
                 </div>
                 <small>
@@ -741,7 +741,7 @@ export function CustomerWorkspace({
               <p className="muted">
                 {selected.analysis.method === "ai"
                   ? `AI 需求分析 · 采购阶段 ${purchaseStages[selected.analysis.purchase_stage] || "待核实"}`
-                  : "规则初筛，尚未由 AI 判断"}
+                  : selected.analysis_failed ? "AI 分析失败，请根据原文核实需求和地区" : "规则初筛，尚未由 AI 判断"}
               </p>
               <p>{selected.analysis.summary}</p>
               {selected.issue_state && (
@@ -753,7 +753,7 @@ export function CustomerWorkspace({
                 </p>
               )}
               <h3>需求证据</h3>
-              {(selected.analysis.evidence || []).map(
+              {((selected.analysis_failed ? selected.triage?.evidence : selected.analysis.evidence) || []).map(
                 (e: string, i: number) => (
                   <blockquote key={i}>{e}</blockquote>
                 ),

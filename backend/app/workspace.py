@@ -21,6 +21,7 @@ GITHUB_LOGIN = re.compile(r'[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?\Z')
 CONTACT_KINDS = ('email', 'wechat', 'qq', 'url')
 PUBLIC_DISCUSSION_PREFIXES = ('github:', 'hn:', *(platform + ':' for platform in HOSTS))
 ISSUE_STATE_MAX_AGE = timedelta(days=2)
+FAILED_ANALYSIS_REVIEW_SCORE = 80
 V2EX_PRIVATE_INVITATION = re.compile(
     r'(?:^|[\n，,。！？；])\s*((?:有(?:知道|了解|推荐)的\s*)?'
     r'(?:请|欢迎|麻烦)(?:直接)?(?:私聊|私信|站内信)我(?:地址|链接|详情)?)(?=$|[\s，,。！？；!?：:])'
@@ -97,23 +98,39 @@ def pending_domestic_promotions(s, cutoff):
     return {lead_id for lead_id, title, text in rows if supplier_promotion(title, text)}
 
 
+def latest_analysis_status(lead_id):
+    return (select(AnalysisCall.status).where(AnalysisCall.lead_id == lead_id)
+            .order_by(AnalysisCall.id.desc()).limit(1).scalar_subquery())
+
+
 def market_review_ids(s, cutoff):
     recent = (datetime.now(timezone.utc) - timedelta(days=90)).date().isoformat()
+    assessed = and_(
+        LeadMarket.assessment_version != '',
+        or_(LeadMarket.score.is_(None), LeadMarket.score < cutoff),
+        Lead.analysis['method'].as_string() == 'ai',
+        Lead.analysis['fit'].as_string().in_(('medium', 'high')),
+        Lead.analysis['purchase_stage'].as_string().in_(('explicit_need', 'exploring')),
+    )
+    failed = and_(
+        func.coalesce(LeadMarket.assessment_version, '') == '',
+        func.coalesce(Lead.analysis['method'].as_string(), '') != 'ai',
+        latest_analysis_status(Lead.id) == 'unknown_or_invalid',
+    )
     rows = s.execute(
-        select(Lead.id, Lead.title, Lead.text).join(LeadMarket, LeadMarket.lead_id == Lead.id)
+        select(Lead.id, Lead.title, Lead.text, assessed.label('assessed'))
+        .outerjoin(LeadMarket, LeadMarket.lead_id == Lead.id)
         .outerjoin(LeadWorkspace, LeadWorkspace.lead_id == Lead.id)
         .outerjoin(GithubIssueState, GithubIssueState.lead_id == Lead.id)
-        .where(LeadMarket.assessment_version != '', LeadMarket.manual.is_(False),
-               or_(LeadMarket.score.is_(None), LeadMarket.score < cutoff),
-               Lead.analysis['method'].as_string() == 'ai',
-               Lead.analysis['fit'].as_string().in_(('medium', 'high')),
-               Lead.analysis['purchase_stage'].as_string().in_(('explicit_need', 'exploring')),
+        .where(func.coalesce(LeadMarket.manual, False).is_(False),
+               or_(assessed, failed),
                or_(Lead.published_at == '', Lead.published_at >= recent),
                func.coalesce(LeadWorkspace.qualification, 'pending') != 'invalid',
                func.coalesce(LeadWorkspace.stage, 'new') == 'new',
                func.coalesce(GithubIssueState.state, 'unavailable').not_in(('closed', 'gone', 'mismatch')))
     )
-    return [lead_id for lead_id, title, text in rows if intent(title, text)['score'] >= 35]
+    return [lead_id for lead_id, title, text, has_assessment in rows
+            if intent(title, text)['score'] >= (35 if has_assessment else FAILED_ANALYSIS_REVIEW_SCORE)]
 
 
 def view(s, lead):
@@ -131,7 +148,10 @@ def view(s, lead):
         match = V2EX_PRIVATE_INVITATION.search(authored_text(lead.text))
         if match and match[1] in lead.text:
             invitation = {'quote': match[1], 'url': lead.url}
+    analysis_failed = (lead.analysis.get('method') != 'ai' and triage['score'] >= FAILED_ANALYSIS_REVIEW_SCORE
+                       and s.scalar(select(latest_analysis_status(lead.id))) == 'unknown_or_invalid')
     return {**row(lead), 'capture': row(evidence) if evidence else None, 'triage': triage, 'market': market_view(s, lead), 'contact_status': contact,
+        'analysis_failed': analysis_failed,
         'contact_invitation': invitation,
         'issue_state': issue_state,
         'high_value_no_contact': bool(lead.analysis.get('method') == 'ai' and lead.analysis.get('fit') == 'high'
@@ -289,7 +309,8 @@ def register_workspace(app, role, reviewer):
             else:
                 ranking = [contact_order]
                 if bucket == 'market_review':
-                    ranking += [case((Lead.analysis['purchase_stage'].as_string() == 'explicit_need', 0), else_=1),
+                    ranking += [case((Lead.analysis['purchase_stage'].as_string() == 'explicit_need', 0),
+                                     (Lead.analysis['purchase_stage'].as_string() == 'exploring', 1), else_=2),
                                 Lead.published_at.desc()]
                 if market == 'domestic' and bucket in ('', 'review'):
                     issue_cutoff = (datetime.now(timezone.utc) - ISSUE_STATE_MAX_AGE).isoformat()

@@ -1,28 +1,28 @@
 {
-  "updated_at": "2026-11-24T21:52:47.6059492+08:00",
+  "updated_at": "2026-11-24T22:05:15.7779930+08:00",
   "timezone": "Asia/Shanghai",
   "phase": "phase_1_assisted_workflow_live",
-  "branch": "codex/v2ex-contact-invitation-20261124",
+  "branch": "codex/market-review-failed-analysis-20261124",
   "repository": "https://github.com/skxndbzu/huoke.git",
   "deployment": {
     "host": "117.72.35.216",
     "user": "admin",
     "root": "/home/admin/huoke-staging",
-    "release": "20261124-v2ex-contact-invitation-r1",
-    "status": "healthy_staging_v2ex_contact_invitation",
+    "release": "20261124-failed-analysis-review-r1",
+    "status": "healthy_staging_failed_analysis_review",
     "access": "http://117.72.35.216:18080",
     "real_send_enabled": false,
     "paused": false,
     "production_policy": "not_confirmed",
-    "image": "huoke:20261124-v2ex-contact-invitation-r1",
-    "image_id": "sha256:1f3d8617c239a09f291143ec54c83615d523820d688ffd28b32d4357c3e57200",
-    "artifact_sha256": "617f2de6f5348b2e3a482aee3d770d8fcf9a2f4ccc2f95579bada93e3f995e11",
-    "artifact_verification": "Local archive SHA256 above. Reassembled the server build directory from prior verified files and this archive's changed entries. All 120 inputs matched manifest 313b71a66534f6d2c8f7e1f736bc960517f1ef55f5b5677b161f578ef5df6a2d.",
+    "image": "huoke:20261124-failed-analysis-review-r1",
+    "image_id": "sha256:4a45f9272961b1267b06072efef7d3bf2e27df3d6f19338576931f7b53c12150",
+    "artifact_sha256": "a2ef13ba641dd885b91bb916d06d9b83b142080bad248d276f2cd1e902782544",
+    "artifact_verification": "Local archive SHA256 above. Reassembled the server build directory from prior verified files and this archive's changed entries. All 120 inputs matched manifest 96957f01925f8b7b3f60d94904b1e958f08ef082252b65279af567be9dc1d5d4.",
     "access_note": "IP HTTP access retained by owner choice. Password account configured at explicit owner request; login verified. Public homepage/assets 200 and unauthenticated API 401 previously verified.",
-    "rollback_image": "huoke:20261124-v2ex-aigc-r1",
-    "backup": "/home/admin/huoke-staging/backups/20261124-before-v2ex-contact-invitation.dump",
-    "private_backup": "/home/admin/huoke-staging/backups/20261124-before-v2ex-contact-invitation.secrets.tar",
-    "environment_backup": "/home/admin/huoke-staging/backups/20261124-before-v2ex-contact-invitation.env"
+    "rollback_image": "huoke:20261124-v2ex-contact-invitation-r1",
+    "backup": "/home/admin/huoke-staging/backups/20261124-before-failed-analysis-review.dump",
+    "private_backup": "/home/admin/huoke-staging/backups/20261124-before-failed-analysis-review.secrets.tar",
+    "environment_backup": "/home/admin/huoke-staging/backups/20261124-before-failed-analysis-review.env"
   },
   "automation": {
     "id": "automation",
@@ -42,7 +42,7 @@
     "postgres_concurrency_test": "passed: 4 workers produced exactly one simulated send",
     "frontend_build": "passed",
     "npm_audit_vulnerabilities": 0,
-    "browser": "390px and 1440px: V2EX invitation badge, original quote, date and link in isolated preview",
+    "browser": "390px and 1440px: analysis failure label, demand quote and source link in isolated preview",
     "local_source_sample": {
       "listed": 26,
       "filtered": 20,
@@ -68,7 +68,7 @@
       "cache_hits": 26,
       "new_leads": 0
     },
-    "server_tests_passed": 70,
+    "server_tests_passed": 71,
     "smtp_auth_probe": {
       "status": "success",
       "host": "smtp.qq.com",
@@ -95,7 +95,7 @@
     },
     "model": "gpt-6.1-sol models verified and one evidence-checked inference succeeded",
     "owner_password_login": "Initial account provisioned at explicit owner request; actual login and logout verified. No reviewer token accessed, no message approval. Credentials not stored in repository.",
-    "local_validation": "42 focused local tests; 70 isolated PostgreSQL tests in the release image; verified frontend build",
+    "local_validation": "43 focused local tests; 71 isolated PostgreSQL tests in the release image; verified frontend build",
     "market_filter": {
       "threshold": 70,
       "total_leads": 1265,
@@ -201,9 +201,9 @@
       "monthly": 100,
       "owner_monthly_ceiling": 10000
     },
-    "conversion_quality": "1291 total records, three domestic review candidates, five procurement candidates awaiting market review, zero direct contacts in either queue, zero owner-qualified opportunities.",
+    "conversion_quality": "1291 total records, three domestic review candidates, six procurement candidates awaiting market review including one failed analysis, zero direct contacts in either queue, zero owner-qualified opportunities.",
     "runtime_ai_estimated_usd": 3.827024,
-    "runtime_ai_note": "483 ledger records, four with unresolved cost. No change in inference usage during the invitation rollout. Actual supplier and development costs unknown.",
+    "runtime_ai_note": "483 ledger records, four with unresolved cost. The failed-analysis review rollout made no inference calls. Actual supplier and development costs unknown.",
     "iteration_model_estimated_usd": 0.0
   },
   "blockers": [
@@ -1176,6 +1176,22 @@
     "contact_status": "public_discussion",
     "domestic_review": 3,
     "market_review": 5,
+    "direct_contacts_in_queues": 0,
+    "owner_qualified_opportunities": 0,
+    "verification_model_calls": 0,
+    "owner_actions": []
+  },
+  "failed_analysis_review_iteration": {
+    "failed_analysis_records_checked": 12,
+    "fallback_triage_threshold": 80,
+    "recovered_review_lead": 1279,
+    "source": "https://www.nodeseek.com/post-1071866-1",
+    "original_analysis_call": 476,
+    "analysis_failure": "HTTPStatusError",
+    "original_call_cost_usd": null,
+    "market_review_before": 5,
+    "market_review_after": 6,
+    "domestic_review": 3,
     "direct_contacts_in_queues": 0,
     "owner_qualified_opportunities": 0,
     "verification_model_calls": 0,

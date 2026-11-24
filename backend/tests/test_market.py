@@ -314,6 +314,35 @@ def test_market_review_surfaces_assessed_buyer_demand_without_admitting_it_to_do
     assert client.get('/api/workspace/metrics').json()['counts']['market_review'] == 2
 
 
+def test_market_review_recovers_strong_demand_after_terminal_analysis_failure(client):
+    with Session.begin() as s:
+        failed, weak, in_flight, recovered = [
+            add_cn(s, 'analysis-recovery-' + name) for name in ('failed', 'weak', 'in-flight', 'recovered')
+        ]
+        s.get(Lead, weak).title = 'Gemini 接入咨询'
+        s.get(Lead, weak).text = '想比较 API 成本。'
+        for lead_id in (failed, weak, in_flight, recovered):
+            s.add(AnalysisCall(cache_key=f'failure-{lead_id}', lead_id=lead_id, model='test',
+                               reserved_usd=0.01, status='unknown_or_invalid'))
+        s.flush()
+        s.add(AnalysisCall(cache_key='new-attempt', lead_id=in_flight, model='test',
+                           reserved_usd=0.01, status='reserved'))
+        s.add(AnalysisCall(cache_key='recovered', lead_id=recovered, model='test',
+                           reserved_usd=0.01, status='success'))
+    queue = '/api/workspace/leads?bucket=market_review'
+    result = client.get(queue).json()
+    assert [lead['id'] for lead in result['items']] == [failed]
+    lead = result['items'][0]
+    assert lead['analysis_failed'] and lead['triage']['evidence']
+    assert lead['market']['status'] == 'pending_ai' and not lead['market']['eligible']
+    assert client.get(f'/api/workspace/leads/{failed}').json()['analysis_failed']
+    assert client.get(queue + '&market=domestic').json()['total'] == 0
+    assert client.get('/api/workspace/metrics').json()['counts']['market_review'] == 1
+    with Session() as s:
+        assert s.scalar(select(func.count()).select_from(AnalysisCall)) == 6
+        assert s.scalar(select(func.count()).select_from(Message)) == 0
+
+
 def test_pending_supplier_submissions_remain_in_history_and_preserve_owner_decisions(client):
     with Session.begin() as s:
         ad_id, handled_id, buyer_id = [add_cn(s, key) for key in ('ad', 'handled-ad', 'buyer')]

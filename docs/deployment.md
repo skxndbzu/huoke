@@ -14,7 +14,13 @@ NodeSeek 在成功读取并上传非空官方 RSS 后等待 10 分钟。读取�
 
 Windows 只重启 NodeSeek 执行器，服务器沿用下方版本。回滚时恢复 `e60441d` 中的 `scripts/social-executor.py` 并仅重启 NodeSeek 执行器。八种模拟执行器路径和 `Retry-After` 日期解析通过。
 
-## 当前发布 `20261124-v2ex-contact-invitation-r1`
+## 当前发布 `20261124-failed-analysis-review-r1`
+
+最近一次 AI 分析失败且需求初筛达到 80 分的线索，可进入「选型需求待核实地区」。工作台展示失败状态、初筛原句和原帖，供人工核实。43 项本地及 71 项隔离 PostgreSQL 测试、前端构建、390px 和 1440px 界面验证通过。线上 39 个文件摘要匹配。
+
+回滚镜像为 `huoke:20261124-v2ex-contact-invitation-r1`，备份前缀为 `backups/20261124-before-failed-analysis-review`。
+
+## 上次发布 `20261124-v2ex-contact-invitation-r1`
 
 工作台为符合选型初筛的 V2EX 线索展示第一人称私聊表述。联系区显示原句、发布时间和原帖。42 项本地及 70 项隔离 PostgreSQL 测试、前端构建、390px 和 1440px 工作台验证通过。线上 39 个文件摘要匹配。本次发布只需更新服务器镜像。
 

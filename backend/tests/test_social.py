@@ -109,21 +109,22 @@ def test_rss_rejects_html_entities_and_untrusted_links():
     assert len(run(raw))==1
 
 
-@pytest.mark.parametrize('failed_node', ['deepseek', 'agent'])
-def test_v2ex_preserves_other_feed_on_network_failure(client, failed_node):
+@pytest.mark.parametrize('failed_nodes', [('deepseek',), ('agent',), ('aigc',), ('deepseek', 'agent')])
+def test_v2ex_preserves_other_feed_on_network_failure(client, failed_nodes):
     raw = ('<feed xmlns="http://www.w3.org/2005/Atom"><entry><title>寻找大模型 API</title>'
            '<link href="https://www.v2ex.com/t/99123#reply1"/><content>' + DEMAND + '</content></entry></feed>')
 
     def handle(request):
-        if request.url.path == f'/feed/{failed_node}.xml':
+        if request.url.path in {f'/feed/{node}.xml' for node in failed_nodes}:
             raise httpx.ReadTimeout('network timeout', request=request)
         return httpx.Response(200, text=raw)
 
     failures = {}
     with httpx.Client(transport=httpx.MockTransport(handle)) as reader:
         items = feed_items('v2ex', reader, network_failures=failures)
-    assert failures == {failed_node: 'timeout'}
-    assert [post.url for post in items] == ['https://www.v2ex.com/t/99123']
+    assert failures == {node: 'timeout' for node in failed_nodes}
+    assert len(items) == 3 - len(failed_nodes)
+    assert {post.url for post in items} == {'https://www.v2ex.com/t/99123'}
 
     version = enable(client, 'v2ex')
     route = '/api/social/channels/v2ex/capture'
@@ -140,13 +141,14 @@ def test_v2ex_preserves_other_feed_on_network_failure(client, failed_node):
     assert reading()['last_success'] == last_success
     assert reading()['stats']['feed_failures'] == failures
     assert client.post(route, json={**payload, 'mode': 'manual', 'feed_failures': failures}).status_code == 422
+    assert client.post(route, json={**payload, 'feed_failures': {'unknown': 'timeout'}}).status_code == 422
     recovery = client.post(route, json=payload).json()
-    assert recovery['status'] == 'success' and recovery['cache_hits'] == 1
+    assert recovery['status'] == 'success' and recovery['cache_hits'] == len(items)
     assert reading()['last_success'] > last_success
     assert 'feed_failures' not in reading()['stats']
 
 
-def test_v2ex_two_network_failures_or_platform_verification_are_not_partial():
+def test_v2ex_total_network_failure_or_platform_verification_is_not_partial():
     def unavailable(request):
         raise httpx.ConnectError('network unavailable', request=request)
 

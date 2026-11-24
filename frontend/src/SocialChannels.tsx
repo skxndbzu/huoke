@@ -3,7 +3,7 @@ type R = Record<string, any>;
 type API = (path: string, body?: unknown, method?: string) => Promise<any>;
 type ReviewSample = (id: number, index: number, decision: string) => void;
 const labels: R = {not_connected:'尚未连接',success:'最近读取成功',partial:'部分订阅读取成功',imported:'已导入，非自动接通',running:'采集中',failed:'读取失败',unavailable:'执行器不可用',login_required:'等待登录',verification_required:'需要平台验证',interrupted:'上轮中断',config_changed:'配置已变化'};
-const feedLabels: Record<string, string> = {agent:'Agent', deepseek:'DeepSeek'};
+const feedLabels: Record<string, string> = {agent:'Agent', deepseek:'DeepSeek', aigc:'AIGC'};
 const feedErrors: Record<string, string> = {connection_error:'连接失败', timeout:'读取超时'};
 const errors: R = {upstream_auth_token_required:'QQ 执行器要求项目方签发的授权令牌',windows_browser_helper_blocked:'Windows 安全软件阻止了小红书的浏览器辅助程序',ConnectError:'无法连接来源',ConnectTimeout:'连接来源超时',HTTP_403:'平台要求完成正常访问验证',HTTP_429:'平台暂时限流，请等待',account_mismatch:'执行器登录账号与采集配置不一致',conversation_mismatch:'读取到的会话与所选范围不一致'};
 const time = (s: string) => s ? new Date(s).toLocaleString('zh-CN') : '尚无';

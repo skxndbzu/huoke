@@ -15,7 +15,7 @@ from .pipeline import clean, classify, fingerprint
 from .prospecting import intent, VERSION_TRIAGE
 from .market import refresh_market
 from .contact_discovery import extract_contacts, extract_contact_text, save_candidate
-from .social_adapters import (CATALOG, HOSTS, Capture, V2EXProfile, V2EX_USERNAME,
+from .social_adapters import (CATALOG, HOSTS, Capture, V2EXProfile, V2EX_USERNAME, V2EX_FEED_NODES,
                               feed_items, gitee_items, gitee_issue_url, validate_url)
 from .config import settings
 
@@ -53,8 +53,8 @@ class Batch(Strict):
     version: int = Field(ge=1)
     items: list[Capture] = Field(max_length=200)
     mode: str = Field(pattern='^(executor|manual)$')
-    feed_failures: dict[Literal['deepseek', 'agent'], Literal['connection_error', 'timeout']] = Field(
-        default_factory=dict, max_length=1)
+    feed_failures: dict[str, Literal['connection_error', 'timeout']] = Field(
+        default_factory=dict, max_length=len(V2EX_FEED_NODES) - 1)
 
 
 class ExecutorStatus(Strict):
@@ -447,6 +447,8 @@ def register_social(app, role, reviewer):
         platform_exists(platform)
         if data.feed_failures and (platform != 'v2ex' or data.mode != 'executor'):
             raise HTTPException(422, '部分读取记录仅用于 V2EX 本地订阅')
+        if set(data.feed_failures).difference(V2EX_FEED_NODES):
+            raise HTTPException(422, 'V2EX 订阅节点无效')
         if data.mode == 'executor' and CATALOG[platform]['mode'] in {'manual', 'search'}:
             raise HTTPException(409, '该渠道不接收本地执行器上传，请使用页面提供的采集方式')
         with Session.begin() as s:

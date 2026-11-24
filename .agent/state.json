@@ -1,28 +1,28 @@
 {
-  "updated_at": "2026-11-24T21:31:01.4597524+08:00",
+  "updated_at": "2026-11-24T21:41:45.9977855+08:00",
   "timezone": "Asia/Shanghai",
   "phase": "phase_1_assisted_workflow_live",
-  "branch": "codex/v2ex-partial-feed-20261124",
+  "branch": "codex/v2ex-aigc-20261124",
   "repository": "https://github.com/skxndbzu/huoke.git",
   "deployment": {
     "host": "117.72.35.216",
     "user": "admin",
     "root": "/home/admin/huoke-staging",
-    "release": "20261124-v2ex-partial-r1",
-    "status": "healthy_staging_v2ex_partial_feed",
+    "release": "20261124-v2ex-aigc-r1",
+    "status": "healthy_staging_v2ex_aigc",
     "access": "http://117.72.35.216:18080",
     "real_send_enabled": false,
     "paused": false,
     "production_policy": "not_confirmed",
-    "image": "huoke:20261124-v2ex-partial-r1",
-    "image_id": "sha256:c3b2f95a1efbd40ba4c8c9f1786df2b67ebd53eaf136e3e1df1f16d02e43f72b",
-    "artifact_sha256": "efdfc383fba21935eccd85d45325b260cb83864a272a7d84c979c06f22d8dc6c",
-    "artifact_verification": "Local archive SHA256 above. Reassembled the server build directory from prior verified files and this archive's changed entries. All 120 inputs matched manifest cf0dacbcc72fb5d79a60131270d0c53a73663adb79ff5b295fcbe9fb5cc6aba3.",
+    "image": "huoke:20261124-v2ex-aigc-r1",
+    "image_id": "sha256:bc398ef3e3576fe776cea429feab50fdb8533291f9f4763dfc4a50e2ef0bbcb8",
+    "artifact_sha256": "1beb6a733da5e14c7adb642821e6d543509fb91218647b7657cf431dd427012f",
+    "artifact_verification": "Local archive SHA256 above. Reassembled the server build directory from prior verified files and this archive's changed entries. All 120 inputs matched manifest 5515fbeb9342ef17a9454fa2c0d0eae97ad74dc485882a04d93c9b3ef7af80dd.",
     "access_note": "IP HTTP access retained by owner choice. Password account configured at explicit owner request; login verified. Public homepage/assets 200 and unauthenticated API 401 previously verified.",
-    "rollback_image": "huoke:20261124-operator-submission-r1",
-    "backup": "/home/admin/huoke-staging/backups/20261124-before-v2ex-partial.dump",
-    "private_backup": "/home/admin/huoke-staging/backups/20261124-before-v2ex-partial.secrets.tar",
-    "environment_backup": "/home/admin/huoke-staging/backups/20261124-before-v2ex-partial.env"
+    "rollback_image": "huoke:20261124-v2ex-partial-r1",
+    "backup": "/home/admin/huoke-staging/backups/20261124-before-v2ex-aigc.dump",
+    "private_backup": "/home/admin/huoke-staging/backups/20261124-before-v2ex-aigc.secrets.tar",
+    "environment_backup": "/home/admin/huoke-staging/backups/20261124-before-v2ex-aigc.env"
   },
   "automation": {
     "id": "automation",
@@ -42,7 +42,7 @@
     "postgres_concurrency_test": "passed: 4 workers produced exactly one simulated send",
     "frontend_build": "passed",
     "npm_audit_vulnerabilities": 0,
-    "browser": "390px: partial V2EX status, failed feed, successful counts and retained screening evidence in isolated preview",
+    "browser": "390px: AIGC timeout label, partial V2EX results and screening evidence in isolated preview",
     "local_source_sample": {
       "listed": 26,
       "filtered": 20,
@@ -68,7 +68,7 @@
       "cache_hits": 26,
       "new_leads": 0
     },
-    "server_tests_passed": 64,
+    "server_tests_passed": 66,
     "smtp_auth_probe": {
       "status": "success",
       "host": "smtp.qq.com",
@@ -95,7 +95,7 @@
     },
     "model": "gpt-6.1-sol models verified and one evidence-checked inference succeeded",
     "owner_password_login": "Initial account provisioned at explicit owner request; actual login and logout verified. No reviewer token accessed, no message approval. Credentials not stored in repository.",
-    "local_validation": "36 focused local tests; 64 isolated PostgreSQL tests in the release image; verified frontend build and executor syntax",
+    "local_validation": "38 focused local tests; 66 isolated PostgreSQL tests in the release image; verified frontend build",
     "market_filter": {
       "threshold": 70,
       "total_leads": 1265,
@@ -201,10 +201,10 @@
       "monthly": 100,
       "owner_monthly_ceiling": 10000
     },
-    "conversion_quality": "1290 total records, three domestic review candidates, four procurement candidates awaiting market review, zero direct contacts in either queue, zero owner-qualified opportunities.",
-    "runtime_ai_estimated_usd": 3.819278,
-    "runtime_ai_note": "482 ledger records, four with unresolved cost. The ledger was unchanged during rollout verification. Two prior operator submissions cost an estimated $0.015754. Actual supplier and development costs unknown.",
-    "iteration_model_estimated_usd": 0.0
+    "conversion_quality": "1291 total records, three domestic review candidates, five procurement candidates awaiting market review, zero direct contacts in either queue, zero owner-qualified opportunities.",
+    "runtime_ai_estimated_usd": 3.827024,
+    "runtime_ai_note": "483 ledger records, four with unresolved cost. No calls explicitly requested for testing. Normal scheduled analysis of the new AIGC candidate cost an estimated $0.007746. Actual supplier and development costs unknown.",
+    "iteration_model_estimated_usd": 0.007746
   },
   "blockers": [
     "QQ upstream Auth Token absent; owner deferred; no purchase or bypass.",
@@ -214,6 +214,7 @@
     "Inbox and billing events not connected. Real sends disabled; production policy unconfirmed; IP HTTP retained per owner."
   ],
   "next_tasks": [
+    "Observe the next natural V2EX batches for new AIGC buyer intent, repeat rate, age and explicit business contact evidence.",
     "Observe the V2EX partial-feed recovery during a natural failure; its first live batch 1753 fully succeeded. Keep collecting evidence for buyer sources with explicit contact paths.",
     "Continue sampling buyer-side sources with explicit business contact paths. Use the current V2EX and GitHub samples as a baseline and add another source only when buyer evidence supports it.",
     "Continue observing natural V2EX Agent batches for new buyer demand and public business contact coverage. Runs 1733 and 1749 had only duplicates.",
@@ -1148,6 +1149,22 @@
     "market_review": 4,
     "domestic_with_direct_contact": 0,
     "high_value_no_contact_domestic": 0,
+    "owner_qualified_opportunities": 0,
+    "verification_model_calls": 0,
+    "owner_actions": []
+  },
+  "v2ex_aigc_iteration": {
+    "nodes_sampled": ["deepseek", "agent", "aigc", "openai", "claudecode", "localllm"],
+    "nodes_enabled": ["deepseek", "agent", "aigc"],
+    "isolated_baseline": {"listed": 60, "new_leads": 2},
+    "isolated_trial": {"listed": 90, "new_leads": 3, "filtered": 87},
+    "isolated_repeat": {"listed": 90, "cache_hits": 90, "new_leads": 0},
+    "live_batch": {"id": 1761, "listed": 90, "filtered": 29, "cache_hits": 60, "new_leads": 1},
+    "new_lead": {"id": 1291, "url": "https://www.v2ex.com/t/1250351", "published_at": "2026-10-20T08:05:51+00:00", "market_score": 50, "fit": "medium", "contact_status": "public_discussion"},
+    "scheduled_analysis": {"id": 483, "input_tokens": 2208, "output_tokens": 333, "estimated_usd": 0.007746},
+    "domestic_review": 3,
+    "market_review": 5,
+    "domestic_with_direct_contact": 0,
     "owner_qualified_opportunities": 0,
     "verification_model_calls": 0,
     "owner_actions": []

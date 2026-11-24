@@ -52,7 +52,7 @@ const marketScopes: R = {
 const defaultMarket = (bucket: string) =>
   bucket === "market"
     ? "unknown"
-    : ["reply", "followup", "opportunity"].includes(bucket)
+    : ["reply", "followup", "opportunity", "market_review"].includes(bucket)
       ? "all"
       : "domestic";
 const kinds: R = {
@@ -302,6 +302,7 @@ export function Today({
       <div className="stats actionable">
         {[
           ["review", "值得看看", "核实原文，标记有效需求"],
+          ["market_review", "选型需求待核实地区", "查看已有选型证据、地区仍待确认的线索"],
           ["research", "待补联系方式", "需求有效，但还没有核实的联系路径"],
           [
             "high_value",
@@ -525,7 +526,9 @@ export function CustomerWorkspace({
           </div>
           <MarketThreshold api={api} owner={owner} onSaved={load} />
           <p className="muted">
-            列表优先展示已核实的邮箱/社交账号，其次为公开待核实联系方式，再展示高价值待补联系方式。低分和待评估记录仍保留，市场匹配与采购意愿分别核实。
+            {queue === "market_review"
+              ? "这些线索已有 API 选型或明确需求。打开档案核对原文、地区证据和联系路径。"
+              : "列表优先展示已核实的邮箱/社交账号，其次为公开待核实联系方式，再展示高价值待补联系方式。低分和待评估记录仍保留，市场匹配与采购意愿分别核实。"}
           </p>
           <div className="filters">
             <select
@@ -537,7 +540,7 @@ export function CustomerWorkspace({
                 setOffset(0);
               }}
             >
-              {options(marketScopes)}
+              {options(queue === "market_review" ? { ...marketScopes, all: "地区待核实（全部）" } : marketScopes)}
             </select>
             <input
               aria-label="搜索需求"
@@ -567,6 +570,7 @@ export function CustomerWorkspace({
                 reply: "待回复",
                 followup: "到期跟进",
                 market: "核实目标市场",
+                market_review: "选型需求待核实地区",
               })}
             </select>
             <select
@@ -663,7 +667,9 @@ export function CustomerWorkspace({
           </div>
           {!items.length && (
             <p className="empty">
-              当前筛选下暂无客户。可切换“全部客户”，或在渠道与任务中检查采集状态。
+              {queue === "market_review"
+                ? "当前没有符合筛选条件的待核实选型需求。"
+                : "当前筛选下暂无客户。可切换“全部客户”，或在渠道与任务中检查采集状态。"}
             </p>
           )}
           <div className="actions">

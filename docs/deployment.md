@@ -14,7 +14,13 @@ NodeSeek 在成功读取并上传非空官方 RSS 后等待 10 分钟。读取�
 
 Windows 只重启 NodeSeek 执行器，服务器沿用下方版本。回滚时恢复 `e60441d` 中的 `scripts/social-executor.py` 并仅重启 NodeSeek 执行器。八种模拟执行器路径和 `Retry-After` 日期解析通过。
 
-## 当前发布 `20261123-v2ex-agent-demand-r1`
+## 当前发布 `20261124-market-review-r1`
+
+今日工作台新增「选型需求待核实地区」。队列复用已存 AI 分析、联系入口和原帖证据，优先展示有直接联系方式和明确需求的线索。本轮通过 38 项本地测试、66 项隔离 PostgreSQL 测试、前端构建及 390px 和 1440px 浏览器验证。线上实际列表与首页计数一致，核对了 39 个已发布文件摘要。
+
+回滚镜像为 `huoke:20261123-v2ex-agent-demand-r1`，使用上一发布目录的 Compose 配置并保留数据卷。备份文件使用 `backups/20261124-before-market-review` 前缀，后缀分别为 `.dump`、`.secrets.tar`、`.env`。
+
+## 上次发布 `20261123-v2ex-agent-demand-r1`
 
 初筛补上有明确模型证据的中转选型问法。Windows V2EX 执行器改读 `deepseek` + `agent`，两组官方订阅每轮最多 60 条。发布后已使用现有代理仅重启 V2EX 执行器，批次 1597 成功。70 项定向与 157 项隔离 PostgreSQL 测试、前端构建、线上 39 个文件摘要及健康检查通过。工作台渠道和详情接口已核对。无数据库结构变更。
 

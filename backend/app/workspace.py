@@ -93,6 +93,25 @@ def pending_domestic_promotions(s, cutoff):
     return {lead_id for lead_id, title, text in rows if supplier_promotion(title, text)}
 
 
+def market_review_ids(s, cutoff):
+    recent = (datetime.now(timezone.utc) - timedelta(days=90)).date().isoformat()
+    rows = s.execute(
+        select(Lead.id, Lead.title, Lead.text).join(LeadMarket, LeadMarket.lead_id == Lead.id)
+        .outerjoin(LeadWorkspace, LeadWorkspace.lead_id == Lead.id)
+        .outerjoin(GithubIssueState, GithubIssueState.lead_id == Lead.id)
+        .where(LeadMarket.assessment_version != '', LeadMarket.manual.is_(False),
+               or_(LeadMarket.score.is_(None), LeadMarket.score < cutoff),
+               Lead.analysis['method'].as_string() == 'ai',
+               Lead.analysis['fit'].as_string().in_(('medium', 'high')),
+               Lead.analysis['purchase_stage'].as_string().in_(('explicit_need', 'exploring')),
+               or_(Lead.published_at == '', Lead.published_at >= recent),
+               func.coalesce(LeadWorkspace.qualification, 'pending') != 'invalid',
+               func.coalesce(LeadWorkspace.stage, 'new') == 'new',
+               func.coalesce(GithubIssueState.state, 'unavailable').not_in(('closed', 'gone', 'mismatch')))
+    )
+    return [lead_id for lead_id, title, text in rows if intent(title, text)['score'] >= 35]
+
+
 def view(s, lead):
     w = s.get(LeadWorkspace, lead.id)
     evidence = s.get(CaptureEvidence, lead.id)
@@ -236,6 +255,8 @@ def register_workspace(app, role, reviewer):
                                   LeadWorkspace.stage.not_in(['closed', 'declined']), LeadWorkspace.qualification != 'invalid')
             elif bucket == 'market':
                 stmt = stmt.where(market_predicate('unknown', threshold(s)))
+            elif bucket == 'market_review':
+                stmt = stmt.where(Lead.id.in_(market_review_ids(s, threshold(s))))
             elif bucket == 'high_value':
                 stmt = stmt.where(high_value(), ~direct_contact(Lead.id))
             candidate = or_(exists(select(ContactPoint.id).where(ContactPoint.lead_id == Lead.id)),
@@ -255,6 +276,9 @@ def register_workspace(app, role, reviewer):
                                 value=Lead.id, else_=len(research_ids))]
             else:
                 ranking = [contact_order]
+                if bucket == 'market_review':
+                    ranking += [case((Lead.analysis['purchase_stage'].as_string() == 'explicit_need', 0), else_=1),
+                                Lead.published_at.desc()]
                 if market == 'domestic' and bucket in ('', 'review'):
                     issue_cutoff = (datetime.now(timezone.utc) - ISSUE_STATE_MAX_AGE).isoformat()
                     stmt = stmt.outerjoin(GithubIssueState, GithubIssueState.lead_id == Lead.id)
@@ -532,6 +556,7 @@ def register_workspace(app, role, reviewer):
                 'review': sum(1 for l, w in rows if l.id in domestic_ids and (not w or w.qualification == 'pending')),
                 'contact': sum(1 for l, w in rows if l.id in domestic_ids and w and w.qualification == 'valid' and w.stage == 'new' and l.id in points),
                 'market': sum(1 for l, _ in rows if markets.get(l.id, 'pending_ai') in ('unknown','pending_ai')),
+                'market_review': len(market_review_ids(s, cutoff)),
                 'high_value': sum(1 for l, _ in rows if l.id in domestic_ids and l.id not in direct_ids
                                   and l.analysis.get('method') == 'ai' and l.analysis.get('fit') == 'high' and l.analysis.get('priority') == 'high'),
                 'research': sum(1 for l, w in rows if l.id in domestic_ids and w and w.qualification == 'valid' and w.stage == 'new' and l.id not in points),

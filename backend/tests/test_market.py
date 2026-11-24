@@ -1,6 +1,6 @@
 import pytest
 from sqlalchemy import select, func
-from app.db import Session, Lead, LeadMarket, LeadWorkspace, AnalysisCall, Message, ContactPoint
+from app.db import Session, Lead, LeadMarket, LeadWorkspace, AnalysisCall, Message, ContactPoint, GithubIssueState
 from app.market import classify_market, refresh_market, backfill, apply_ai_market, VERSION, public_profile
 from app.sources import analyze_pending, policy, OLD_GITHUB_QUERIES, SOURCES
 from app.analysis import analyze
@@ -269,6 +269,49 @@ def test_domestic_review_prioritizes_ai_purchase_stage_within_contact_tier(clien
         assert [lead['id'] for lead in result.json()['items']] == expected
     all_markets = client.get('/api/workspace/leads', params={'market': 'all'}).json()
     assert [lead['id'] for lead in all_markets['items'] if lead['id'] in ids] == ids[::-1]
+
+
+def test_market_review_surfaces_assessed_buyer_demand_without_admitting_it_to_domestic(client):
+    cases = ('explicit', 'exploring', 'contact', 'eligible', 'manual', 'pending',
+             'closed', 'old', 'rejected', 'promotion', 'no_demand')
+    with Session.begin() as s:
+        ids = {name: add_cn(s, 'market-review-' + name) for name in cases}
+        for name, lead_id in ids.items():
+            lead = s.get(Lead, lead_id)
+            lead.analysis = {'method': 'ai', 'fit': 'medium', 'purchase_stage': 'explicit_need'}
+            market = s.get(LeadMarket, lead_id)
+            market.assessment_version, market.score = VERSION, 50
+        s.get(Lead, ids['exploring']).analysis = {'method': 'ai', 'fit': 'medium', 'purchase_stage': 'exploring'}
+        s.get(LeadMarket, ids['exploring']).score = None
+        s.get(LeadMarket, ids['eligible']).score = 70
+        s.get(LeadMarket, ids['manual']).manual = True
+        s.get(LeadMarket, ids['pending']).assessment_version = ''
+        s.get(Lead, ids['old']).published_at = '2020-01-01T00:00:00+00:00'
+        s.add(GithubIssueState(lead_id=ids['closed'], state='closed'))
+        s.add(LeadWorkspace(lead_id=ids['rejected'], qualification='invalid'))
+        s.get(Lead, ids['promotion']).title = '【广告】模型 API 中转站'
+        s.get(Lead, ids['no_demand']).analysis = {'method': 'ai', 'fit': 'medium', 'purchase_stage': 'unknown'}
+        s.add(ContactPoint(lead_id=ids['contact'], kind='wechat', value='public_test_id',
+                           source_url='https://example.test/business', evidence='Public business contact', verified=False))
+
+    queue = '/api/workspace/leads?bucket=market_review'
+    result = client.get(queue).json()
+    assert result['total'] == 3
+    assert [lead['id'] for lead in result['items']] == [ids['contact'], ids['explicit'], ids['exploring']]
+    assert all(not lead['market']['eligible'] for lead in result['items'])
+    assert client.get(queue + '&market=unknown').json()['total'] == 1
+    assert client.get(queue + '&market=domestic').json()['total'] == 0
+    counts = client.get('/api/workspace/metrics').json()['counts']
+    assert counts['market_review'] == result['total']
+
+    lead = result['items'][1]
+    reviewed = client.put(f"/api/workspace/leads/{lead['id']}/market", json={
+        'version': lead['market']['version'], 'status': 'confirmed_cn',
+        'reason': 'Fixture for verified business geography', 'source_url': lead['url'],
+    })
+    assert reviewed.status_code == 200 and reviewed.json()['eligible']
+    assert client.get(queue).json()['total'] == 2
+    assert client.get('/api/workspace/metrics').json()['counts']['market_review'] == 2
 
 
 def test_pending_supplier_submissions_remain_in_history_and_preserve_owner_decisions(client):

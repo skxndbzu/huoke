@@ -13,6 +13,33 @@ HN = 'https://hacker-news.firebaseio.com/v0'
 RULE_VERSION = 'intent-v1'
 TECH = re.compile(r'\b(llm|openai|gpt|claude|gemini|inference|model api|ai api)\b|模型.{0,4}(接口|API)|大模型|AI\s*(?:答题|应用|客服)', re.I)
 NEED = re.compile(r'\b(need|looking for|recommend|alternative|provider|cost|pricing|integrat|building|develop|rate limit|latency)\w*|寻找|接入|开发|价格|供应商', re.I)
+HN_SCREENING_VERSION = 'hn-api-demand-v1'
+HN_MODEL = r'(?:llms?|language models?|model|inference|openai|chatgpt|gpt|claude|gemini|deepseek|kimi|qwen)'
+HN_API = re.compile(
+    rf"\b(?:{HN_MODEL}(?:[- ]+(?:code|[a-z0-9.-]*\d[a-z0-9.-]*))?(?:['’]s)?\s+(?:apis?|endpoints?|providers?)"
+    rf"|(?:api access to|apis? for)\s+(?:the\s+)?{HN_MODEL})\b|(?:大模型|模型).{{0,4}}(?:API|接口|供应商)",
+    re.I,
+)
+HN_API_NEED = re.compile(
+    r'\b(?:look(?:ing)? for|search(?:ing)? for|recommend(?:ations?)?|alternatives?|switch(?:ing)? (?:from|to)'
+    r'|need(?:s|ed)?|integrat(?:e|ing)|compar(?:e|ing|ison)|cheaper|economical|cost from|billing|overcharg\w*'
+    r'|quality of service|latency|rate limit(?:s|ed|ing)?|timeouts?|degraded responses?|unreliable)\b'
+    r'|求推荐|求助|选型|采购|接入|限流|不稳定|超时|计费',
+    re.I,
+)
+
+
+def hn_demand_evidence(title, body):
+    body = re.sub(r'<(blockquote|pre)\b[^>]*>.*?</\1>', '', body, flags=re.I | re.S)
+    body = re.sub(r'```.*?```|~~~.*?~~~', '', clean(body), flags=re.S)
+    body = '\n'.join(line for line in body.splitlines() if not line.lstrip().startswith('>'))
+    for part in (title, body):
+        for service in HN_API.finditer(part):
+            nearby = part[max(0, service.start() - 72):service.end() + 72]
+            demand = HN_API_NEED.search(nearby)
+            if demand:
+                return [service.group(0), demand.group(0)]
+    return []
 
 
 def clean(text):
@@ -53,7 +80,8 @@ def sync_hn():
         s.add(run)
         s.flush()
         run_id = run.id
-    stats = {'listed': 0, 'fetched': 0, 'cache_hits': 0, 'filtered': 0, 'duplicates': 0, 'new_leads': 0, 'model_calls': 0}
+    stats = {'listed': 0, 'fetched': 0, 'cache_hits': 0, 'filtered': 0, 'duplicates': 0, 'new_leads': 0, 'model_calls': 0,
+             'screening_version': HN_SCREENING_VERSION, 'filter_reasons': {}, 'filtered_samples': []}
     try:
         with httpx.Client(timeout=15, follow_redirects=False, headers={'User-Agent': 'HuokePilot/0.1 (bounded official API reader)'}) as client:
             response = client.get(f'{HN}/askstories.json')
@@ -70,25 +98,33 @@ def sync_hn():
                 response.raise_for_status()
                 item = response.json() or {}
                 stats['fetched'] += 1
-                text = clean(item.get('title', '') + '\n' + item.get('text', ''))
+                title = clean(item.get('title'))
+                text = clean((item.get('title') or '') + '\n' + (item.get('text') or ''))
+                url = f'https://news.ycombinator.com/item?id={int(item_id)}'
                 digest = fingerprint(text)
+                unavailable = item.get('deleted') or item.get('dead') or not item
+                evidence = hn_demand_evidence(title, item.get('text') or '') if not unavailable else []
                 with Session.begin() as s:
                     locked_control(s)
                     if s.get(SourceItem, key):
                         stats['cache_hits'] += 1
                         continue
                     s.add(SourceItem(key=key, fingerprint=digest))
-                    if item.get('deleted') or item.get('dead') or not TECH.search(text) or not NEED.search(text):
+                    if not evidence:
                         stats['filtered'] += 1
+                        reason = 'unavailable' if unavailable else 'no_api_demand'
+                        reasons = stats['filter_reasons']
+                        reasons[reason] = reasons.get(reason, 0) + 1
+                        if not unavailable and len(stats['filtered_samples']) < 5:
+                            stats['filtered_samples'].append({'title': title[:250], 'url': url, 'reason': reason})
                     elif s.scalar(select(Lead.id).where(Lead.fingerprint == digest)):
                         stats['duplicates'] += 1
                     else:
                         lead = Lead(source='Hacker News / Ask', source_key=key,
-                            url=f'https://news.ycombinator.com/item?id={int(item_id)}',
-                            author=item.get('by', '未知'), title=clean(item.get('title')),
+                            url=url, author=item.get('by', '未知'), title=title,
                             text=text, fingerprint=digest,
                             published_at=datetime.fromtimestamp(item.get('time', 0), timezone.utc).isoformat(),
-                            analysis=classify(text))
+                            analysis={**classify(text), 'version': HN_SCREENING_VERSION, 'evidence': evidence})
                         s.add(lead)
                         s.flush()
                         refresh_market(s, lead)

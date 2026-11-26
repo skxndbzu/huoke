@@ -1,5 +1,5 @@
 import httpx
-from app.pipeline import sync_hn
+from app.pipeline import hn_demand_evidence, sync_hn
 from app.db import Session, Lead, AnalysisCall
 from sqlalchemy import select
 from app.analysis import analyze
@@ -14,16 +14,35 @@ def test_source_filters_and_second_run_reuses_cache(monkeypatch):
     requests=[]
     def handle(request):
         requests.append(request.url.path)
-        if request.url.path.endswith('askstories.json'):return httpx.Response(200,json=[100,101])
+        if request.url.path.endswith('askstories.json'):return httpx.Response(200,json=[100,101,102])
         if request.url.path.endswith('100.json'):return httpx.Response(200,json={'id':100,'title':'Looking for LLM API provider','text':'Need help with model API pricing','by':'real-source-test','time':1700000000})
+        if request.url.path.endswith('102.json'):
+            return httpx.Response(200, json={'id': 102, 'title': 'Ask HN: AI hype is cooling down',
+                                             'text': 'OpenAI was a big topic. I studied CS and develop software.'})
         return httpx.Response(200,json={'id':101,'title':'My garden','time':1700000000})
     monkeypatch.setattr('app.pipeline.httpx.Client',lambda **kwargs:real_client(transport=httpx.MockTransport(handle),**kwargs))
     first=sync_hn();second=sync_hn()
-    assert first['new_leads']==1 and first['filtered']==1
-    assert second['cache_hits']==2 and second['fetched']==0 and len(requests)==4
+    assert first['new_leads'] == 1 and first['filtered'] == 2 and first['model_calls'] == 0
+    assert first['filter_reasons'] == {'no_api_demand': 2}
+    assert first['filtered_samples'][-1]['url'] == 'https://news.ycombinator.com/item?id=102'
+    assert second['cache_hits'] == 3 and second['fetched'] == 0 and len(requests) == 5
     with Session() as s:
         lead=s.scalar(select(Lead).where(Lead.source_key=='hn:100'))
         assert lead.analysis['contact_permission']=='unknown'
+        assert 'LLM API' in lead.analysis['evidence']
+
+
+@pytest.mark.parametrize('title,body,expected', [
+    ('What are some economical ways to access LLMs?',
+     'Want to hear about your experiences in terms of cost from various providers of LLM APIs.', True),
+    ("Claude Code's API billing depends on how often the cache expires", '', True),
+    ('What is going on regarding quality of service for API access to LLMs?', '', True),
+    ('How do you find out if the LLM API is giving degraded responses?', '', True),
+    ('Inception’s Diffusion LLM API is shutting down', '<pre>We need to switch to an LLM API</pre>', False),
+    ('General chat about developer tools', '&gt; Looking for an LLM API provider\nI am quoting another post.', False),
+])
+def test_hn_demand_requires_local_service_evidence(title, body, expected):
+    assert bool(hn_demand_evidence(title, body)) is expected
 
 
 def model_config(monkeypatch):

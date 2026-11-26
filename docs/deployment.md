@@ -14,7 +14,13 @@ NodeSeek 成功上传官方 RSS 后，根据该批次的发布时间范围安排
 
 2026-11-26 仅重启 Windows NodeSeek 执行器，服务端沿用下方镜像。回滚时恢复 `6572f91` 中的 `scripts/social-executor.py`，再单独重启 NodeSeek 执行器。15 项轮询模拟路径、`Retry-After` 解析及 31 项渠道测试通过。
 
-## 当前发布 `20261124-evidence-greeting-r1`
+## 当前发布 `20261126-hackernews-demand-r1`
+
+Hacker News 自动采集按模型接口与相邻需求证据执行初筛。采集批次保存筛除原因与最多五条原帖链接。61 项本地定向测试、92 项隔离 PostgreSQL 测试和前端构建通过。服务器核对 39 个运行文件摘要，真实发送关闭。
+
+回滚镜像为 `huoke:20261124-evidence-greeting-r1`，使用上一发布目录的 Compose 配置。数据库及私有配置备份前缀为 `backups/20261126-before-hackernews-demand`，后缀为 `.dump`、`.env`、`.secrets.tar`。
+
+## 上次发布 `20261124-evidence-greeting-r1`
 
 建议招呼语从原帖提取已写明的模型或用量关注点，也可引用最近成功核对的 V2EX 楼主公开回复。编辑框旁显示提问所依据的原文片段及链接。48 项本地和 76 项隔离 PostgreSQL 测试、前端构建及 390px 和 1440px 编辑流程通过。仅需更新服务器镜像。
 

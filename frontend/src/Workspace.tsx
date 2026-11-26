@@ -81,6 +81,33 @@ const fmt = (s: string) =>
         hour12: false,
       })
     : "未设置";
+const DAY_MS = 24 * 60 * 60 * 1000;
+function elapsedTime(value?: string) {
+  if (!value) return null;
+  const timestamp = Date.parse(value);
+  const now = Date.now();
+  if (!Number.isFinite(timestamp) || timestamp > now) return null;
+  const days = Math.floor((now - timestamp) / DAY_MS);
+  return (
+    <time dateTime={value} title={fmt(value)}>
+      {days === 0 ? "24 小时内" : `${days} 天前`}
+    </time>
+  );
+}
+
+function LeadActivity({ lead }: { lead: R }) {
+  const replies = lead.market?.profile?.v2ex_author_replies?.replies || [];
+  const latest = Math.max(-Infinity, ...replies
+    .map((reply: R) => Date.parse(reply.published_at))
+    .filter((timestamp: number) => Number.isFinite(timestamp) && timestamp <= Date.now()));
+  const replyAge = Number.isFinite(latest) ? elapsedTime(new Date(latest).toISOString()) : null;
+  return (
+    <>
+      原文发布 {elapsedTime(lead.published_at) || "时间待核实"}
+      {replyAge && <> · 最近记录的楼主回复 {replyAge}</>}
+    </>
+  );
+}
 const localInput = (s: string) => {
   const d = s ? new Date(s) : new Date();
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
@@ -500,6 +527,7 @@ export function CustomerWorkspace({
     await reload();
     setStarted(Date.now());
   };
+  const authorReplies = selected?.market?.profile?.v2ex_author_replies;
   return (
     <>
       {error && (
@@ -662,8 +690,8 @@ export function CustomerWorkspace({
                 </div>
                 <small>
                   {queue === "opportunity" && `${l.triage?.reason || "待核实需求"} · `}
-                  原文发布：{fmt(l.published_at)} · 跟进：
-                  {fmt(l.work.next_followup)}
+                  <LeadActivity lead={l} />
+                  {l.work.next_followup && <> · 跟进 {fmt(l.work.next_followup)}</>}
                 </small>
               </button>
             ))}
@@ -768,17 +796,23 @@ export function CustomerWorkspace({
                 <summary>展开完整原文</summary>
                 <pre>{selected.text}</pre>
               </details>
-              {selected.market?.profile?.v2ex_author_replies?.replies?.length > 0 && (
+              {authorReplies && (
                 <div className="contact-evidence">
                   <h3>楼主的公开回复</h3>
-                  {selected.market.profile.v2ex_author_replies.replies.map((reply: R) => (
+                  {(authorReplies.replies || []).map((reply: R) => (
                     <div key={reply.id}>
                       <blockquote>{reply.text}</blockquote>
                       <p className="muted">{fmt(reply.published_at)} · {urlLink(reply.url, "查看原回复 ↗")}</p>
                     </div>
                   ))}
-                  {selected.market.profile.v2ex_author_replies.status === "unavailable" && (
-                    <p className="muted">最近一次读取失败，显示 {fmt(selected.market.profile.v2ex_author_replies.last_success)} 的记录。</p>
+                  {authorReplies.last_success && (
+                    <p className="muted">
+                      上次成功核对 {fmt(authorReplies.last_success)}
+                      {!authorReplies.replies?.length && " · 暂未查到楼主的公开回复"}
+                    </p>
+                  )}
+                  {authorReplies.status === "unavailable" && (
+                    <p className="muted">最近一次读取失败 · {fmt(authorReplies.checked_at)}</p>
                   )}
                 </div>
               )}

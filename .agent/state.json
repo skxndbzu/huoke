@@ -1,28 +1,28 @@
 {
-  "updated_at": "2026-11-27T00:31:10+08:00",
+  "updated_at": "2026-11-27T00:42:41+08:00",
   "timezone": "Asia/Shanghai",
   "phase": "phase_1_assisted_workflow_live",
-  "branch": "codex/v2ex-profile-priority-20261127",
+  "branch": "codex/lead-freshness-20261127",
   "repository": "https://github.com/skxndbzu/huoke.git",
   "deployment": {
     "host": "117.72.35.216",
     "user": "admin",
     "root": "/home/admin/huoke-staging",
-    "release": "20261127-v2ex-profile-priority-r1",
-    "status": "healthy_staging_v2ex_profile_priority",
+    "release": "20261127-lead-freshness-r1",
+    "status": "healthy_staging_lead_freshness",
     "access": "http://117.72.35.216:18080",
     "real_send_enabled": false,
     "paused": false,
     "production_policy": "not_confirmed",
-    "image": "huoke:20261127-v2ex-profile-priority-r1",
-    "image_id": "sha256:95428aaf6e2442d79556092384ad41e004fb478a2b20b3e5558d2d4382633069",
-    "artifact_sha256": "927071431f5fa92d172eff97a12075dd75198bbf73531512d10848b99d2b8dba",
-    "artifact_verification": "Uploaded overlay SHA256 above. All 120 assembled build inputs matched manifest 5cb31aea9efa41dc587fcc8d42d8b22f8ec3b7ee55ae1c6895f03bb45f724a04.",
+    "image": "huoke:20261127-lead-freshness-r1",
+    "image_id": "sha256:d63673cbe14df3cc1519f585a4a23554b4885924393946dbdf45753029fd98c7",
+    "artifact_sha256": "575e8d7d7ab44c0eeb908567574661a899da53d0661109bec1f0cb5444ac6f66",
+    "artifact_verification": "Uploaded overlay SHA256 above. All 120 assembled build inputs matched manifest 9bfdad93fc4a54b8333fa14e8ec31391665181bd66117d3670acc9b4fad22c89.",
     "access_note": "IP HTTP access retained by owner choice. Password account configured at explicit owner request; login verified. Public homepage/assets 200 and unauthenticated API 401 previously verified.",
-    "rollback_image": "huoke:20261127-v2ex-relay-feed-r1",
-    "backup": "/home/admin/huoke-staging/backups/20261127-before-v2ex-profile-priority.dump",
-    "private_backup": "/home/admin/huoke-staging/backups/20261127-before-v2ex-profile-priority.secrets.tar",
-    "environment_backup": "/home/admin/huoke-staging/backups/20261127-before-v2ex-profile-priority.env"
+    "rollback_image": "huoke:20261127-v2ex-profile-priority-r1",
+    "backup": "/home/admin/huoke-staging/backups/20261127-before-lead-freshness.dump",
+    "private_backup": "/home/admin/huoke-staging/backups/20261127-before-lead-freshness.secrets.tar",
+    "environment_backup": "/home/admin/huoke-staging/backups/20261127-before-lead-freshness.env"
   },
   "automation": {
     "id": "automation",
@@ -42,7 +42,7 @@
     "postgres_concurrency_test": "passed: 4 workers produced exactly one simulated send",
     "frontend_build": "passed",
     "npm_audit_vulnerabilities": 0,
-    "browser": "390px V2EX partial feed status, timeout label, counts and source links",
+    "browser": "Lead timing, empty replies and older evidence after refresh failure at 390px/1440px. Live 390px view checked on two workbench leads.",
     "local_source_sample": {
       "listed": 26,
       "filtered": 20,
@@ -95,7 +95,7 @@
     },
     "model": "gpt-6.1-sol models verified and one evidence-checked inference succeeded",
     "owner_password_login": "Initial account provisioned at explicit owner request; actual login and logout verified. No reviewer token accessed, no message approval. Credentials not stored in repository.",
-    "local_validation": "33 local social tests, 53 isolated PostgreSQL tests in the release image, and a real profile lookup via the normal Windows executor",
+    "local_validation": "Frontend build, 390px and 1440px browser checks, and 53 isolated PostgreSQL tests in the release image",
     "market_filter": {
       "threshold": 70,
       "total_leads": 1265,
@@ -203,7 +203,7 @@
     },
     "conversion_quality": "1301 total records, three domestic review candidates, thirteen procurement candidates awaiting market review, zero direct contacts in either queue, zero domestic high-value leads awaiting contacts, zero owner-qualified opportunities.",
     "runtime_ai_estimated_usd": 3.88328,
-    "runtime_ai_note": "490 ledger records, four with unresolved cost. Profile lookup and verification made no model calls. Actual supplier and development costs unknown.",
+    "runtime_ai_note": "490 ledger records, four with unresolved cost. The lead timing UI and verification made no model calls. Actual supplier and development costs unknown.",
     "iteration_model_estimated_usd": 0.0
   },
   "blockers": [
@@ -1335,6 +1335,17 @@
     "total_leads": 1301,
     "domestic_review": 3,
     "market_review": 13,
+    "owner_qualified_opportunities": 0,
+    "verification_model_calls": 0,
+    "owner_actions": []
+  },
+  "lead_freshness_iteration": {
+    "relay_feed_leads_older_than_30_days": 5,
+    "relay_feed_leads_total": 7,
+    "live_browser_verified_ids": [1296, 1295],
+    "workbench_domestic_review": 3,
+    "workbench_market_review": 13,
+    "direct_contacts_in_queues": 0,
     "owner_qualified_opportunities": 0,
     "verification_model_calls": 0,
     "owner_actions": []

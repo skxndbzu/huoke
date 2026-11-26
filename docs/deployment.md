@@ -14,7 +14,13 @@ NodeSeek 成功上传官方 RSS 后，根据该批次的发布时间范围安排
 
 2026-11-26 仅重启 Windows NodeSeek 执行器，服务端沿用下方镜像。回滚时恢复 `6572f91` 中的 `scripts/social-executor.py`，再单独重启 NodeSeek 执行器。15 项轮询模拟路径、`Retry-After` 解析及 31 项渠道测试通过。
 
-## 当前发布 `20261127-v2ex-profile-priority-r1`
+## 当前发布 `20261127-lead-freshness-r1`
+
+客户卡直接显示原帖及最近记录的 V2EX 楼主回复距今多久。详情显示上次成功核对时间和最近读取结果。前端构建、390px 与 1440px 浏览器检查、53 项隔离 PostgreSQL 测试及线上 390px 样本检查通过。发布只更新服务器镜像。
+
+回滚镜像为 `huoke:20261127-v2ex-profile-priority-r1`，备份前缀为 `backups/20261127-before-lead-freshness`。
+
+## 上次发布 `20261127-v2ex-profile-priority-r1`
 
 V2EX 公开资料补查先处理明确需求，再按已有优先级和原帖发布时间排序。工作台标记为无效或已结束的档案会从补查队列移除。33 项本地和 53 项隔离 PostgreSQL 测试通过，线上核对 39 个运行文件摘要及实际补查结果。发布只更新服务器镜像。
 

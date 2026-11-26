@@ -4,7 +4,7 @@ from types import SimpleNamespace
 import httpx
 import pytest
 from sqlalchemy import select, func
-from app.db import Session, Lead, CaptureEvidence, ContactPoint, Message, AnalysisCall, ChannelRun
+from app.db import Session, Lead, LeadWorkspace, CaptureEvidence, ContactPoint, Message, AnalysisCall, ChannelRun
 from app.social import get_policy, sync_social
 from app.social_adapters import (feed_items, gitee_items, v2ex_author_replies, v2ex_profile, qq_items, xhs_items, wechat_items, Capture,
                                  AdapterError, validate_url, milky)
@@ -333,6 +333,39 @@ def test_v2ex_profile_requires_same_author_and_keeps_contact_unverified(client):
     detail = client.get(f'/api/workspace/leads/{job["id"]}').json()
     assert detail['market']['profile']['github'] == 'test-github'
     assert detail['market']['status'] == 'pending_ai' and detail['contact_status'] == 'unverified_candidate'
+
+
+def test_v2ex_profile_queue_prioritizes_demand_and_source_recency(client):
+    version = enable(client, 'v2ex')
+    timestamp = datetime.now(timezone.utc)
+    authors = [
+        ('current', 1, 'explicit_need', 'medium'),
+        ('urgent', 20, 'explicit_need', 'high'),
+        ('older', 60, 'explicit_need', 'medium'),
+        ('exploring', 0, 'exploring', 'medium'),
+        ('invalid', 0, 'explicit_need', 'high'),
+    ]
+    items = [
+        item(url=f'https://www.v2ex.com/t/{99123 + index}', author=author,
+             published_at=(timestamp - timedelta(days=days)).isoformat())
+        for index, (author, days, _, _) in enumerate(authors)
+    ]
+    result = client.post('/api/social/channels/v2ex/capture',
+                         json={'version': version, 'mode': 'executor', 'items': items})
+    assert result.json()['new_leads'] == len(authors)
+    with Session.begin() as s:
+        for author, _, stage, priority in authors:
+            lead = s.scalar(select(Lead).where(Lead.author == author))
+            lead.analysis = {**lead.analysis, 'purchase_stage': stage, 'priority': priority}
+            if author == 'invalid':
+                s.add(LeadWorkspace(lead_id=lead.id, qualification='invalid'))
+    route = '/api/social/v2ex/profiles'
+    pending = client.get(route).json()['items']
+    assert [target['username'] for target in pending] == ['urgent', 'current', 'older']
+    assert client.post(f'{route}/{pending[0]["id"]}', json={
+        'version': version, 'username': 'urgent', 'status': 'public_profile',
+    }).status_code == 200
+    assert [target['username'] for target in client.get(route).json()['items']] == ['current', 'older', 'exploring']
 
 
 def test_v2ex_author_replies_match_topic_and_author_and_preserve_profile(client):

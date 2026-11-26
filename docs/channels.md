@@ -1,5 +1,11 @@
 # 渠道能力与证据
 
+## 2026-11-27 V2EX 资料补查顺序
+
+同批帖子按最新到最旧入库时，原补查按入库序号倒排，先处理了较旧作者。调整为先补查明确需求，随后比较已有优先级和原帖发布时间。线上在相同数据下的首批从 1298、1297、1296 变为 1297、1295、1296。通过 Windows 执行器复用正常入口实测三次公开资料读取，均成功。
+
+工作台为线索 1297 保存了作者在 V2EX 公开资料里填写的 GitHub 链接。GitHub 公开档案无公开邮箱，个人 README 返回 404，其自填站点首页可读，抽查未找到明确商务联系入口。新增直接联系方式 0 条。新节点七条线索已有六条完成资料补查，余下一条保留在下次队列。 [需求原文](https://www.v2ex.com/t/1251918) · [作者公开资料](https://www.v2ex.com/member/bigjie910) · [作者自填 GitHub](https://github.com/wengdajie)
+
 ## 2026-11-27 V2EX 中转站订阅
 
 公开节点目录和官方 Atom 已验证可读。抽查中转站、评测、Gemini、Claude、API 和 Hermes Agent 节点。中转站订阅读到 30 条，25 条在近 90 天内，包含开发者请求文字、生图和视频接口、稳定 Gemini 供应商及平台选型的原帖。评测节点的 3 条近期帖子没有通过需求初筛。Gemini 和 Claude 样本多为账号与订阅。Hermes Agent 订阅返回 404。 [官方节点目录](https://www.v2ex.com/api/nodes/all.json) · [中转站订阅](https://www.v2ex.com/feed/openrouter.xml) · [开发者接口需求](https://www.v2ex.com/t/1251918)

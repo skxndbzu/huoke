@@ -6,7 +6,7 @@ from datetime import datetime, timezone, timedelta
 from typing import Literal
 from fastapi import Depends, HTTPException
 from pydantic import Field
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import and_, case, func, or_, select
 import httpx
 from .schemas import Strict
 from .db import (Session, SourcePolicy, SourceItem, ChannelRun, Lead, LeadMarket, LeadWorkspace, CaptureEvidence, Event,
@@ -347,9 +347,16 @@ def register_social(app, role, reviewer):
             policy = s.get(SourcePolicy, 'social:v2ex')
             if not policy or not policy.enabled or not settings().source_enabled:
                 return {'items': []}
+            purchase_stage = Lead.analysis['purchase_stage'].as_string()
+            priority = Lead.analysis['priority'].as_string()
             rows = s.execute(select(Lead, LeadMarket.profile).outerjoin(LeadMarket, LeadMarket.lead_id == Lead.id)
-                             .where(Lead.source_key.startswith('v2ex:'), Lead.published_at >= recent)
-                             .order_by(Lead.id.desc()).limit(120)).all()
+                             .outerjoin(LeadWorkspace, LeadWorkspace.lead_id == Lead.id)
+                             .where(Lead.source_key.startswith('v2ex:'), Lead.published_at >= recent,
+                                    func.coalesce(LeadWorkspace.qualification, 'pending') != 'invalid',
+                                    func.coalesce(LeadWorkspace.stage, 'new').in_(('new', 'contacted', 'conversation')))
+                             .order_by(case((purchase_stage == 'explicit_need', 0), else_=1),
+                                       case((priority == 'high', 0), else_=1),
+                                       Lead.published_at.desc(), Lead.id.desc()).limit(120)).all()
             seen = {lead.author.lower() for lead, profile in rows if (profile or {}).get('checked_at', '') > day_ago}
             pending = []
             for lead, _ in rows:

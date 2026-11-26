@@ -22,6 +22,23 @@ from app.social_adapters import (FEEDS, feed_items, qq_items, v2ex_author_replie
 PROJECT_TUNNEL = 'http://127.0.0.1:18081'
 WORKBENCH_RETRY_SECONDS = 30
 NODESEEK_POLL_SECONDS = 10 * 60
+NODESEEK_BUSY_POLL_SECONDS = 5 * 60
+NODESEEK_FULL_FEED_SIZE = 20
+NODESEEK_BUSY_WINDOW_SECONDS = 12 * 60
+
+
+def nodeseek_poll_seconds(listed, window):
+    if listed < NODESEEK_FULL_FEED_SIZE or not window or window.get('known') != listed:
+        return NODESEEK_POLL_SECONDS
+    try:
+        earliest = datetime.fromisoformat(window.get('earliest_at'))
+        latest = datetime.fromisoformat(window.get('latest_at'))
+        span = (latest - earliest).total_seconds()
+    except (TypeError, ValueError):
+        return NODESEEK_POLL_SECONDS
+    if 0 <= span < NODESEEK_BUSY_WINDOW_SECONDS:
+        return NODESEEK_BUSY_POLL_SECONDS
+    return NODESEEK_POLL_SECONDS
 
 
 def retry_after_seconds(response):
@@ -229,15 +246,16 @@ def main():
                         response = api.post('/api/social/channels/' + args.platform + '/capture',
                                             json={**pending, 'items': batch})
                         response.raise_for_status()
+                        result = response.json()
                         for k in totals:
-                            totals[k] += response.json().get(k, 0)
+                            totals[k] += result.get(k, 0)
                     state = {'scope': scope, 'cursors': state.get('next_cursors', cursors)}
                     save_state(path, state)
                     failures = pending.get('feed_failures', {})
                     print(json.dumps({'platform': args.platform, 'status': 'partial' if failures else 'success',
                                       **totals, **({'feed_failures': failures} if failures else {})}), flush=True)
                     if args.platform == 'nodeseek' and totals['listed'] > 0:
-                        delay = NODESEEK_POLL_SECONDS
+                        delay = nodeseek_poll_seconds(totals['listed'], result.get('publication_window'))
                     if args.platform == 'v2ex':
                         for name, run in (('v2ex_profiles', research_v2ex_profiles),
                                           ('v2ex_author_replies', research_v2ex_author_replies)):

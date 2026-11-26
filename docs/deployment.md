@@ -8,11 +8,11 @@
 
 可在任务计划程序暂停这个任务，或者用 `Disable-ScheduledTask -TaskName 'Huoke Public Collector Recovery'` 暂停自动恢复。计划停止采集进程前先停用恢复任务。再次运行安装脚本可启用恢复。
 
-## Windows NodeSeek 补采试点
+## Windows NodeSeek 补采
 
-NodeSeek 在成功读取并上传非空官方 RSS 后等待 10 分钟。读取失败、空订阅或停用时按原每小时检查。上游返回 `Retry-After` 时等待至少其指定时间。工作台传输失败仍复用待上传批次，按 30 秒重试。
+NodeSeek 成功上传官方 RSS 后，根据该批次的发布时间范围安排下次读取。至少 20 条且每条都有发布时间、最早和最晚相距不到 12 分钟时，下一轮等待 5 分钟。其他非空批次等待 10 分钟。读取失败、空订阅或停用时每小时检查。上游返回 `Retry-After` 时等待至少其指定时间。工作台传输失败时按 30 秒重试同一上传批次。
 
-Windows 只重启 NodeSeek 执行器，服务器沿用下方版本。回滚时恢复 `e60441d` 中的 `scripts/social-executor.py` 并仅重启 NodeSeek 执行器。八种模拟执行器路径和 `Retry-After` 日期解析通过。
+2026-11-26 仅重启 Windows NodeSeek 执行器，服务端沿用下方镜像。回滚时恢复 `6572f91` 中的 `scripts/social-executor.py`，再单独重启 NodeSeek 执行器。15 项轮询模拟路径、`Retry-After` 解析及 31 项渠道测试通过。
 
 ## 当前发布 `20261124-evidence-greeting-r1`
 

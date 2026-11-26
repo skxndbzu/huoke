@@ -1,8 +1,8 @@
 {
-  "updated_at": "2026-11-24T22:41:41.5109269+08:00",
+  "updated_at": "2026-11-26T23:40:58+08:00",
   "timezone": "Asia/Shanghai",
   "phase": "phase_1_assisted_workflow_live",
-  "branch": "codex/evidence-based-greetings-20261124",
+  "branch": "codex/nodeseek-adaptive-polling-20261126",
   "repository": "https://github.com/skxndbzu/huoke.git",
   "deployment": {
     "host": "117.72.35.216",
@@ -201,9 +201,9 @@
       "monthly": 100,
       "owner_monthly_ceiling": 10000
     },
-    "conversion_quality": "1291 total records, three domestic review candidates, six procurement candidates awaiting market review including one failed analysis, zero direct contacts in either queue, zero owner-qualified opportunities.",
+    "conversion_quality": "1294 total records, three domestic review candidates, six procurement candidates awaiting market review, zero direct contacts in either queue, zero domestic high-value leads awaiting contacts, zero owner-qualified opportunities.",
     "runtime_ai_estimated_usd": 3.827024,
-    "runtime_ai_note": "483 ledger records, four with unresolved cost. Greeting generation and release checks made no inference calls. Actual supplier and development costs unknown.",
+    "runtime_ai_note": "483 ledger records, four with unresolved cost. NodeSeek polling and verification made no inference calls. Actual supplier and development costs unknown.",
     "iteration_model_estimated_usd": 0.0
   },
   "blockers": [
@@ -214,7 +214,8 @@
     "Inbox and billing events not connected. Real sends disabled; production policy unconfirmed; IP HTTP retained per owner."
   ],
   "next_tasks": [
-    "Observe the next normal V2EX run for the remaining two author-reply checks. Verify useful demand updates and explicit business contact coverage.",
+    "Track NodeSeek publication-window overlap, new buyer demand and HTTP 429 responses across more busy periods. The November 26 iteration observed the adaptive Windows executor.",
+    "Review Hacker News ingestion against domestic buyer criteria. Its three new records during November 25–26 show no title-level model API procurement signal.",
     "Continue observing AIGC age, duplicate rate and buyer intent after all 90 items matched the cache in run 1769.",
     "Observe the V2EX partial-feed recovery during a natural failure; its first live batch 1753 fully succeeded. Keep collecting evidence for buyer sources with explicit contact paths.",
     "Continue sampling buyer-side sources with explicit business contact paths. Use the current V2EX and GitHub samples as a baseline and add another source only when buyer evidence supports it.",
@@ -1226,6 +1227,39 @@
     "domestic_review": 3,
     "direct_contacts_in_queues": 0,
     "owner_qualified_opportunities": 0,
+    "verification_model_calls": 0,
+    "owner_actions": []
+  },
+  "nodeseek_adaptive_polling_iteration": {
+    "deployment_target": "Windows NodeSeek public executor",
+    "server_image": "huoke:20261124-evidence-greeting-r1",
+    "rollback_commit": "6572f91",
+    "baseline": {
+      "full_dated_batches": 96,
+      "pairs_10_to_11_minutes_apart": 90,
+      "pairs_with_window_gap": 31,
+      "gaps_preceded_by_window_under_12_minutes": 31,
+      "maximum_gap_seconds": 368
+    },
+    "busy_interval_seconds": 300,
+    "normal_interval_seconds": 600,
+    "initial_run": 2179,
+    "natural_runs": [
+      {"id": 2183, "interval_seconds": 304, "overlap_seconds": 110, "listed": 20, "cache_hits": 4, "filtered": 16, "new_leads": 0},
+      {"id": 2184, "interval_seconds": 303, "overlap_seconds": 153, "listed": 20, "cache_hits": 7, "filtered": 13, "new_leads": 0}
+    ],
+    "window_between_first_and_last_covered_by_middle_seconds": 188,
+    "executor_paths_checked": 15,
+    "local_channel_tests_passed": 31,
+    "workbench_channels_api_verified": true,
+    "v2ex_author_reply_followup": {"batch": 2172, "listed": 90, "cache_hits": 90, "reply_counts": {"1283": 0, "1291": 1}},
+    "total_leads": 1294,
+    "domestic_review": 3,
+    "market_review": 6,
+    "direct_contacts_in_queues": 0,
+    "high_value_without_direct_contact": 0,
+    "owner_qualified_opportunities": 0,
+    "screening_false_negative_rate": null,
     "verification_model_calls": 0,
     "owner_actions": []
   }

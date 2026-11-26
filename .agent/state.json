@@ -1,28 +1,28 @@
 {
-  "updated_at": "2026-11-26T23:55:00+08:00",
+  "updated_at": "2026-11-27T00:13:30+08:00",
   "timezone": "Asia/Shanghai",
   "phase": "phase_1_assisted_workflow_live",
-  "branch": "codex/hackernews-api-demand-20261126",
+  "branch": "codex/v2ex-relay-feed-20261127",
   "repository": "https://github.com/skxndbzu/huoke.git",
   "deployment": {
     "host": "117.72.35.216",
     "user": "admin",
     "root": "/home/admin/huoke-staging",
-    "release": "20261126-hackernews-demand-r1",
-    "status": "healthy_staging_hackernews_demand",
+    "release": "20261127-v2ex-relay-feed-r1",
+    "status": "healthy_staging_v2ex_relay_feed",
     "access": "http://117.72.35.216:18080",
     "real_send_enabled": false,
     "paused": false,
     "production_policy": "not_confirmed",
-    "image": "huoke:20261126-hackernews-demand-r1",
-    "image_id": "sha256:77fabf2c903dcdf2529a804449fe6d967e74e61b865e901e924078b36f7660ba",
-    "artifact_sha256": "85c2008c90e93561f0526ca5ad4a8c99018021c9d84c91fbcf175cc2e55fddbf",
-    "artifact_verification": "Uploaded overlay SHA256 above. All 120 assembled build inputs matched manifest 8b2d4a59dfb93ccab6051422cd557226535979044a20063f9d05b9159a75f1f9.",
+    "image": "huoke:20261127-v2ex-relay-feed-r1",
+    "image_id": "sha256:3dc916061c956a1bdca943074ebced60057695db04ed3ec223149b975398a8d3",
+    "artifact_sha256": "c8b535248383e7f7db29f6d3d93a663ecc39cc4b2bfde054ef52954c37e1a0b9",
+    "artifact_verification": "Uploaded overlay SHA256 above. All 120 assembled build inputs matched manifest 2a28eddafd383fde4322839c54196307e2525c0c7d9e701804ff0fef0e7a6ab8.",
     "access_note": "IP HTTP access retained by owner choice. Password account configured at explicit owner request; login verified. Public homepage/assets 200 and unauthenticated API 401 previously verified.",
-    "rollback_image": "huoke:20261124-evidence-greeting-r1",
-    "backup": "/home/admin/huoke-staging/backups/20261126-before-hackernews-demand.dump",
-    "private_backup": "/home/admin/huoke-staging/backups/20261126-before-hackernews-demand.secrets.tar",
-    "environment_backup": "/home/admin/huoke-staging/backups/20261126-before-hackernews-demand.env"
+    "rollback_image": "huoke:20261126-hackernews-demand-r1",
+    "backup": "/home/admin/huoke-staging/backups/20261127-before-v2ex-relay-feed.dump",
+    "private_backup": "/home/admin/huoke-staging/backups/20261127-before-v2ex-relay-feed.secrets.tar",
+    "environment_backup": "/home/admin/huoke-staging/backups/20261127-before-v2ex-relay-feed.env"
   },
   "automation": {
     "id": "automation",
@@ -42,7 +42,7 @@
     "postgres_concurrency_test": "passed: 4 workers produced exactly one simulated send",
     "frontend_build": "passed",
     "npm_audit_vulnerabilities": 0,
-    "browser": "390px and 1440px editing and source links for evidence-based greetings",
+    "browser": "390px V2EX partial feed status, timeout label, counts and source links",
     "local_source_sample": {
       "listed": 26,
       "filtered": 20,
@@ -68,7 +68,7 @@
       "cache_hits": 26,
       "new_leads": 0
     },
-    "server_tests_passed": 92,
+    "server_tests_passed": 130,
     "smtp_auth_probe": {
       "status": "success",
       "host": "smtp.qq.com",
@@ -95,7 +95,7 @@
     },
     "model": "gpt-6.1-sol models verified and one evidence-checked inference succeeded",
     "owner_password_login": "Initial account provisioned at explicit owner request; actual login and logout verified. No reviewer token accessed, no message approval. Credentials not stored in repository.",
-    "local_validation": "61 focused local tests and 92 isolated PostgreSQL tests in the release image, plus frontend build",
+    "local_validation": "110 focused local tests, 130 isolated PostgreSQL tests in the release image, frontend build and 390px browser check",
     "market_filter": {
       "threshold": 70,
       "total_leads": 1265,
@@ -201,10 +201,10 @@
       "monthly": 100,
       "owner_monthly_ceiling": 10000
     },
-    "conversion_quality": "1294 total records, three domestic review candidates, six procurement candidates awaiting market review, zero direct contacts in either queue, zero domestic high-value leads awaiting contacts, zero owner-qualified opportunities.",
-    "runtime_ai_estimated_usd": 3.827024,
-    "runtime_ai_note": "483 ledger records, four with unresolved cost. Hacker News screening and verification made no inference calls. Actual supplier and development costs unknown.",
-    "iteration_model_estimated_usd": 0.0
+    "conversion_quality": "1301 total records, three domestic review candidates, thirteen procurement candidates awaiting market review, zero direct contacts in either queue, zero domestic high-value leads awaiting contacts, zero owner-qualified opportunities.",
+    "runtime_ai_estimated_usd": 3.88328,
+    "runtime_ai_note": "490 ledger records, four with unresolved cost. Seven scheduled inference calls on new V2EX candidates, with no calls during isolated verification. Actual supplier and development costs unknown.",
+    "iteration_model_estimated_usd": 0.056256
   },
   "blockers": [
     "QQ upstream Auth Token absent; owner deferred; no purchase or bypass.",
@@ -214,6 +214,7 @@
     "Inbox and billing events not connected. Real sends disabled; production policy unconfirmed; IP HTTP retained per owner."
   ],
   "next_tasks": [
+    "Check the next natural V2EX batch, including fresh buyer requests, remaining author profile and reply checks, and direct business contact coverage.",
     "Check newly seen Hacker News items in a scheduled batch and audit screening with more positive examples. The first live manual batch was entirely cached.",
     "Benchmark permitted domestic public sources for active model API buyers with business contact paths. Confirm relevance on raw samples before deploying another connector.",
     "Track NodeSeek publication-window overlap, new buyer demand and HTTP 429 responses across more busy periods.",
@@ -1285,6 +1286,40 @@
     "owner_qualified_opportunities": 0,
     "screening_false_negative_rate": null,
     "verification_model_calls": 0,
+    "owner_actions": []
+  },
+  "v2ex_relay_feed_iteration": {
+    "feed": "https://www.v2ex.com/feed/openrouter.xml",
+    "historical_records_replayed": 1294,
+    "historical_rule_results_changed": 0,
+    "isolated_sample": {
+      "listed": 120,
+      "filtered": 111,
+      "supplier_promotions": 8,
+      "candidates": 9,
+      "candidates_from_new_node": 7,
+      "repeat_cache_hits": 120
+    },
+    "startup_batch": {"id": 2191, "listed": 120, "filtered": 111, "cache_hits": 2, "new_leads": 7},
+    "manual_followup_batch": {"id": 2197, "listed": 120, "cache_hits": 120, "new_leads": 0},
+    "public_profiles_checked": 3,
+    "topics_with_author_reply_check": 2,
+    "public_author_replies_recorded": 3,
+    "total_leads": 1301,
+    "domestic_review": 3,
+    "market_review_before": 6,
+    "market_review_after": 13,
+    "new_explicit_need": 4,
+    "new_exploring": 3,
+    "new_domestic_threshold_met": 0,
+    "direct_contacts_in_queues": 0,
+    "owner_qualified_opportunities": 0,
+    "screening_false_negative_rate": null,
+    "verification_model_calls": 0,
+    "scheduled_model_calls": 7,
+    "scheduled_input_tokens": 15273,
+    "scheduled_output_tokens": 2571,
+    "scheduled_estimated_usd": 0.056256,
     "owner_actions": []
   }
 }

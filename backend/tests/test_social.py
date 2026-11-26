@@ -109,7 +109,9 @@ def test_rss_rejects_html_entities_and_untrusted_links():
     assert len(run(raw))==1
 
 
-@pytest.mark.parametrize('failed_nodes', [('deepseek',), ('agent',), ('aigc',), ('deepseek', 'agent')])
+@pytest.mark.parametrize('failed_nodes', [
+    ('deepseek',), ('agent',), ('aigc',), ('openrouter',), ('deepseek', 'agent', 'aigc'),
+])
 def test_v2ex_preserves_other_feed_on_network_failure(client, failed_nodes):
     raw = ('<feed xmlns="http://www.w3.org/2005/Atom"><entry><title>寻找大模型 API</title>'
            '<link href="https://www.v2ex.com/t/99123#reply1"/><content>' + DEMAND + '</content></entry></feed>')
@@ -123,7 +125,7 @@ def test_v2ex_preserves_other_feed_on_network_failure(client, failed_nodes):
     with httpx.Client(transport=httpx.MockTransport(handle)) as reader:
         items = feed_items('v2ex', reader, network_failures=failures)
     assert failures == {node: 'timeout' for node in failed_nodes}
-    assert len(items) == 3 - len(failed_nodes)
+    assert len(items) == 4 - len(failed_nodes)
     assert {post.url for post in items} == {'https://www.v2ex.com/t/99123'}
 
     version = enable(client, 'v2ex')

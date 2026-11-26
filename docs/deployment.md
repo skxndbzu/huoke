@@ -14,7 +14,13 @@ NodeSeek 成功上传官方 RSS 后，根据该批次的发布时间范围安排
 
 2026-11-26 仅重启 Windows NodeSeek 执行器，服务端沿用下方镜像。回滚时恢复 `6572f91` 中的 `scripts/social-executor.py`，再单独重启 NodeSeek 执行器。15 项轮询模拟路径、`Retry-After` 解析及 31 项渠道测试通过。
 
-## 当前发布 `20261126-hackernews-demand-r1`
+## 当前发布 `20261127-v2ex-relay-feed-r1`
+
+V2EX 本地执行器增加「中转站」官方 Atom，每轮共最多 120 条。规则识别明确的站方促销标签及模型 API 对接、聚合平台选型问法。110 项本地定向测试、130 项隔离 PostgreSQL 测试、前端构建和 390px 部分读取状态检查通过。服务器核对 39 个运行文件摘要，真实发送关闭。
+
+回滚镜像为 `huoke:20261126-hackernews-demand-r1`，使用上一发布目录的 Compose 配置。Windows 回滚恢复 `5dcd748` 中的 V2EX 订阅配置，单独重启 V2EX 执行器。数据库及私有配置备份前缀为 `backups/20261127-before-v2ex-relay-feed`，后缀为 `.dump`、`.env`、`.secrets.tar`。
+
+## 上次发布 `20261126-hackernews-demand-r1`
 
 Hacker News 自动采集按模型接口与相邻需求证据执行初筛。采集批次保存筛除原因与最多五条原帖链接。61 项本地定向测试、92 项隔离 PostgreSQL 测试和前端构建通过。服务器核对 39 个运行文件摘要，真实发送关闭。
 

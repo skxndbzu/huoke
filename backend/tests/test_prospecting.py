@@ -6,6 +6,14 @@ from sqlalchemy import select, func
 from app.db import Session, Lead, LeadMarket, AnalysisCall, ContactPoint, Message, SourceItem
 from app.market import refresh_market, backfill
 from app.prospecting import intent, analysis_candidates, supplier_promotion
+
+
+def test_model_relay_marketplace_separates_provider_promotions_from_buyer_questions():
+    vendor = intent('[中转站源头] GPT 充值加赠', '自家 GPT API 通道，欢迎对接，价格优惠')
+    assert vendor['category'] == 'supplier_promotion'
+    assert intent('有可以对接中转的大佬吗？', '我开发了工具，需要 Gemini 生图和文字 API 接口')['score'] == 80
+    assert intent('现在国内有那些好用的 API 聚合平台？', '想给应用接入 GPT 和 Gemini')['score'] == 80
+    assert intent('有可以对接中转的大佬吗？', '想接 VPS 网络转发')['score'] == 0
 from app.profile_research import research_profile
 
 

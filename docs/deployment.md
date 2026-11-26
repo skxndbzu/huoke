@@ -14,7 +14,13 @@ NodeSeek 成功上传官方 RSS 后，根据该批次的发布时间范围安排
 
 2026-11-26 仅重启 Windows NodeSeek 执行器，服务端沿用下方镜像。回滚时恢复 `6572f91` 中的 `scripts/social-executor.py`，再单独重启 NodeSeek 执行器。15 项轮询模拟路径、`Retry-After` 解析及 31 项渠道测试通过。
 
-## 当前发布 `20261127-lead-freshness-r1`
+## 当前发布 `20261127-video-api-demand-r1`
+
+GitHub 采集识别第一人称视频 API 使用与费用求助。规则保留模型、费用和求助原句。84 项本地测试、104 项隔离 PostgreSQL 测试以及 GitHub 实际返回的样本回放通过。线上 39 个运行文件摘要一致。
+
+回滚镜像为 `huoke:20261127-lead-freshness-r1`，备份前缀为 `backups/20261127-before-video-api-demand`。
+
+## 上次发布 `20261127-lead-freshness-r1`
 
 客户卡直接显示原帖及最近记录的 V2EX 楼主回复距今多久。详情显示上次成功核对时间和最近读取结果。前端构建、390px 与 1440px 浏览器检查、53 项隔离 PostgreSQL 测试及线上 390px 样本检查通过。发布只更新服务器镜像。
 

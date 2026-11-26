@@ -15,7 +15,7 @@ from .schemas import Strict
 from .config import settings
 from .market import refresh_market, market_predicate, threshold, VERSION as MARKET_VERSION
 from .contact_discovery import extract_contacts
-from .prospecting import intent, supplier_promotion, VERSION_TRIAGE
+from .prospecting import intent, VERSION_TRIAGE
 
 VERSION = 'discovery-v3-intent'
 AUTO_ANALYSIS_HOURLY_LIMIT = 100
@@ -211,15 +211,22 @@ def sync_public(channel):
                     cached.fingerprint, cached.checked_at = cache_digest, now()
                 else:
                     s.add(SourceItem(key=item['key'], fingerprint=cache_digest))
-                if supplier_promotion(title, text):
+                triage = intent(title, text)
+                category = triage.get('category')
+                if category == 'supplier_promotion':
                     stats['filtered'] += 1
                     stats['intent_filtered'] += 1
                     stats['supplier_promotions'] = stats.get('supplier_promotions', 0) + 1
                     continue
-                if not TECH.search(text) or not DEMAND.search(text) or NON_DEMAND.search(title) or any(word.lower() in text.lower() for word in options.get('exclude', [])):
+                if NON_DEMAND.search(title) or any(word.lower() in text.lower() for word in options.get('exclude', [])):
                     stats['filtered'] += 1
                     continue
-                if intent(title, text)['score'] < 35:
+                video_cost_question = category == 'video_api_cost'
+                matches = (TECH.search(text), DEMAND.search(text))
+                if not video_cost_question and not all(matches):
+                    stats['filtered'] += 1
+                    continue
+                if triage['score'] < 35:
                     stats['filtered'] += 1
                     stats['intent_filtered'] += 1
                     continue
@@ -231,7 +238,7 @@ def sync_public(channel):
                     stats['duplicates'] += 1
                     continue
                 analysis = classify(text)
-                analysis.update(version=VERSION, evidence=[m.group(0) for m in (TECH.search(text), DEMAND.search(text)) if m],
+                analysis.update(version=VERSION, evidence=triage['evidence'] if video_cost_question else [m.group(0) for m in matches if m],
                                 recency=item['published_at'] or '未知', source_updated_at=item['updated_at'],
                                 next_action='核实需求与公开商务联系证据；技术提问不代表采购意愿')
                 if lead:

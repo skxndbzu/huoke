@@ -1,28 +1,28 @@
 {
-  "updated_at": "2026-11-27T00:42:41+08:00",
+  "updated_at": "2026-11-27T00:55:05+08:00",
   "timezone": "Asia/Shanghai",
   "phase": "phase_1_assisted_workflow_live",
-  "branch": "codex/lead-freshness-20261127",
+  "branch": "codex/video-api-cost-demand-20261127",
   "repository": "https://github.com/skxndbzu/huoke.git",
   "deployment": {
     "host": "117.72.35.216",
     "user": "admin",
     "root": "/home/admin/huoke-staging",
-    "release": "20261127-lead-freshness-r1",
-    "status": "healthy_staging_lead_freshness",
+    "release": "20261127-video-api-demand-r1",
+    "status": "healthy_staging_video_api_demand",
     "access": "http://117.72.35.216:18080",
     "real_send_enabled": false,
     "paused": false,
     "production_policy": "not_confirmed",
-    "image": "huoke:20261127-lead-freshness-r1",
-    "image_id": "sha256:d63673cbe14df3cc1519f585a4a23554b4885924393946dbdf45753029fd98c7",
-    "artifact_sha256": "575e8d7d7ab44c0eeb908567574661a899da53d0661109bec1f0cb5444ac6f66",
-    "artifact_verification": "Uploaded overlay SHA256 above. All 120 assembled build inputs matched manifest 9bfdad93fc4a54b8333fa14e8ec31391665181bd66117d3670acc9b4fad22c89.",
+    "image": "huoke:20261127-video-api-demand-r1",
+    "image_id": "sha256:0383f88d8bbe4308a8bc4594c2fec893c089608d9342f49bb1204fb1cc797dbe",
+    "artifact_sha256": "020748bd19482e57f9d9322c2f974e7d15a2ccff1104b0c95888d8496b1e43d9",
+    "artifact_verification": "Uploaded overlay SHA256 above. All 120 assembled build inputs matched manifest 152ae8e9e9cdfa4b56bf3651c3ede7052155eee8d9331a2e2fae7eddf4da314d.",
     "access_note": "IP HTTP access retained by owner choice. Password account configured at explicit owner request; login verified. Public homepage/assets 200 and unauthenticated API 401 previously verified.",
-    "rollback_image": "huoke:20261127-v2ex-profile-priority-r1",
-    "backup": "/home/admin/huoke-staging/backups/20261127-before-lead-freshness.dump",
-    "private_backup": "/home/admin/huoke-staging/backups/20261127-before-lead-freshness.secrets.tar",
-    "environment_backup": "/home/admin/huoke-staging/backups/20261127-before-lead-freshness.env"
+    "rollback_image": "huoke:20261127-lead-freshness-r1",
+    "backup": "/home/admin/huoke-staging/backups/20261127-before-video-api-demand.dump",
+    "private_backup": "/home/admin/huoke-staging/backups/20261127-before-video-api-demand.secrets.tar",
+    "environment_backup": "/home/admin/huoke-staging/backups/20261127-before-video-api-demand.env"
   },
   "automation": {
     "id": "automation",
@@ -68,7 +68,7 @@
       "cache_hits": 26,
       "new_leads": 0
     },
-    "server_tests_passed": 53,
+    "server_tests_passed": 104,
     "smtp_auth_probe": {
       "status": "success",
       "host": "smtp.qq.com",
@@ -95,7 +95,7 @@
     },
     "model": "gpt-6.1-sol models verified and one evidence-checked inference succeeded",
     "owner_password_login": "Initial account provisioned at explicit owner request; actual login and logout verified. No reviewer token accessed, no message approval. Credentials not stored in repository.",
-    "local_validation": "Frontend build, 390px and 1440px browser checks, and 53 isolated PostgreSQL tests in the release image",
+    "local_validation": "84 local tests, 104 isolated PostgreSQL tests and an isolated replay from the real GitHub search",
     "market_filter": {
       "threshold": 70,
       "total_leads": 1265,
@@ -203,7 +203,7 @@
     },
     "conversion_quality": "1301 total records, three domestic review candidates, thirteen procurement candidates awaiting market review, zero direct contacts in either queue, zero domestic high-value leads awaiting contacts, zero owner-qualified opportunities.",
     "runtime_ai_estimated_usd": 3.88328,
-    "runtime_ai_note": "490 ledger records, four with unresolved cost. The lead timing UI and verification made no model calls. Actual supplier and development costs unknown.",
+    "runtime_ai_note": "490 ledger records at release, four with unresolved cost. The isolated search and replay made no model calls. Actual supplier and development costs unknown.",
     "iteration_model_estimated_usd": 0.0
   },
   "blockers": [
@@ -214,6 +214,7 @@
     "Inbox and billing events not connected. Real sends disabled; production policy unconfirmed; IP HTTP retained per owner."
   ],
   "next_tasks": [
+    "Verify the first scheduled GitHub capture with the video API cost screening rule and subsequent workbench visibility.",
     "Check the next natural V2EX batch and remaining profile task 1298. Prioritize verifying recent buyer activity and explicit business contact paths.",
     "Continue auditing Hacker News filtering on positive examples. Natural batch 2204 fetched one newly seen post and filtered it.",
     "Benchmark permitted domestic public sources for active model API buyers with business contact paths. Confirm relevance on raw samples before deploying another connector.",
@@ -1349,5 +1350,15 @@
     "owner_qualified_opportunities": 0,
     "verification_model_calls": 0,
     "owner_actions": []
+  },
+  "video_api_demand_iteration": {
+    "source": "https://github.com/xixihhhh/clipforge/issues/59",
+    "isolated_search": {"listed": 11, "filtered": 9, "new_leads": 2, "repeat_cache_hits": 11},
+    "historical_records_replayed": 1301,
+    "historical_rule_results_changed": 0,
+    "public_author_followups": 2,
+    "direct_contacts_verified": 0,
+    "first_scheduled_github_run": null,
+    "verification_model_calls": 0
   }
 }

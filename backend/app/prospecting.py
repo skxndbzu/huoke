@@ -4,7 +4,7 @@ from sqlalchemy import select, func
 from .db import Lead, LeadMarket, LeadWorkspace, AnalysisCall, ContactPoint
 from .market import VERSION
 
-VERSION_TRIAGE = 'intent-triage-v9'
+VERSION_TRIAGE = 'intent-triage-v10'
 MODEL = re.compile(
     r'(?a:\b(?:llm|openai|gpt|claude|gemini|deepseek|model api)\b)|大模型|模型.{0,8}(?:API|接口)|AI\s*(?:答题|应用|客服)',
     re.I,
@@ -37,6 +37,11 @@ PROVIDER_COMPARISON = re.compile(
     re.I,
 )
 EVALUATION_METRIC = re.compile(r'单价|成本|价格|计费|延迟|准确率')
+VIDEO_API_TITLE = re.compile(r'(?:中转|视频|生视频)\s*API|API.{0,12}(?:生成视频|生视频)', re.I)
+VIDEO_MODEL = re.compile(r'(?a:\b(?:seedance|wan[.-]?\d+)(?:[.-]\d+)*\b)', re.I)
+VIDEO_USAGE = re.compile(r'我(?:们)?\s*(?:(?:正在|目前|已|在)\s*)?(?:使用|用|接入|调用)')
+VIDEO_COST = re.compile(r'单价|预[估计]花费|价格差异|多扣费|额外计费')
+VIDEO_QUESTION = re.compile(r'请问|求助|怎么解决|如何处理')
 
 
 def supplier_promotion(title, text):
@@ -57,6 +62,13 @@ def intent(title, text):
     body = re.sub(r'```.*?```|~~~.*?~~~', '', text[:12000], flags=re.S)
     body = '\n'.join(x for x in body.splitlines() if not x.lstrip().startswith(('>', '- [', '* [')))
     content = title + '\n' + body
+    if VIDEO_API_TITLE.search(title) and not NOISE.search(title) and re.search(r'视频|reference-to-video', body, re.I):
+        model = VIDEO_MODEL.search(body)
+        cost = VIDEO_COST.search(body)
+        question = VIDEO_QUESTION.search(body)
+        if model and cost and question and VIDEO_USAGE.search(body):
+            return {'score': 55, 'reason': '有视频 API 使用和费用求助', 'category': 'video_api_cost',
+                    'evidence': [model.group(0), cost.group(0), question.group(0)]}
     model_signal = MODEL.search(content)
     relay = VPS_RELAY.search(content)
     if relay and not model_signal:

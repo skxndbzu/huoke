@@ -77,6 +77,28 @@ def test_github_bounded_dedupe_no_pr_no_contact_authorization(monkeypatch):
         assert s.scalar(select(func.count()).select_from(Message))==0
 
 
+def test_github_collects_video_api_cost_questions_and_ignores_quoted_demand(monkeypatch):
+    original = '我在使用 WAN3.0 做视频。应用改用 Seedance，预计花费增加。请问怎么处理？'
+    issue = {'id': 100, 'html_url': 'https://github.com/test/app/issues/1',
+             'title': '关于中转API问题', 'body': original, 'user': {'login': 'buyer', 'type': 'User'},
+             'created_at': '2026-11-24T00:00:00Z'}
+    quoted = {**issue, 'id': 101, 'html_url': 'https://github.com/test/app/issues/2', 'body': '> ' + original}
+    tutorial = {**issue, 'id': 102, 'html_url': 'https://github.com/test/app/issues/3', 'title': '视频 API 费用教程'}
+    def handle(request):
+        items = [issue, quoted, tutorial] if '"中转"' in request.url.params['q'] else []
+        return httpx.Response(200, json={'items': items})
+
+    transport(monkeypatch, handle)
+    run = sync_public('github')
+    assert run['new_leads'] == 1 and run['filtered'] == 2 and run['model_calls'] == 0
+    cooldown_off('github')
+    assert sync_public('github')['cache_hits'] == 3
+    with Session() as s:
+        lead = s.scalar(select(Lead).where(Lead.source_key == 'github:100'))
+        assert lead.analysis['evidence'] == ['WAN3.0', '预计花费', '请问']
+        assert lead.analysis['contact_permission'] == 'unknown'
+
+
 def test_github_sync_rechecks_current_status_and_reorders_review(client, monkeypatch):
     open_ids = {}
     with Session.begin() as s:

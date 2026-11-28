@@ -27,6 +27,37 @@ def test_generation_never_authorizes(client,draft):
     assert client.post('/api/messages/1/queue',json={}).status_code==409
 
 
+def test_workbench_text_reaches_review_and_requires_owner_approval(client):
+    payload = {'contact_id': 1, 'channel': 'simulation',
+               'content': {'subject': '模型 API 方案', 'body': '这是在工作台编辑过的正文。'}}
+    operator = {'Authorization': 'Bearer test-operator'}
+    route = '/api/leads/1/draft'
+    response = client.post(route, json=payload, headers=operator)
+    assert response.status_code == 200
+    draft = response.json()
+    assert draft['subject'] == payload['content']['subject'] and draft['body'] == payload['content']['body']
+    assert draft['status'] == 'pending_review' and not draft['approval_hash']
+    assert client.post(route, json=payload, headers=operator).json()['id'] == draft['id']
+    assert client.post('/api/messages/1/queue', json={}, headers=operator).status_code == 409
+    approval = {'version': draft['version'], 'content_hash': draft['content_hash'], 'queue_now': True}
+    assert client.post('/api/messages/1/approve', headers=operator, json=approval).status_code == 403
+
+    smtp_draft = client.post(route, json={**payload, 'channel': 'smtp'}).json()
+    assert approve(client, smtp_draft).status_code == 409
+    client.post('/api/control/pause', json={'paused': True})
+    assert client.post('/api/messages/1/approve', json=approval).status_code == 409
+    client.post('/api/control/pause', json={'paused': False})
+    queued = client.post('/api/messages/1/approve', json=approval)
+    assert queued.status_code == 200 and queued.json()['status'] == 'queued'
+    assert client.post('/api/messages/1/approve', json=approval).status_code == 409
+    assert dispatch_one()['status'] == 'simulated'
+    assert dispatch_one()['status'] in ('empty', 'rate_limited')
+
+    with Session.begin() as s:
+        s.get(Contact, 1).verified = False
+    assert client.post(route, json=payload, headers=operator).status_code == 409
+
+
 def test_unverified_contact_blocks(client,draft):
     with Session.begin() as s: s.get(Contact,1).verified=False
     assert approve(client,draft).status_code==409

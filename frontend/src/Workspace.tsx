@@ -42,6 +42,12 @@ const contactLabel = (lead: R) =>
   lead.contact_status === "public_discussion" && issueLinkUnavailable(lead)
     ? "公开讨论入口不可用"
     : contactLabels[lead.contact_status];
+const communitySources = new Set(["v2ex", "nodeseek", "linuxdo", "hn", "xiaohongshu", "douyin", "kuaishou"]);
+const defaultEmailSubject = "关于你提到的模型 API 需求";
+const draftEmail = (address: string, subject: string, body: string) =>
+  "mailto:" + encodeURIComponent(address).replace("%40", "@") +
+  "?subject=" + encodeURIComponent(subject.trim()) +
+  "&body=" + encodeURIComponent(body.replace(/\r?\n/g, "\r\n"));
 const marketScopes: R = {
   domestic: "国内目标（达到阈值）",
   unknown: "待 AI / 市场未知",
@@ -389,11 +395,15 @@ export function CustomerWorkspace({
   owner,
   bucket,
   onEmail,
+  onReviewDraft,
+  realSending,
 }: {
   api: API;
   owner: boolean;
   bucket: string;
   onEmail: (id: number) => void;
+  onReviewDraft: (leadId: number, draft: R) => Promise<void>;
+  realSending: boolean;
 }) {
   const [items, setItems] = useState<R[]>([]),
     [sources, setSources] = useState<string[]>([]),
@@ -411,6 +421,7 @@ export function CustomerWorkspace({
     [started, setStarted] = useState(Date.now());
   const [research, setResearch] = useState<R | null>(null);
   const [body, setBody] = useState(""),
+    [emailSubject, setEmailSubject] = useState(defaultEmailSubject),
     [questionEvidence, setQuestionEvidence] = useState<{ quote: string; url: string } | null>(null),
     [note, setNote] = useState(""),
     [error, setError] = useState(""),
@@ -463,6 +474,7 @@ export function CustomerWorkspace({
     setResearch(null);
     setStarted(Date.now());
     setBody("");
+    setEmailSubject(defaultEmailSubject);
     setQuestionEvidence(null);
     setNote("");
     setPoint({ kind: "wechat", value: "", source_url: d.url, evidence: "" });
@@ -528,6 +540,27 @@ export function CustomerWorkspace({
     setStarted(Date.now());
   };
   const authorReplies = selected?.market?.profile?.v2ex_author_replies;
+  const sourcePlatform = selected?.source_key?.split(":")[0];
+  const sourceContactChannel = ["qq", "wechat"].includes(sourcePlatform)
+    ? sourcePlatform
+    : communitySources.has(sourcePlatform) ? "community" : "";
+  const openCommunity = sourceContactChannel === "community" && /^https?:\/\//i.test(selected?.url);
+  const contactActive = selected && work.qualification !== "invalid" && !["closed", "declined"].includes(work.stage);
+  const verifiedEmails = Array.from(new Set<string>([
+    ...(selected?.points || []).filter((p: R) => p.kind === "email" && p.verified).map((p: R) => p.value),
+    ...(selected?.email_contacts || []).filter((c: R) => c.verified).map((c: R) => c.address),
+  ].filter((address) => /^[^\s@,;<>]+@[^\s@,;<>]+\.[^\s@,;<>]+$/.test(address))));
+  function prepareContactRecord(channel: string) {
+    setTouch((previous) => ({
+      ...previous,
+      kind: "outbound",
+      channel,
+      body: previous.body || body,
+      occurred_at: localInput(""),
+      request_id: requestId(),
+    }));
+    document.getElementById("contact-record-heading")?.focus();
+  }
   return (
     <>
       {error && (
@@ -753,6 +786,7 @@ export function CustomerWorkspace({
                 {issueLinkUnavailable(selected) ? "原帖链接不可用" : urlLink(selected.url)}
                 {" · 发布时间 "}{fmt(selected.published_at)}
               </p>
+              <p><a href="#contact-customer-heading">联系客户与跟进 ↓</a></p>
               <MarketPanel
                 lead={selected}
                 owner={owner}
@@ -905,11 +939,75 @@ export function CustomerWorkspace({
               </p>
             </section>
             <section className="panel">
-              <h2>联系客户</h2>
+              <h2 id="contact-customer-heading">联系客户</h2>
               <p className="muted">
                 {contactLabel(selected)}
-                。联系方式与客户价值分别核实。复制话术不代表已发送，系统发送仍须逐条审核。
               </p>
+              {contactActive && (
+                <>
+                  <button
+                    className="secondary"
+                    disabled={busy}
+                    onClick={() => action(async () => {
+                      const d = await api("/workspace/leads/" + selected.id + "/suggestion");
+                      setBody(d.body);
+                      setQuestionEvidence(d.question_evidence ?? null);
+                    }, "已生成招呼语，可以继续编辑")}
+                  >
+                    生成建议话术
+                  </button>
+                  {questionEvidence && <p className="muted">
+                    提问依据「{questionEvidence.quote}」 · {urlLink(questionEvidence.url, "查看出处 ↗")}
+                  </p>}
+                  <label>
+                    招呼语
+                    <textarea aria-label="建议招呼语" rows={5} value={body} maxLength={5000}
+                      onChange={(e) => setBody(e.target.value)} />
+                  </label>
+                  <div className="actions">
+                    <button className="secondary" disabled={busy || !body.trim()}
+                      onClick={() => action(() => copy(body), "招呼语已复制")}>
+                      复制话术
+                    </button>
+                    {openCommunity && urlLink(selected.url, "在手机打开论坛原帖 ↗")}
+                    {sourceContactChannel && (
+                      <button className="secondary" onClick={() => prepareContactRecord(sourceContactChannel)}>
+                        填写{channels[sourceContactChannel]}联系记录
+                      </button>
+                    )}
+                  </div>
+                  {verifiedEmails.length > 0 ? (
+                    <>
+                      <label>
+                        邮件主题
+                        <input value={emailSubject} maxLength={200} onChange={(e) => setEmailSubject(e.target.value)} />
+                      </label>
+                      {body.trim() && emailSubject.trim() && verifiedEmails.map((address) => (
+                        <p key={address}>
+                          <a href={draftEmail(address, emailSubject, body)}>在邮箱起草给 {address} ↗</a>
+                          {" "}
+                          {selected.email_contacts.filter((c: R) => c.verified && c.address === address).slice(0, 1).map((contact: R) => (
+                            <button key={contact.id} className="secondary" disabled={busy || selected.human_takeover}
+                              onClick={() => action(() => onReviewDraft(selected.id, {
+                                contact_id: contact.id,
+                                channel: "smtp",
+                                content: { subject: emailSubject.trim(), body },
+                              }))}>
+                              存为待审核邮件
+                            </button>
+                          ))}
+                        </p>
+                      ))}
+                      {!realSending && <p className="muted">服务器真实邮件发送已关闭，可保存草稿供审核。</p>}
+                      <button className="secondary" onClick={() => prepareContactRecord("email")}>
+                        填写邮件联系记录
+                      </button>
+                    </>
+                  ) : (
+                    <p className="muted">核实邮箱后可用当前招呼语起草邮件。</p>
+                  )}
+                </>
+              )}
               {selected.contact_invitation && (
                 <div className="contact-evidence">
                   <strong>原文提到私聊</strong>
@@ -1008,13 +1106,6 @@ export function CustomerWorkspace({
                     {p.kind === "url" &&
                       p.verified &&
                       urlLink(p.value, "打开联系入口 ↗")}
-                    {p.kind === "email" &&
-                      p.verified &&
-                      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.value) && (
-                        <a href={"mailto:" + encodeURIComponent(p.value)}>
-                          打开邮件客户端 ↗
-                        </a>
-                      )}
                   </div>
                 </div>
               ))}
@@ -1091,52 +1182,11 @@ export function CustomerWorkspace({
                 </button>
               </details>
               <hr />
-              <h3>建议招呼语</h3>
-              <button
-                className="secondary"
-                disabled={busy}
-                onClick={() =>
-                  action(async () => {
-                    const d = await api(
-                      "/workspace/leads/" + selected.id + "/suggestion",
-                    );
-                    setBody(d.body);
-                    setQuestionEvidence(d.question_evidence ?? null);
-                  }, "已基于确认产品事实生成，可编辑后复制")
-                }
-              >
-                生成建议话术
-              </button>
-              {body && (
-                <>
-                  {questionEvidence && <p className="muted">
-                    提问依据「{questionEvidence.quote}」 · {urlLink(questionEvidence.url, "查看出处 ↗")}
-                  </p>}
-                  <textarea
-                    aria-label="建议招呼语"
-                    rows={6}
-                    value={body}
-                    onChange={(e) => setBody(e.target.value)}
-                  />
-                  <button
-                    disabled={busy}
-                    onClick={() =>
-                      action(
-                        () => copy(body),
-                        "话术已复制，请由你在目标平台决定是否发送",
-                      )
-                    }
-                  >
-                    复制话术
-                  </button>
-                </>
-              )}
-              <p>{issueLinkUnavailable(selected) ? "原帖链接不可用" : urlLink(selected.url, "打开原帖 / 项目入口 ↗")}</p>
               <button className="text" onClick={() => onEmail(selected.id)}>
                 邮件草稿与逐条审核 →
               </button>
               <hr />
-              <h3>记录实际沟通</h3>
+              <h3 id="contact-record-heading" tabIndex={-1}>记录实际沟通</h3>
               <label>
                 记录类型
                 <select

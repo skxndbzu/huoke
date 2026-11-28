@@ -29,18 +29,9 @@ class ContactInput(Strict):
         return value
 
 
-class DraftInput(Strict):
-    contact_id: int
-    channel: Literal['simulation', 'smtp'] = 'simulation'
-
-
-class MessageEdit(Strict):
-    version: int
+class DraftContent(Strict):
     subject: str = Field(min_length=1, max_length=200)
     body: str = Field(min_length=1, max_length=5000)
-    contact_id: int
-    channel: Literal['simulation', 'smtp']
-    attachments: list = Field(default_factory=list, max_length=0)
 
     @field_validator('subject')
     @classmethod
@@ -50,9 +41,23 @@ class MessageEdit(Strict):
         return value
 
 
+class DraftInput(Strict):
+    contact_id: int
+    channel: Literal['simulation', 'smtp'] = 'simulation'
+    content: DraftContent | None = None
+
+
+class MessageEdit(DraftContent):
+    version: int
+    contact_id: int
+    channel: Literal['simulation', 'smtp']
+    attachments: list = Field(default_factory=list, max_length=0)
+
+
 class Approval(Strict):
     version: int
     content_hash: str
+    queue_now: bool = False
 
 
 class QueueInput(Strict):

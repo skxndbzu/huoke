@@ -367,6 +367,14 @@ function App() {
               owner={owner}
               bucket={bucket}
               onEmail={(id) => act(() => openLead(id), "")}
+              realSending={overview.real_send_enabled}
+              onReviewDraft={async (leadId, payload) => {
+                const draft = await api(`/leads/${leadId}/draft`, payload);
+                const lead = await api(`/leads/${leadId}`);
+                await refresh();
+                navigate("消息审核");
+                setReview({ ...draft, lead, contact: lead.contacts.find((c: Row) => c.id === draft.contact_id) });
+              }}
             />
           )}
           {page === "客户池" && selected && (
@@ -765,6 +773,19 @@ function App() {
                       <p className="warning">{review.block_reason}</p>
                     )}
                     <div className="actions">
+                      {review.status === "pending_review" && (
+                        <button disabled={busy || !owner || !!review.block_reason || overview.paused}
+                          onClick={() => act(async () => {
+                            await api(`/messages/${review.id}/approve`, {
+                              version: review.version,
+                              content_hash: review.content_hash,
+                              queue_now: true,
+                            });
+                            setReview(null);
+                          }, "已确认并加入发送队列")}>
+                          确认收件人和全文并排队
+                        </button>
+                      )}
                       <button
                         disabled={
                           busy ||
@@ -782,7 +803,7 @@ function App() {
                           }, "已确认这个具体内容版本；尚未加入发送队列")
                         }
                       >
-                        确认此收件人及完整内容
+                        仅确认，稍后排队
                       </button>
                       <button
                         className="secondary"

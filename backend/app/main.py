@@ -183,13 +183,25 @@ def draft(lead_id: int, data: DraftInput, actor=Depends(role)):
         product = control.product
         if not product.get('confirmed'):
             raise HTTPException(409, '产品资料未确认')
+        if data.content and (not contact.verified or lead.human_takeover):
+            raise HTTPException(409, '请使用已核实邮箱，并确认该客户允许系统跟进')
         m = Message(lead_id=lead_id, contact_id=contact.id, recipient=contact.address,
             channel=data.channel, account='simulation' if data.channel == 'simulation' else settings().smtp_from,
             subject='关于您提到的模型 API 需求',
             body=f'你好，我看到你发布的“{lead.title[:120]}”。\n\n我们{product["description"]}\n如果你仍在评估模型接口，愿意交流一下需要接入的模型和使用场景吗？\n\n如果不希望收到后续联系，请直接回复告知。')
+        if data.content:
+            m.subject, m.body = data.content.subject, data.content.body
+            pending = s.scalar(select(Message).where(
+                Message.lead_id == lead_id, Message.contact_id == contact.id, Message.status == 'pending_review',
+                Message.channel == m.channel, Message.account == m.account, Message.recipient == m.recipient,
+                Message.subject == m.subject, Message.body == m.body,
+            ).order_by(Message.id.desc()).limit(1))
+            if pending:
+                return message_view(s, pending)
         s.add(m)
         s.flush()
-        event(s, 'draft_created', m.id, method='confirmed_facts_template', product_version=product['version'])
+        event(s, 'draft_created', m.id, method='workbench_text' if data.content else 'confirmed_facts_template',
+              product_version=product['version'])
         return message_view(s, m)
 
 
@@ -222,16 +234,25 @@ def edit_message(message_id: int, data: MessageEdit, actor=Depends(role)):
 @app.post('/api/messages/{message_id}/approve')
 def approve(message_id: int, data: Approval, actor=Depends(reviewer)):
     with Session.begin() as s:
-        locked_control(s)
+        control = locked_control(s)
         m = get(s, Message, message_id)
         if m.status != 'pending_review' or m.version != data.version or data.content_hash != content_hash(m):
             raise HTTPException(409, '审核版本已变化，请重新查看完整内容')
         reason = eligibility(s, m)
         if reason:
             raise HTTPException(409, reason)
+        if data.queue_now and control.paused:
+            raise HTTPException(409, '全局发送已暂停')
         m.approval_hash, m.approved_at, m.status = content_hash(m), now(), 'approved'
         event(s, 'owner_approved', m.id, version=m.version, content_hash=m.approval_hash, actor=actor)
+        if data.queue_now:
+            enqueue_message(s, m, now())
         return message_view(s, m)
+
+
+def enqueue_message(s, message, scheduled_at):
+    message.status, message.not_before = 'queued', scheduled_at
+    event(s, 'queued', message.id, not_before=scheduled_at)
 
 
 @app.post('/api/messages/{message_id}/queue')
@@ -253,13 +274,12 @@ def queue(message_id: int, data: QueueInput, actor=Depends(role)):
                 date = datetime.fromisoformat(data.not_before)
                 if date.tzinfo is None:
                     raise ValueError()
-                m.not_before = date.astimezone(timezone.utc).isoformat()
+                scheduled_at = date.astimezone(timezone.utc).isoformat()
             except ValueError:
                 raise HTTPException(422, '排期须包含时区') from None
         else:
-            m.not_before = now()
-        m.status = 'queued'
-        event(s, 'queued', m.id, not_before=m.not_before)
+            scheduled_at = now()
+        enqueue_message(s, m, scheduled_at)
         return message_view(s, m)
 
 
